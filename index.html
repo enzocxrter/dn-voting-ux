@@ -747,15 +747,14 @@
 
       // ---- TEMPORARY PoH STUB ----
       // Put your PoH-verified wallet addresses in this array (all lowercased)
-      const POH_ALLOWLIST = [
-        // "0x54115A13047fB10C3D5849fFF1b23EFAa010CE09".toLowerCase(),
-        // "0xdef456...".toLowerCase(),
-      ];
+const POH_ALLOWLIST = [
+  "0x54115a13047fb10c3d5849fff1b23efaa010ce09",
+];
 
-      async function isPohVerified(address) {
-        const addr = address.toLowerCase();
-        return POH_ALLOWLIST.includes(addr);
-      }
+     async function isPohVerified(address) {
+  const addr = address.toLowerCase();
+  return POH_ALLOWLIST.includes(addr);
+}
 
       function setPohStatus(isVerified) {
         if (!pohStatusValue) return;
