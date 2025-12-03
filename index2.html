@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dn Brotato Taterz Farm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Dn Brotato Taterz Farm" />
+
+    <link rel="icon" href="fabicon.png" />
+
+    <style>
+      @font-face {
+        font-family: "OverstreetBibleBold";
+        src: url("assets/fonts/overstreetbiblebold.ttf") format("truetype");
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "OverstreetBibleBold", system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #ffffff;
+        background: url("assets/images/background2.png") center center / cover
+          no-repeat fixed;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .page {
+        width: 100%;
+        max-width: 1200px;
+        padding: 20px 16px 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* HEADER / LOGO BAR */
+      .header {
+        width: 100%;
+        height: 100px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
+      }
+
+      .header-link {
+        display: inline-block;
+      }
+
+      .header-logo {
+        height: 80px;
+        width: auto;
+        transition: transform 0.3s ease;
+      }
+
+      .header-logo:hover {
+        transform: scale(1.05);
+      }
+
+      /* TITLE */
+      h1 {
+        margin: 60px 0 40px;
+        text-align: center;
+        font-size: clamp(2.5rem, 5vw, 4.5rem);
+        line-height: 1.1;
+        text-transform: uppercase;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+        color: #000000; /* black title */
+      }
+
+      /* CONNECT SECTION */
+      .connect-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+
+      .connect-btn {
+        border: none;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+        display: block;
+        width: 260px;
+        height: 80px;
+        background-image: url("assets/images/connect.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        transition:
+          transform 0.15s ease-out,
+          background-image 0.15s ease-out;
+      }
+
+      /* Grow by 15% on hover + hover image */
+      .connect-btn:hover {
+        background-image: url("assets/images/connecthover.png");
+        transform: scale(1.15);
+      }
+
+      .connect-btn:active {
+        transform: scale(0.98);
+      }
+
+      /* Hover text under connect */
+      .connect-hover-text {
+        margin-top: 16px;
+        width: 100%;
+        max-width: 600px;
+        text-align: center;
+        color: #f5f5f5;
+        font-size: 2rem;
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 0.2s ease-out,
+          transform 0.2s ease-out;
+        pointer-events: none;
+      }
+
+      .connect-wrapper:hover .connect-hover-text {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* VOTING STATION */
+      .voting-station {
+        margin-top: 20px;
+        width: 100%;
+        max-width: 540px; /* narrower center box */
+        text-align: center;
+        color: #ffffff;
+      }
+
+      /* Layout: thermometer on left, stats on right */
+      .voting-layout {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        justify-content: center;
+      }
+
+      .voting-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .voting-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      }
+
+      /* PoH status line */
+      .poh-status {
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+      }
+
+      .poh-status-label {
+        color: #ffffff;
+      }
+
+      .poh-status-yes {
+        /* darker forest green */
+        color: #1f7a3a;
+      }
+
+      .vote-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        font-size: 1.4rem;
+        margin-bottom: 30px;
+      }
+
+      .vote-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 10px 16px;
+        border-radius: 10px;
+      }
+
+      .vote-stat-label {
+        text-align: left;
+      }
+
+      .vote-stat-value {
+        text-align: right;
+      }
+
+      /* Vote action area */
+      .vote-action {
+        margin-top: 10px;
+        font-size: 1.6rem;
+      }
+
+      /* Image-based VOTE button */
+      .vote-btn {
+        border: none;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+        display: inline-block;
+        width: 220px;
+        height: 70px;
+        background-image: url("assets/images/vote.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        transition:
+          transform 0.15s ease-out,
+          background-image 0.15s ease-out;
+      }
+
+      .vote-btn:hover {
+        background-image: url("assets/images/votehover.png");
+        transform: scale(1.15);
+      }
+
+      .vote-btn:active {
+        transform: scale(0.98);
+      }
+
+      .no-votes-text {
+        font-size: 1.6rem;
+        opacity: 0.9;
+      }
+
+      /* Not PoH verified panel */
+      .not-verified {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 1.4rem;
+      }
+
+      .verify-button {
+        margin-top: 12px;
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 999px;
+        background: #000000;
+        color: #ffffff;
+        text-decoration: none;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+      }
+
+      /* LEFT SIDE: VOTE THERMOMETER */
+      .thermo-wrapper {
+        width: 200px;
+        padding: 16px 12px 20px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 20px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+        text-align: center;
+      }
+
+      .thermo-title {
+        font-size: 1.4rem;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+
+      .thermo-body {
+        position: relative;
+        width: 90px;
+        height: 460px; /* tall thermometer */
+        margin: 0 auto 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .thermo-column {
+        position: relative;
+        width: 36px;
+        height: 340px;
+        margin-top: 6px;
+        border-radius: 999px;
+        border: 4px solid rgba(255, 255, 255, 0.9);
+        overflow: hidden;
+        background: linear-gradient(
+          to top,
+          rgba(255, 255, 255, 0.12),
+          rgba(255, 255, 255, 0.25)
+        );
+      }
+
+      .thermo-mercury {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 0%; /* JS updates this */
+        background: linear-gradient(
+          to top,
+          #12ceec,
+          #00ffe8
+        );
+        box-shadow: 0 0 12px rgba(0, 255, 232, 0.8);
+        transition: height 0.6s ease-out;
+      }
+
+      .thermo-bulb {
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        border: 4px solid rgba(255, 255, 255, 0.95);
+        background: radial-gradient(
+          circle at 30% 30%,
+          #ffcf8f,
+          #f04438
+        );
+        box-shadow: 0 0 18px rgba(240, 68, 56, 0.7);
+        margin-top: -6px;
+      }
+
+      /* Moving face riding the mercury (Devlan with hair) */
+      .thermo-face {
+        position: absolute;
+        left: 50%;
+        width: 78px;
+        height: 78px;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent; /* no black */
+        border: none; /* no white ring */
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
+        bottom: 20px; /* JS will adjust based on percentage */
+        transition: bottom 0.6s ease-out;
+        z-index: 2;
+      }
+
+      .thermo-face img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: contain;
+      }
+
+      /* Goal face at the top (Devlan bald) */
+      .thermo-face-goal {
+        position: absolute;
+        left: 50%;
+        width: 78px;
+        height: 78px;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        top: -6px; /* sits right at the top as the goal */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none; /* no white ring */
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
+        z-index: 2;
+      }
+
+      .thermo-face-goal img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: contain;
+      }
+
+      .thermo-labels {
+        font-size: 1.05rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      #thermoCount {
+        font-size: 1.3rem;
+      }
+
+      #thermoPercent {
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+
+      .thermo-target {
+        font-size: 0.9rem;
+        opacity: 0.7;
+      }
+
+      @media (max-width: 600px) {
+        .header {
+          height: 80px;
+        }
+
+        .header-logo {
+          height: 60px;
+        }
+
+        .connect-btn {
+          width: 220px;
+          height: 70px;
+        }
+
+        h1 {
+          margin-top: 40px;
+        }
+
+        .connect-hover-text {
+          font-size: 1.6rem;
+        }
+
+        .vote-stats {
+          font-size: 1.2rem;
+        }
+
+        .vote-btn,
+        .no-votes-text {
+          font-size: 1.4rem;
+        }
+
+        .poh-status {
+          font-size: 1.2rem;
+        }
+
+        .voting-layout {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .thermo-wrapper {
+          width: 220px;
+        }
+      }
+
+      /* helper: hidden class */
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <header class="header">
+        <a
+          href="https://www.davydonothing.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="header-link"
+        >
+          <img
+            src="assets/images/dnlogo2.png"
+            alt="DN Brotato logo"
+            class="header-logo"
+          />
+        </a>
+      </header>
+
+      <h1>DN Voting Platform</h1>
+
+      <!-- STATE 1: CONNECT (shown initially) -->
+      <div class="connect-wrapper" id="connectSection">
+        <button
+          class="connect-btn"
+          id="connectWalletButton"
+          aria-label="Connect Wallet"
+        ></button>
+
+        <div class="connect-hover-text">
+          <p>Connect your wallet to vote on SERIOUS topics</p>
+        </div>
+      </div>
+
+      <!-- STATE 2: NOT POH VERIFIED -->
+      <div class="not-verified hidden" id="notVerifiedSection">
+        <p>This wallet is not PoH verified yet.</p>
+        <a
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="verify-button"
+          id="verifyLink"
+        >
+          Verify Here
+        </a>
+      </div>
+
+      <!-- STATE 3: VOTING STATION -->
+      <div class="voting-station hidden" id="votingSection">
+        <div class="voting-layout">
+          <!-- LEFT: Vote Thermometer -->
+          <div class="thermo-wrapper">
+            <div class="thermo-title">Vote Heat</div>
+
+            <div class="thermo-body">
+              <div class="thermo-column">
+                <div class="thermo-mercury" id="thermoMercury"></div>
+              </div>
+              <div class="thermo-bulb"></div>
+
+              <!-- Goal face (Devlan bald) at the top -->
+              <div class="thermo-face-goal">
+                <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
+              </div>
+
+              <!-- Moving face (Devlan with hair) following the mercury -->
+              <div class="thermo-face" id="thermoFace">
+                <img src="assets/images/Devlan.png" alt="Devlan face" />
+              </div>
+            </div>
+
+            <div class="thermo-labels">
+              <div id="thermoCount">0</div>
+              <div id="thermoPercent">0% to target</div>
+              <div class="thermo-target" id="thermoTarget">
+                Target: 100,000 votes
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Existing content -->
+          <div class="voting-content">
+            <div class="voting-title">Voting station</div>
+
+            <!-- PoH status line -->
+            <div class="poh-status">
+              <span class="poh-status-label">Proof of Humanity verified: </span>
+              <span class="poh-status-yes">Yes</span>
+            </div>
+
+            <div class="vote-stats">
+              <div class="vote-stat-row">
+                <div class="vote-stat-label">Total votes</div>
+                <div class="vote-stat-value" id="totalVotes">0</div>
+              </div>
+
+              <div class="vote-stat-row">
+                <div class="vote-stat-label">Your total votes</div>
+                <div class="vote-stat-value" id="userTotalVotes">0</div>
+              </div>
+
+              <div class="vote-stat-row">
+                <div class="vote-stat-label">Votes today</div>
+                <div class="vote-stat-value" id="votesToday">0/10</div>
+              </div>
+            </div>
+
+            <div class="vote-action" id="voteAction">
+              <!-- JS will drop the image Vote button or "Come back later" text here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const connectSection = document.getElementById("connectSection");
+      const notVerifiedSection = document.getElementById("notVerifiedSection");
+      const votingSection = document.getElementById("votingSection");
+      const voteAction = document.getElementById("voteAction");
+
+      const totalVotesEl = document.getElementById("totalVotes");
+      const userTotalVotesEl = document.getElementById("userTotalVotes");
+      const votesTodayEl = document.getElementById("votesToday");
+
+      const connectWalletButton =
+        document.getElementById("connectWalletButton");
+
+      // Thermometer elements
+      const thermoMercury = document.getElementById("thermoMercury");
+      const thermoFace = document.getElementById("thermoFace");
+      const thermoCount = document.getElementById("thermoCount");
+      const thermoPercent = document.getElementById("thermoPercent");
+      const thermoTarget = document.getElementById("thermoTarget");
+
+      const MAX_VOTES_PER_DAY = 10;
+      const TARGET_VOTES = 100000; // adjust to your real goal
+
+      connectWalletButton.addEventListener("click", async () => {
+        console.log("Connect clicked");
+
+        const walletAddress = await connectWalletStub();
+        const isVerified = await checkPohStub(walletAddress);
+
+        if (!isVerified) {
+          showNotVerified();
+          return;
+        }
+
+        const { totalVotes, userTotalVotes, votesTodayUsed } =
+          await loadVoteStatsStub(walletAddress);
+
+        showVotingStation(totalVotes, userTotalVotes, votesTodayUsed);
+      });
+
+      function showNotVerified() {
+        connectSection.classList.add("hidden");
+        votingSection.classList.add("hidden");
+        notVerifiedSection.classList.remove("hidden");
+      }
+
+      function showVotingStation(totalVotes, userTotalVotes, votesTodayUsed) {
+        connectSection.classList.add("hidden");
+        notVerifiedSection.classList.add("hidden");
+        votingSection.classList.remove("hidden");
+
+        // Basic stats
+        totalVotesEl.textContent = totalVotes.toString();
+        userTotalVotesEl.textContent = userTotalVotes.toString();
+        votesTodayEl.textContent = `${MAX_VOTES_PER_DAY - votesTodayUsed}/${MAX_VOTES_PER_DAY}`;
+
+        // ---- Thermometer update ----
+        const pctRaw =
+          TARGET_VOTES > 0 ? (totalVotes / TARGET_VOTES) * 100 : 0;
+        const pct = Math.max(0, Math.min(pctRaw, 100)); // clamp 0–100
+
+        // Mercury: slightly slower than Devlan's pct
+        const MERCURY_OFFSET = 7; // tweak between 5–7 to taste
+        const mercuryPct = Math.max(0, Math.min(pct - MERCURY_OFFSET, 100));
+
+        // Mercury height uses slowed percentage
+        if (thermoMercury) {
+          thermoMercury.style.height = mercuryPct + "%";
+        }
+        if (thermoCount) {
+          thermoCount.textContent = totalVotes.toLocaleString();
+        }
+        if (thermoPercent) {
+          // label still shows real pct
+          thermoPercent.textContent = `${pct.toFixed(1)}% to target`;
+        }
+        if (thermoTarget) {
+          thermoTarget.textContent = `Target: ${TARGET_VOTES.toLocaleString()} votes`;
+        }
+
+        // Devlan face mapping with easing so he tracks closer to the mercury
+        if (thermoFace) {
+          const MIN_BOTTOM = 20; // your calibrated 0% position
+          const MAX_BOTTOM = 340; // approximate top of the column
+
+          const t = pct / 100; // 0 → 1
+          const eased = Math.pow(t, 0.6); // tweak exponent if needed
+
+          const faceBottom =
+            MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
+
+          thermoFace.style.bottom = `${faceBottom}px`;
+        }
+
+        // ---- Vote action (button vs "come back later") ----
+        voteAction.innerHTML = "";
+
+        if (votesTodayUsed < MAX_VOTES_PER_DAY) {
+          const btn = document.createElement("button");
+          btn.className = "vote-btn";
+          btn.setAttribute("aria-label", "Vote");
+          btn.addEventListener("click", () => {
+            alert("Voting flow will be wired to the contract next.");
+          });
+          voteAction.appendChild(btn);
+        } else {
+          const p = document.createElement("p");
+          p.className = "no-votes-text";
+          p.textContent = "You’ve used all votes for now. Come back later.";
+          voteAction.appendChild(p);
+        }
+      }
+
+      // ---- STUBS (to be replaced with real Linea / contract logic) ----
+
+      async function connectWalletStub() {
+        console.log("Connecting wallet (stub)...");
+        return "0x1234...stub";
+      }
+
+      async function checkPohStub(walletAddress) {
+        console.log("Checking PoH for", walletAddress);
+        return true; // change to false to see the "Verify Here" state
+      }
+
+      async function loadVoteStatsStub(walletAddress) {
+        console.log("Loading vote stats for", walletAddress);
+        return {
+          totalVotes: 100000, // 85% of 100,000 for testing
+          userTotalVotes: 42,
+          votesTodayUsed: 2,
+        };
+      }
+    </script>
+  </body>
+</html>
