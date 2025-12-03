@@ -774,9 +774,7 @@
     <script>
       const {
         BrowserProvider,
-        Contract,
-        formatEther,
-        parseEther
+        Contract
       } = ethers;
 
       // ---- DOM elements ----
@@ -826,6 +824,8 @@
         "function vote() payable"
       ];
 
+      // NOTE: If your deployed claim contract differs from this ABI,
+      // the view calls will be caught and ignored (defaulting to 0).
       const CLAIM_ABI = [
         "function claimableVotes(address user) view returns (uint256)",
         "function claimsLeftToday(address user) view returns (uint8)",
@@ -835,7 +835,6 @@
       // Simple PoH allowlist
       const POH_ADDRESSES = new Set([
         "0x54115a13047fb10c3d5849fff1b23efaa010ce09" // your PoH wallet
-        // add more here as you verify more degenerates
       ]);
 
       let provider;
@@ -881,11 +880,9 @@
       }
 
       function secondsUntilNextDayFromDayIndex(userDayIndex) {
-        // Contract dayIndex uses block.timestamp / 86400
         const nowSec = Math.floor(Date.now() / 1000);
         const todayIndex = Math.floor(nowSec / 86400);
 
-        // If userDayIndex < todayIndex, new day already started for them
         if (userDayIndex < todayIndex) {
           return 0;
         }
@@ -899,10 +896,7 @@
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
 
-        return {
-          hours,
-          minutes
-        };
+        return { hours, minutes };
       }
 
       function shortenAddress(addr) {
@@ -912,9 +906,24 @@
 
       // ---- Leaderboard mock data (replace with real data later) ----
       const mockLeaders = [
-        { rank: 1, address: "0x54115A13047fB10C3D5849fFF1b23EFAa010CE09", votes: 42, tag: "Hair Nemesis" },
-        { rank: 2, address: "0x1234000000000000000000000000000000BEEF", votes: 24, tag: "Follicle Foe" },
-        { rank: 3, address: "0x9999000000000000000000000000000000DEAD", votes: 17, tag: "Clipper Casual" }
+        {
+          rank: 1,
+          address: "0x54115A13047fB10C3D5849fFF1b23EFAa010CE09",
+          votes: 42,
+          tag: "Hair Nemesis"
+        },
+        {
+          rank: 2,
+          address: "0x1234000000000000000000000000000000BEEF",
+          votes: 24,
+          tag: "Follicle Foe"
+        },
+        {
+          rank: 3,
+          address: "0x9999000000000000000000000000000000DEAD",
+          votes: 17,
+          tag: "Clipper Casual"
+        }
       ];
 
       function renderLeaderboard(rows) {
@@ -969,10 +978,9 @@
         const pct = Math.max(0, Math.min(pctRaw, 100)); // clamp 0–100
 
         // Mercury: slightly slower than Devlan's pct
-        const MERCURY_OFFSET = 7; // tweak between 5–7 to taste
+        const MERCURY_OFFSET = 7;
         const mercuryPct = Math.max(0, Math.min(pct - MERCURY_OFFSET, 100));
 
-        // Mercury height uses slowed percentage
         if (thermoMercury) {
           thermoMercury.style.height = mercuryPct + "%";
         }
@@ -980,24 +988,19 @@
           thermoCount.textContent = totalVotesGlobal.toLocaleString();
         }
         if (thermoPercent) {
-          // label still shows real pct
           thermoPercent.textContent = `${pct.toFixed(1)}% to target`;
         }
         if (thermoTarget) {
           thermoTarget.textContent = `Target: ${TARGET_VOTES.toLocaleString()} votes`;
         }
 
-        // Devlan face mapping with easing so he tracks closer to the mercury
         if (thermoFace) {
-          const MIN_BOTTOM = 20; // your calibrated 0% position
-          const MAX_BOTTOM = 340; // approximate top of the column
-
-          const t = pct / 100; // 0 → 1
-          const eased = Math.pow(t, 0.6); // tweak exponent if needed
-
+          const MIN_BOTTOM = 20;
+          const MAX_BOTTOM = 340;
+          const t = pct / 100;
+          const eased = Math.pow(t, 0.6);
           const faceBottom =
             MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
-
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
@@ -1102,21 +1105,38 @@
       async function loadVoteAndClaimStats(walletAddress) {
         await ensureProvider();
 
-        const [
-          userInfo,
-          totalVotesGlobal,
-          maxVotesPerDayOnChain,
-          claimableVotes,
-          claimsLeftToday
-        ] = await Promise.all([
-          voteContract.getUserInfo(walletAddress),
-          voteContract.totalVotesGlobal(),
-          voteContract.maxVotesPerDay(),
-          claimContract.claimableVotes(walletAddress),
-          claimContract.claimsLeftToday(walletAddress)
-        ]);
+        // --- Always load vote info (this ABI is known-good) ---
+        const [userInfo, totalVotesGlobal, maxVotesPerDayOnChain] =
+          await Promise.all([
+            voteContract.getUserInfo(walletAddress),
+            voteContract.totalVotesGlobal(),
+            voteContract.maxVotesPerDay()
+          ]);
 
         const [dayIndex, votesToday, userTotalVotes, votesLeftToday] = userInfo;
+
+        // --- Try to load claim info, but don't break if ABI is off or view reverts ---
+        let claimableVotes = 0;
+        let claimsLeftToday = 0;
+
+        try {
+          if (claimContract) {
+            const [claimableVotesRaw, claimsLeftTodayRaw] = await Promise.all([
+              claimContract.claimableVotes(walletAddress),
+              claimContract.claimsLeftToday(walletAddress)
+            ]);
+
+            claimableVotes = Number(claimableVotesRaw);
+            claimsLeftToday = Number(claimsLeftTodayRaw);
+          }
+        } catch (e) {
+          console.warn(
+            "Claim contract view calls failed (this is OK for now, defaulting to 0 claims):",
+            e
+          );
+          claimableVotes = 0;
+          claimsLeftToday = 0;
+        }
 
         return {
           dayIndex: Number(dayIndex),
@@ -1125,8 +1145,8 @@
           userTotalVotes: Number(userTotalVotes),
           totalVotesGlobal: Number(totalVotesGlobal),
           maxVotesPerDay: Number(maxVotesPerDayOnChain),
-          claimableVotes: Number(claimableVotes),
-          claimsLeftToday: Number(claimsLeftToday)
+          claimableVotes,
+          claimsLeftToday
         };
       }
 
