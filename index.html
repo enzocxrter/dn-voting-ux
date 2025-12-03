@@ -106,7 +106,6 @@
         will-change: transform;
       }
 
-      /* Grow by 15% on hover + hover image */
       .connect-btn:hover {
         background-image: url("assets/images/connecthover.png");
         transform: scale(1.15);
@@ -177,7 +176,6 @@
       }
 
       .poh-status-yes {
-        /* darker forest green */
         color: #1f7a3a;
       }
 
@@ -347,8 +345,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent; /* no black */
-        border: none; /* no white ring */
+        background: transparent;
+        border: none;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         bottom: 20px; /* JS will adjust based on percentage */
         transition: bottom 0.6s ease-out;
@@ -375,7 +373,7 @@
         align-items: center;
         justify-content: center;
         background: transparent;
-        border: none; /* no white ring */
+        border: none;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         z-index: 2;
       }
@@ -578,6 +576,8 @@
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
     <script>
+      console.log("DN Voting script loaded");
+
       const connectSection = document.getElementById("connectSection");
       const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
@@ -613,33 +613,45 @@
         "function vote() payable"
       ];
 
-      let provider;
-      let signer;
-      let votingContract;
-      let connectedAddress;
-      let voteFeeWei = ethers.BigNumber.from(0);
+      let provider = null;
+      let signer = null;
+      let votingContract = null;
+      let connectedAddress = null;
+      let voteFeeWei = null; // set after we read from chain
 
       let MAX_VOTES_PER_DAY = 10;
       const DEFAULT_TARGET_VOTES = 5000;
       let TARGET_VOTES = DEFAULT_TARGET_VOTES;
 
+      console.log("connectWalletButton:", !!connectWalletButton);
+
       connectWalletButton.addEventListener("click", handleConnectClick);
 
       async function handleConnectClick() {
         try {
-          if (!window.ethereum) {
+          console.log("Connect clicked");
+
+          if (typeof window.ethereum === "undefined") {
             alert(
               "No Web3 wallet detected. Please install MetaMask or another wallet."
             );
             return;
           }
 
-          provider = new ethers.providers.Web3Provider(window.ethereum);
+          if (typeof window.ethers === "undefined") {
+            alert("Internal error: ethers.js failed to load.");
+            return;
+          }
+
+          provider = new window.ethers.providers.Web3Provider(
+            window.ethereum
+          );
           await provider.send("eth_requestAccounts", []);
 
           let network = await provider.getNetwork();
+          console.log("Current network chainId:", network.chainId);
+
           if (network.chainId !== LINEA_SEPOLIA_DEC) {
-            // try to switch
             try {
               await window.ethereum.request({
                 method: "wallet_switchEthereumChain",
@@ -647,7 +659,6 @@
               });
             } catch (switchError) {
               if (switchError.code === 4902) {
-                // Chain not added – try add
                 try {
                   await window.ethereum.request({
                     method: "wallet_addEthereumChain",
@@ -681,21 +692,23 @@
               }
             }
 
-            // refresh provider after network change
-            provider = new ethers.providers.Web3Provider(window.ethereum);
+            provider = new window.ethers.providers.Web3Provider(
+              window.ethereum
+            );
             network = await provider.getNetwork();
+            console.log("Network after switch:", network.chainId);
           }
 
           signer = provider.getSigner();
           connectedAddress = await signer.getAddress();
+          console.log("Connected address:", connectedAddress);
 
-          votingContract = new ethers.Contract(
+          votingContract = new window.ethers.Contract(
             CONTRACT_ADDRESS,
             CONTRACT_ABI,
             signer
           );
 
-          // Load on-chain config + stats
           const [maxPerDayFromChain, fee, userInfo, totalGlobal] =
             await Promise.all([
               votingContract.maxVotesPerDay(),
@@ -714,7 +727,7 @@
             userInfo.totalVotes !== undefined ? userInfo.totalVotes : userInfo[2]
           );
 
-          // PoH check is still a stub for now – always true.
+          // PoH check is still stub for now
           const isVerified = await checkPohStub(connectedAddress);
 
           if (!isVerified) {
@@ -728,8 +741,11 @@
             votesTodayUsed
           );
         } catch (err) {
-          console.error(err);
-          alert("Error connecting wallet. Check the console for details.");
+          console.error("handleConnectClick error:", err);
+          const msg =
+            (err && err.message) ||
+            "Error connecting wallet. Check the console for details.";
+          alert(msg);
         }
       }
 
@@ -755,13 +771,11 @@
         // ---- Thermometer update ----
         const pctRaw =
           TARGET_VOTES > 0 ? (totalVotes / TARGET_VOTES) * 100 : 0;
-        const pct = Math.max(0, Math.min(pctRaw, 100)); // clamp 0–100
+        const pct = Math.max(0, Math.min(pctRaw, 100));
 
-        // Mercury: slightly slower than Devlan's pct
-        const MERCURY_OFFSET = 7; // tweak 5–7 to taste
+        const MERCURY_OFFSET = 7;
         const mercuryPct = Math.max(0, Math.min(pct - MERCURY_OFFSET, 100));
 
-        // Mercury height uses slowed percentage
         if (thermoMercury) {
           thermoMercury.style.height = mercuryPct + "%";
         }
@@ -769,20 +783,18 @@
           thermoCount.textContent = totalVotes.toLocaleString();
         }
         if (thermoPercent) {
-          // label shows real pct
           thermoPercent.textContent = `${pct.toFixed(1)}% to target`;
         }
         if (thermoTarget) {
           thermoTarget.textContent = `Target: ${TARGET_VOTES.toLocaleString()} votes`;
         }
 
-        // Devlan face mapping with easing so he tracks closer to the mercury
         if (thermoFace) {
-          const MIN_BOTTOM = 20; // your calibrated 0% position
-          const MAX_BOTTOM = 340; // approximate top of the column
+          const MIN_BOTTOM = 20;
+          const MAX_BOTTOM = 340;
 
-          const t = pct / 100; // 0 → 1
-          const eased = Math.pow(t, 0.6); // tweak exponent if needed
+          const t = pct / 100;
+          const eased = Math.pow(t, 0.6);
 
           const faceBottom =
             MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
@@ -814,12 +826,18 @@
         }
 
         try {
-          const tx = await votingContract.vote({ value: voteFeeWei });
+          const overrides = {};
+
+          if (voteFeeWei && !voteFeeWei.isZero()) {
+            overrides.value = voteFeeWei;
+          }
+
+          const tx = await votingContract.vote(overrides);
           await tx.wait();
 
           await refreshVotingStats();
         } catch (err) {
-          console.error(err);
+          console.error("handleVoteClick error:", err);
           const msg =
             (err && err.data && err.data.message) ||
             (err && err.message) ||
