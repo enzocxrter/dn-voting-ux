@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <!-- Remove or update if you add a real favicon -->
+    <!-- Optional favicon – comment out to avoid 404 if you don't have it -->
     <!-- <link rel="icon" href="fabicon.png" /> -->
 
     <style>
@@ -177,8 +177,11 @@
       }
 
       .poh-status-yes {
-        /* darker forest green */
-        color: #1f7a3a;
+        color: #1f7a3a; /* forest green */
+      }
+
+      .poh-status-no {
+        color: #ff4d4f; /* red */
       }
 
       .vote-stats {
@@ -572,7 +575,9 @@
 
       <!-- STATE 2: NOT POH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
-        <p class="verify-text">This wallet is not PoH verified yet.</p>
+        <p class="verify-text">
+          This wallet is not PoH verified yet. Please verify to start voting.
+        </p>
         <a
           href="https://linea.build/hub/apps/sumsub-reusable-identity"
           target="_blank"
@@ -614,14 +619,19 @@
             </div>
           </div>
 
-          <!-- RIGHT: Existing content -->
+          <!-- RIGHT: Voting + Claim content -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
             <!-- PoH status line -->
             <div class="poh-status">
               <span class="poh-status-label">Proof of Humanity verified: </span>
-              <span class="poh-status-yes" id="pohStatusYes">Yes</span>
+              <span
+                id="pohStatusValue"
+                class="poh-status-yes"
+              >
+                Yes
+              </span>
             </div>
 
             <div class="vote-stats">
@@ -697,6 +707,8 @@
       const thermoPercent = document.getElementById("thermoPercent");
       const thermoTarget = document.getElementById("thermoTarget");
 
+      const pohStatusValue = document.getElementById("pohStatusValue");
+
       // ---- Contract constants ----
       const VOTING_CONTRACT_ADDRESS =
         "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
@@ -733,10 +745,29 @@
       let votingContract;
       let claimContract;
 
-      // ---- PoH stub (for now: everyone is treated as verified) ----
-      async function isPohVerifiedStub(address) {
-        // TODO: replace with real PoH check when ready
-        return true;
+      // ---- TEMPORARY PoH STUB ----
+      // Put your PoH-verified wallet addresses in this array (all lowercased)
+      const POH_ALLOWLIST = [
+        // "0xabc123...".toLowerCase(),
+        // "0xdef456...".toLowerCase(),
+      ];
+
+      async function isPohVerified(address) {
+        const addr = address.toLowerCase();
+        return POH_ALLOWLIST.includes(addr);
+      }
+
+      function setPohStatus(isVerified) {
+        if (!pohStatusValue) return;
+        if (isVerified) {
+          pohStatusValue.textContent = "Yes";
+          pohStatusValue.classList.remove("poh-status-no");
+          pohStatusValue.classList.add("poh-status-yes");
+        } else {
+          pohStatusValue.textContent = "No";
+          pohStatusValue.classList.remove("poh-status-yes");
+          pohStatusValue.classList.add("poh-status-no");
+        }
       }
 
       // ---- UI helpers ----
@@ -782,12 +813,15 @@
             signer
           );
 
-          const isVerified = await isPohVerifiedStub(currentAccount);
-          if (!isVerified) {
+          const verified = await isPohVerified(currentAccount);
+
+          if (!verified) {
+            setPohStatus(false);
             showNotVerified();
             return;
           }
 
+          setPohStatus(true);
           await refreshStats();
           showVotingStation();
         } catch (err) {
