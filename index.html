@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <link rel="icon" href="fabicon.png" />
+    <!-- Use dnlogo as favicon so we don't 404 -->
+    <link rel="icon" href="assets/images/dnlogo2.png" />
 
     <style>
       @font-face {
@@ -102,7 +103,7 @@
         transition:
           transform 0.15s ease-out,
           background-image 0.15s ease-out;
-        transform: scale(1);         /* helps avoid first-hover glitch */
+        transform: scale(1); /* helps avoid first-hover glitch */
         will-change: transform;
       }
 
@@ -226,7 +227,7 @@
         transition:
           transform 0.15s ease-out,
           background-image 0.15s ease-out;
-        transform: scale(1);         /* helps avoid first-hover glitch */
+        transform: scale(1); /* helps avoid first-hover glitch */
         will-change: transform;
       }
 
@@ -242,6 +243,14 @@
       .no-votes-text {
         font-size: 1.6rem;
         opacity: 0.9;
+      }
+
+      /* Shared loading state for buttons */
+      .connect-btn.loading,
+      .vote-btn.loading {
+        opacity: 0.6;
+        pointer-events: none;
+        transform: scale(0.95) !important;
       }
 
       /* Not PoH verified panel */
@@ -345,8 +354,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent;
-        border: none;
+        background: transparent; /* no black */
+        border: none; /* no white ring */
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         bottom: 20px; /* JS will adjust based on percentage */
         transition: bottom 0.6s ease-out;
@@ -373,7 +382,7 @@
         align-items: center;
         justify-content: center;
         background: transparent;
-        border: none;
+        border: none; /* no white ring */
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         z-index: 2;
       }
@@ -490,7 +499,7 @@
         </div>
       </div>
 
-      <!-- STATE 2: NOT POH VERIFIED -->
+      <!-- STATE 2: NOT PoH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
         <p>This wallet is not PoH verified yet.</p>
         <a
@@ -565,14 +574,14 @@
             </div>
 
             <div class="vote-action" id="voteAction">
-              <!-- JS will drop the image Vote button or "Come back later" text here -->
+              <!-- JS drops VOTE button or "Come back later" text here -->
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ethers.js CDN (correct path) -->
+    <!-- ethers.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
     <script>
@@ -617,11 +626,13 @@
       let signer = null;
       let votingContract = null;
       let connectedAddress = null;
-      let voteFeeWei = null; // set after we read from chain
+      let voteFeeWei = null;
 
       let MAX_VOTES_PER_DAY = 10;
       const DEFAULT_TARGET_VOTES = 5000;
       let TARGET_VOTES = DEFAULT_TARGET_VOTES;
+
+      let voteButtonRef = null; // track current vote button for loading state
 
       console.log("connectWalletButton:", !!connectWalletButton);
 
@@ -630,6 +641,9 @@
       async function handleConnectClick() {
         try {
           console.log("Connect clicked");
+
+          // show loading style on connect button
+          connectWalletButton.classList.add("loading");
 
           if (typeof window.ethereum === "undefined") {
             alert(
@@ -692,6 +706,7 @@
               }
             }
 
+            // refresh provider after network switch
             provider = new window.ethers.providers.Web3Provider(
               window.ethereum
             );
@@ -727,7 +742,7 @@
             userInfo.totalVotes !== undefined ? userInfo.totalVotes : userInfo[2]
           );
 
-          // PoH check is still stub for now
+          // PoH still stubbed for now
           const isVerified = await checkPohStub(connectedAddress);
 
           if (!isVerified) {
@@ -746,6 +761,9 @@
             (err && err.message) ||
             "Error connecting wallet. Check the console for details.";
           alert(msg);
+        } finally {
+          // always clear loading style
+          connectWalletButton.classList.remove("loading");
         }
       }
 
@@ -804,12 +822,14 @@
 
         // ---- Vote action (button vs "come back later") ----
         voteAction.innerHTML = "";
+        voteButtonRef = null;
 
         if (votesTodayUsed < MAX_VOTES_PER_DAY) {
           const btn = document.createElement("button");
           btn.className = "vote-btn";
           btn.setAttribute("aria-label", "Vote");
           btn.addEventListener("click", handleVoteClick);
+          voteButtonRef = btn;
           voteAction.appendChild(btn);
         } else {
           const p = document.createElement("p");
@@ -826,6 +846,10 @@
         }
 
         try {
+          if (voteButtonRef) {
+            voteButtonRef.classList.add("loading");
+          }
+
           const overrides = {};
 
           if (voteFeeWei && !voteFeeWei.isZero()) {
@@ -833,8 +857,10 @@
           }
 
           const tx = await votingContract.vote(overrides);
+          console.log("vote tx:", tx.hash);
           await tx.wait();
 
+          alert("Vote successful!");
           await refreshVotingStats();
         } catch (err) {
           console.error("handleVoteClick error:", err);
@@ -843,6 +869,10 @@
             (err && err.message) ||
             "Voting transaction failed or was rejected.";
           alert(msg);
+        } finally {
+          if (voteButtonRef) {
+            voteButtonRef.classList.remove("loading");
+          }
         }
       }
 
