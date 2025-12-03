@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <!-- You can fix this path or remove if you don't have a favicon -->
-    <link rel="icon" href="fabicon.png" />
+    <!-- Remove or update if you add a real favicon -->
+    <!-- <link rel="icon" href="fabicon.png" /> -->
 
     <style>
       @font-face {
@@ -246,45 +246,47 @@
       }
 
       /* CLAIM STATION */
-      .claim-station {
+      .claim-section {
         margin-top: 32px;
-        text-align: center;
+        text-align: left;
       }
 
       .claim-title {
-        font-size: clamp(1.5rem, 3vw, 2.4rem);
+        font-size: clamp(1.8rem, 3.5vw, 2.6rem);
         text-transform: uppercase;
         margin-bottom: 12px;
         text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+        text-align: center;
       }
 
       .claim-stats {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
         font-size: 1.3rem;
-        margin-bottom: 20px;
+        margin-bottom: 22px;
       }
 
-      .claim-stat-row {
+      .claim-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         background: rgba(0, 0, 0, 0.45);
-        padding: 8px 16px;
+        padding: 8px 14px;
         border-radius: 10px;
       }
 
-      .claim-stat-label {
+      .claim-label {
         text-align: left;
       }
 
-      .claim-stat-value {
+      .claim-value {
         text-align: right;
       }
 
       .claim-action {
-        margin-top: 8px;
+        text-align: center;
+        font-size: 1.4rem;
       }
 
       .claim-btn {
@@ -314,6 +316,11 @@
         transform: scale(0.98);
       }
 
+      .no-claims-text {
+        font-size: 1.4rem;
+        opacity: 0.9;
+      }
+
       /* Not PoH verified panel */
       .not-verified {
         margin-top: 24px;
@@ -321,17 +328,28 @@
         font-size: 1.4rem;
       }
 
-      .verify-button {
-        margin-top: 12px;
+      .verify-text {
+        margin-bottom: 12px;
+      }
+
+      /* Image-based verify button */
+      .verify-link-img {
         display: inline-block;
-        padding: 10px 24px;
-        border-radius: 999px;
-        background: #000000;
-        color: #ffffff;
-        text-decoration: none;
-        text-transform: uppercase;
-        font-size: 1.2rem;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+        width: 260px;
+        height: 80px;
+        background-image: url("assets/images/verifyhere.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        transition:
+          transform 0.15s ease-out,
+          background-image 0.15s ease-out;
+        will-change: transform;
+      }
+
+      .verify-link-img:hover {
+        background-image: url("assets/images/verifyherehover.png");
+        transform: scale(1.15);
       }
 
       /* LEFT SIDE: VOTE THERMOMETER */
@@ -381,11 +399,7 @@
         left: 0;
         width: 100%;
         height: 0%; /* JS updates this */
-        background: linear-gradient(
-          to top,
-          #12ceec,
-          #00ffe8
-        );
+        background: linear-gradient(to top, #12ceec, #00ffe8);
         box-shadow: 0 0 12px rgba(0, 255, 232, 0.8);
         transition: height 0.6s ease-out;
       }
@@ -395,11 +409,7 @@
         height: 56px;
         border-radius: 999px;
         border: 4px solid rgba(255, 255, 255, 0.95);
-        background: radial-gradient(
-          circle at 30% 30%,
-          #00ffe8,
-          #12ceec
-        );
+        background: radial-gradient(circle at 30% 30%, #00ffe8, #12ceec);
         box-shadow: 0 0 18px rgba(0, 255, 232, 0.7);
         margin-top: -6px;
       }
@@ -519,10 +529,6 @@
         .thermo-wrapper {
           width: 220px;
         }
-
-        .claim-stats {
-          font-size: 1.1rem;
-        }
       }
 
       /* helper: hidden class */
@@ -566,16 +572,13 @@
 
       <!-- STATE 2: NOT POH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
-        <p>This wallet is not PoH verified yet.</p>
+        <p class="verify-text">This wallet is not PoH verified yet.</p>
         <a
-          href="#"
+          href="https://linea.build/hub/apps/sumsub-reusable-identity"
           target="_blank"
           rel="noopener noreferrer"
-          class="verify-button"
-          id="verifyLink"
-        >
-          Verify Here
-        </a>
+          class="verify-link-img"
+        ></a>
       </div>
 
       <!-- STATE 3: VOTING STATION -->
@@ -593,12 +596,12 @@
 
               <!-- Goal face (Devlan bald) at the top -->
               <div class="thermo-face-goal">
-                <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
+                <img src="assets/images/devlanbald.png" alt="Devlan bald" />
               </div>
 
               <!-- Moving face (Devlan with hair) following the mercury -->
               <div class="thermo-face" id="thermoFace">
-                <img src="assets/images/Devlan.png" alt="Devlan face" />
+                <img src="assets/images/devlan.png" alt="Devlan face" />
               </div>
             </div>
 
@@ -618,7 +621,7 @@
             <!-- PoH status line -->
             <div class="poh-status">
               <span class="poh-status-label">Proof of Humanity verified: </span>
-              <span class="poh-status-yes">Yes</span>
+              <span class="poh-status-yes" id="pohStatusYes">Yes</span>
             </div>
 
             <div class="vote-stats">
@@ -639,26 +642,26 @@
             </div>
 
             <div class="vote-action" id="voteAction">
-              <!-- JS will drop the image Vote button or "Come back later" text here -->
+              <!-- JS will drop the image Vote button or message here -->
             </div>
 
             <!-- CLAIM STATION -->
-            <div class="claim-station">
+            <div class="claim-section">
               <div class="claim-title">Claim station</div>
 
               <div class="claim-stats">
-                <div class="claim-stat-row">
-                  <div class="claim-stat-label">Available claims</div>
-                  <div class="claim-stat-value" id="availableClaims">0</div>
+                <div class="claim-row">
+                  <div class="claim-label">Available claims</div>
+                  <div class="claim-value" id="availableClaims">0</div>
                 </div>
-                <div class="claim-stat-row">
-                  <div class="claim-stat-label">Claims left today</div>
-                  <div class="claim-stat-value" id="claimsLeftToday">0/10</div>
+                <div class="claim-row">
+                  <div class="claim-label">Claims left today</div>
+                  <div class="claim-value" id="claimsLeftToday">0/10</div>
                 </div>
               </div>
 
               <div class="claim-action" id="claimAction">
-                <!-- JS will drop the Claim button or "No claims" text -->
+                <!-- JS will drop the Claim button or message here -->
               </div>
             </div>
           </div>
@@ -666,46 +669,16 @@
       </div>
     </div>
 
-    <!-- Ethers v6 UMD build -->
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.12.1/dist/ethers.umd.min.js"></script>
+    <!-- Ethers.js UMD build -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
     <script>
-      // --------- CONFIG ---------
-      const VOTING_CONTRACT_ADDRESS = "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
-      const CLAIM_CONTRACT_ADDRESS = "0xf31540fF97EE8CC6e49765F1De9142f7417130F6";
-
-      // We scale Devlan's meter to this target
-      const TARGET_VOTES = 5000;
-      // UI-only cap for display of "Claims left today"
-      const MAX_CLAIMS_PER_DAY_UI = 10;
-
-      const votingAbi = [
-        "function totalVotesGlobal() view returns (uint256)",
-        "function maxVotesPerDay() view returns (uint8)",
-        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint8 votesLeft)",
-        "function voteFeeWei() view returns (uint256)",
-        "function vote() payable"
-      ];
-
-      const claimAbi = [
-        "function claimableVotes(address user) view returns (uint256)",
-        "function claimableEth(address user) view returns (uint256)",
-        "function ethPerVoteWei() view returns (uint256)",
-        "function claim()"
-      ];
-
-      // --------- GLOBAL STATE ---------
-      let provider;
-      let signer;
-      let currentAccount;
-      let votingContract;
-      let claimContract;
-
-      // DOM elements
+      // ---- DOM elements ----
       const connectSection = document.getElementById("connectSection");
       const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
       const voteAction = document.getElementById("voteAction");
+      const claimAction = document.getElementById("claimAction");
 
       const totalVotesEl = document.getElementById("totalVotes");
       const userTotalVotesEl = document.getElementById("userTotalVotes");
@@ -713,9 +686,9 @@
 
       const availableClaimsEl = document.getElementById("availableClaims");
       const claimsLeftTodayEl = document.getElementById("claimsLeftToday");
-      const claimAction = document.getElementById("claimAction");
 
-      const connectWalletButton = document.getElementById("connectWalletButton");
+      const connectWalletButton =
+        document.getElementById("connectWalletButton");
 
       // Thermometer elements
       const thermoMercury = document.getElementById("thermoMercury");
@@ -724,138 +697,169 @@
       const thermoPercent = document.getElementById("thermoPercent");
       const thermoTarget = document.getElementById("thermoTarget");
 
-      // --------- CONNECT & LOAD ---------
-      connectWalletButton.addEventListener("click", async () => {
-        try {
-          await connectAndLoad();
-        } catch (err) {
-          console.error("Connect error:", err);
-          alert(
-            "Failed to connect wallet. Check console for details and make sure MetaMask is unlocked."
-          );
-        }
-      });
+      // ---- Contract constants ----
+      const VOTING_CONTRACT_ADDRESS =
+        "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
+      const CLAIM_CONTRACT_ADDRESS =
+        "0x27d9afD099d947B6D04d2713c2fD357495E13fcd";
 
-      async function connectAndLoad() {
-        if (!window.ethereum) {
-          alert("Please install MetaMask or a compatible wallet.");
-          return;
-        }
+      // Target total votes for the thermometer (visual 100%)
+      const TARGET_VOTES = 5000;
 
-        provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = await provider.getSigner();
-        currentAccount = await signer.getAddress();
+      // ABIs
+      const votingAbi = [
+        "function totalVotesGlobal() view returns (uint256)",
+        "function totalVotesOf(address user) view returns (uint256)",
+        "function votesLeftToday(address user) view returns (uint8)",
+        "function getUserInfo(address user) view returns (uint64, uint8, uint256, uint8)",
+        "function maxVotesPerDay() view returns (uint8)",
+        "function voteFeeWei() view returns (uint256)",
+        "function vote() payable"
+      ];
 
-        votingContract = new ethers.Contract(
-          VOTING_CONTRACT_ADDRESS,
-          votingAbi,
-          signer
-        );
+      const claimAbi = [
+        "function claimableVotes(address user) view returns (uint256)",
+        "function claimableEth(address user) view returns (uint256)",
+        "function ethPerVoteWei() view returns (uint256)",
+        "function dailyClaimsLeft(address user) view returns (uint8)",
+        "function maxClaimsPerDay() view returns (uint8)",
+        "function claim()"
+      ];
 
-        claimContract = new ethers.Contract(
-          CLAIM_CONTRACT_ADDRESS,
-          claimAbi,
-          signer
-        );
+      // Ethers objects
+      let provider;
+      let signer;
+      let currentAccount;
+      let votingContract;
+      let claimContract;
 
-        // Placeholder PoH check – always true for now
-        const isVerified = await checkPoh(currentAccount);
-        if (!isVerified) {
-          showNotVerified();
-          return;
-        }
-
-        await refreshStats();
-      }
-
-      // PoH stub – wire to Sumsub later
-      async function checkPoh(_walletAddress) {
+      // ---- PoH stub (for now: everyone is treated as verified) ----
+      async function isPohVerifiedStub(address) {
+        // TODO: replace with real PoH check when ready
         return true;
       }
 
-      // --------- LOAD ONCHAIN STATS ---------
-      async function refreshStats() {
-        if (!votingContract || !claimContract || !currentAccount) return;
-
-        try {
-          const [
-            maxVotesPerDayBn,
-            userInfo,
-            totalVotesGlobalBn,
-            availableClaimsBn
-          ] = await Promise.all([
-            votingContract.maxVotesPerDay(),
-            votingContract.getUserInfo(currentAccount),
-            votingContract.totalVotesGlobal(),
-            claimContract.claimableVotes(currentAccount)
-          ]);
-
-          const maxVotesPerDay = Number(maxVotesPerDayBn);
-          const [
-            /*dayIndex*/,
-            votesTodayUsedBn,
-            userTotalVotesBn,
-            votesLeftTodayBn
-          ] = userInfo;
-
-          const totalVotesGlobal = Number(totalVotesGlobalBn);
-          const userTotalVotes = Number(userTotalVotesBn);
-          const votesLeftToday = Number(votesLeftTodayBn);
-          const availableClaims = Number(availableClaimsBn);
-
-          // For UI: clamp claims left to 10
-          const claimsLeftToday = Math.min(
-            MAX_CLAIMS_PER_DAY_UI,
-            availableClaims
-          );
-
-          showVotingStation(
-            totalVotesGlobal,
-            userTotalVotes,
-            votesLeftToday,
-            maxVotesPerDay,
-            availableClaims,
-            claimsLeftToday
-          );
-        } catch (err) {
-          console.error("refreshStats error:", err);
-          alert(
-            "Failed to load on-chain stats. Check console and network (Linea Sepolia) in MetaMask."
-          );
-        }
+      // ---- UI helpers ----
+      function showConnect() {
+        connectSection.classList.remove("hidden");
+        notVerifiedSection.classList.add("hidden");
+        votingSection.classList.add("hidden");
       }
 
-      // --------- UI STATE SWITCHING ---------
       function showNotVerified() {
         connectSection.classList.add("hidden");
         votingSection.classList.add("hidden");
         notVerifiedSection.classList.remove("hidden");
       }
 
-      function showVotingStation(
-        totalVotes,
-        userTotalVotes,
-        votesLeftToday,
-        maxVotesPerDay,
-        availableClaims,
-        claimsLeftToday
-      ) {
+      function showVotingStation() {
         connectSection.classList.add("hidden");
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
+      }
 
-        // Basic stats
-        totalVotesEl.textContent = totalVotes.toLocaleString();
-        userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
-        votesTodayEl.textContent = `${votesLeftToday}/${maxVotesPerDay}`;
+      // ---- Wallet connect ----
+      connectWalletButton.addEventListener("click", async () => {
+        try {
+          if (!window.ethereum || !window.ethers) {
+            alert("No wallet found. Please install MetaMask or a compatible wallet.");
+            return;
+          }
 
-        // ---- Thermometer update ----
+          provider = new window.ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = provider.getSigner();
+          currentAccount = await signer.getAddress();
+
+          votingContract = new window.ethers.Contract(
+            VOTING_CONTRACT_ADDRESS,
+            votingAbi,
+            signer
+          );
+          claimContract = new window.ethers.Contract(
+            CLAIM_CONTRACT_ADDRESS,
+            claimAbi,
+            signer
+          );
+
+          const isVerified = await isPohVerifiedStub(currentAccount);
+          if (!isVerified) {
+            showNotVerified();
+            return;
+          }
+
+          await refreshStats();
+          showVotingStation();
+        } catch (err) {
+          console.error("Connect error:", err);
+          alert("Failed to connect wallet.");
+        }
+      });
+
+      // ---- Refresh both vote + claim stats ----
+      async function refreshStats() {
+        if (!votingContract || !claimContract || !currentAccount) return;
+
+        try {
+          const [
+            globalVotesBn,
+            userInfo,
+            maxVotesPerDayBn,
+            voteFeeBn,
+            claimableVotesBn,
+            dailyClaimsLeftBn,
+            maxClaimsPerDayBn
+          ] = await Promise.all([
+            votingContract.totalVotesGlobal(),
+            votingContract.getUserInfo(currentAccount),
+            votingContract.maxVotesPerDay(),
+            votingContract.voteFeeWei(),
+            claimContract.claimableVotes(currentAccount),
+            claimContract.dailyClaimsLeft(currentAccount),
+            claimContract.maxClaimsPerDay()
+          ]);
+
+          const [dayIndex, votesTodayUsedBn, userTotalVotesBn, votesLeftTodayBn] =
+            userInfo;
+
+          const totalVotesGlobal = Number(globalVotesBn);
+          const userTotalVotes = Number(userTotalVotesBn);
+          const votesTodayUsed = Number(votesTodayUsedBn);
+          const votesLeftToday = Number(votesLeftTodayBn);
+          const maxVotesPerDay = Number(maxVotesPerDayBn);
+
+          const availableClaims = Number(claimableVotesBn);
+          const claimsLeftToday = Number(dailyClaimsLeftBn);
+          const maxClaimsPerDay = Number(maxClaimsPerDayBn);
+
+          // Update basic text stats
+          totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
+          userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
+          votesTodayEl.textContent = `${votesLeftToday}/${maxVotesPerDay}`;
+
+          availableClaimsEl.textContent = availableClaims.toString();
+          claimsLeftTodayEl.textContent = `${claimsLeftToday}/${maxClaimsPerDay}`;
+
+          // Update thermometer
+          updateThermometer(totalVotesGlobal);
+
+          // Update vote button / message
+          renderVoteAction(votesLeftToday, maxVotesPerDay, voteFeeBn);
+
+          // Update claim button / message
+          renderClaimAction(availableClaims, claimsLeftToday);
+        } catch (err) {
+          console.error("refreshStats error:", err);
+        }
+      }
+
+      // ---- Thermometer logic ----
+      function updateThermometer(totalVotesGlobal) {
         const pctRaw =
-          TARGET_VOTES > 0 ? (totalVotes / TARGET_VOTES) * 100 : 0;
-        const pct = Math.max(0, Math.min(pctRaw, 100)); // clamp 0–100
+          TARGET_VOTES > 0 ? (totalVotesGlobal / TARGET_VOTES) * 100 : 0;
+        const pct = Math.max(0, Math.min(pctRaw, 100));
 
-        // Mercury: slightly slower than Devlan's pct
+        // Mercury slightly behind Devlan (for vibe)
         const MERCURY_OFFSET = 7;
         const mercuryPct = Math.max(0, Math.min(pct - MERCURY_OFFSET, 100));
 
@@ -863,7 +867,7 @@
           thermoMercury.style.height = mercuryPct + "%";
         }
         if (thermoCount) {
-          thermoCount.textContent = totalVotes.toLocaleString();
+          thermoCount.textContent = totalVotesGlobal.toLocaleString();
         }
         if (thermoPercent) {
           thermoPercent.textContent = `${pct.toFixed(1)}% to target`;
@@ -873,19 +877,21 @@
         }
 
         if (thermoFace) {
-          const MIN_BOTTOM = 20; // your calibrated 0% position
-          const MAX_BOTTOM = 340; // approximate top of the column
+          const MIN_BOTTOM = 20; // calibrated 0% position
+          const MAX_BOTTOM = 340; // approximate top
 
           const t = pct / 100; // 0 → 1
-          const eased = Math.pow(t, 0.6); // easing
+          const eased = Math.pow(t, 0.6);
 
           const faceBottom =
             MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
 
           thermoFace.style.bottom = `${faceBottom}px`;
         }
+      }
 
-        // ---- Vote action (button vs "come back later") ----
+      // ---- Vote action (button vs message) ----
+      function renderVoteAction(votesLeftToday, maxVotesPerDay, voteFeeBn) {
         voteAction.innerHTML = "";
 
         if (votesLeftToday > 0) {
@@ -894,64 +900,62 @@
           btn.setAttribute("aria-label", "Vote");
           btn.addEventListener("click", async () => {
             try {
-              if (!votingContract) {
-                alert("Voting contract not ready");
-                return;
-              }
-              const fee = await votingContract.voteFeeWei();
+              const fee = voteFeeBn || window.ethers.BigNumber.from(0);
               const tx = await votingContract.vote({ value: fee });
               await tx.wait();
               await refreshStats();
             } catch (err) {
               console.error("Vote error:", err);
-              alert(
-                "Vote failed: " +
-                  (err?.shortMessage || err?.message || "Unknown error")
-              );
+              if (err && err.code === 4001) {
+                // user rejected
+                return;
+              }
+              alert("Voting transaction failed.");
             }
           });
           voteAction.appendChild(btn);
         } else {
           const p = document.createElement("p");
           p.className = "no-votes-text";
-          p.textContent = "You’ve used all votes for now. Come back later.";
+          p.textContent =
+            "Woah there brotato, time to Do Nothing, come back and vote again tomorrow";
           voteAction.appendChild(p);
         }
+      }
 
-        // ---- Claim station ----
-        availableClaimsEl.textContent = availableClaims.toString();
-        claimsLeftTodayEl.textContent = `${claimsLeftToday}/${MAX_CLAIMS_PER_DAY_UI}`;
-
+      // ---- Claim action (button vs message) ----
+      function renderClaimAction(availableClaims, claimsLeftToday) {
         claimAction.innerHTML = "";
+
         if (availableClaims > 0 && claimsLeftToday > 0) {
-          const cbtn = document.createElement("button");
-          cbtn.className = "claim-btn";
-          cbtn.setAttribute("aria-label", "Claim");
-          cbtn.addEventListener("click", async () => {
+          const btn = document.createElement("button");
+          btn.className = "claim-btn";
+          btn.setAttribute("aria-label", "Claim");
+          btn.addEventListener("click", async () => {
             try {
-              if (!claimContract) {
-                alert("Claim contract not ready");
-                return;
-              }
               const tx = await claimContract.claim();
               await tx.wait();
               await refreshStats();
             } catch (err) {
               console.error("Claim error:", err);
-              alert(
-                "Claim failed: " +
-                  (err?.shortMessage || err?.message || "Unknown error")
-              );
+              if (err && err.code === 4001) {
+                // user rejected
+                return;
+              }
+              alert("Claim transaction failed.");
             }
           });
-          claimAction.appendChild(cbtn);
+          claimAction.appendChild(btn);
         } else {
           const p = document.createElement("p");
-          p.className = "no-votes-text";
+          p.className = "no-claims-text";
           p.textContent = "No claims available right now.";
           claimAction.appendChild(p);
         }
       }
+
+      // Start in connect state
+      showConnect();
     </script>
   </body>
 </html>
