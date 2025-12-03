@@ -88,21 +88,25 @@
       }
 
       .connect-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-        display: block;
-        width: 260px;
-        height: 80px;
-        background-image: url("assets/images/connect.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+  width: 260px;
+  height: 80px;
+  background-image: url("assets/images/connect.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition:
+    transform 0.15s ease-out,
+    background-image 0.15s ease-out;
+
+  /* TEMP: make sure you can SEE the button even if the image fails */
+  background-color: rgba(0, 0, 0, 0.4);
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+}
 
       /* Grow by 15% on hover + hover image */
       .connect-btn:hover {
