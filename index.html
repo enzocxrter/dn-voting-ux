@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <!-- If this 404s you can remove or point to a real icon -->
-    <link rel="icon" href="fabicon.png" />
+    <!-- Use dnlogo as favicon so we don't 404 -->
+    <link rel="icon" href="assets/images/dnlogo2.png" />
 
     <style>
       @font-face {
@@ -103,6 +103,8 @@
         transition:
           transform 0.15s ease-out,
           background-image 0.15s ease-out;
+        transform: scale(1); /* helps avoid first-hover glitch */
+        will-change: transform;
       }
 
       .connect-btn:hover {
@@ -139,11 +141,12 @@
       .voting-station {
         margin-top: 20px;
         width: 100%;
-        max-width: 540px;
+        max-width: 540px; /* narrower center box */
         text-align: center;
         color: #ffffff;
       }
 
+      /* Layout: thermometer on left, stats on right */
       .voting-layout {
         display: flex;
         gap: 24px;
@@ -177,10 +180,6 @@
         color: #1f7a3a;
       }
 
-      .poh-status-no {
-        color: #ff5c5c;
-      }
-
       .vote-stats {
         display: flex;
         flex-direction: column;
@@ -206,11 +205,13 @@
         text-align: right;
       }
 
+      /* Vote action area */
       .vote-action {
         margin-top: 10px;
         font-size: 1.6rem;
       }
 
+      /* Image-based VOTE button */
       .vote-btn {
         border: none;
         padding: 0;
@@ -226,6 +227,8 @@
         transition:
           transform 0.15s ease-out,
           background-image 0.15s ease-out;
+        transform: scale(1); /* helps avoid first-hover glitch */
+        will-change: transform;
       }
 
       .vote-btn:hover {
@@ -238,46 +241,36 @@
       }
 
       .no-votes-text {
-        font-size: 1.4rem;
-        opacity: 0.95;
-        line-height: 1.3;
+        font-size: 1.6rem;
+        opacity: 0.9;
+      }
+
+      /* Shared loading state for buttons */
+      .connect-btn.loading,
+      .vote-btn.loading {
+        opacity: 0.6;
+        pointer-events: none;
+        transform: scale(0.95) !important;
       }
 
       /* Not PoH verified panel */
       .not-verified {
-        margin-top: 40px;
+        margin-top: 24px;
         text-align: center;
         font-size: 1.4rem;
       }
 
-      .not-verified p {
-        margin-bottom: 18px;
-      }
-
-      .verify-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
+      .verify-button {
+        margin-top: 12px;
         display: inline-block;
-        width: 260px;
-        height: 80px;
-        background-image: url("assets/images/verifyhere.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
-
-      .verify-btn:hover {
-        background-image: url("assets/images/verifyherehover.png");
-        transform: scale(1.15);
-      }
-
-      .verify-btn:active {
-        transform: scale(0.98);
+        padding: 10px 24px;
+        border-radius: 999px;
+        background: #000000;
+        color: #ffffff;
+        text-decoration: none;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
       }
 
       /* LEFT SIDE: VOTE THERMOMETER */
@@ -299,7 +292,7 @@
       .thermo-body {
         position: relative;
         width: 90px;
-        height: 460px;
+        height: 460px; /* tall thermometer */
         margin: 0 auto 12px;
         display: flex;
         flex-direction: column;
@@ -326,7 +319,7 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 0%;
+        height: 0%; /* JS updates this */
         background: linear-gradient(
           to top,
           #12ceec,
@@ -350,6 +343,7 @@
         margin-top: -6px;
       }
 
+      /* Moving face riding the mercury (Devlan with hair) */
       .thermo-face {
         position: absolute;
         left: 50%;
@@ -360,10 +354,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent;
-        border: none;
+        background: transparent; /* no black */
+        border: none; /* no white ring */
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
-        bottom: 20px;
+        bottom: 20px; /* JS will adjust based on percentage */
         transition: bottom 0.6s ease-out;
         z-index: 2;
       }
@@ -375,6 +369,7 @@
         object-fit: contain;
       }
 
+      /* Goal face at the top (Devlan bald) */
       .thermo-face-goal {
         position: absolute;
         left: 50%;
@@ -382,12 +377,12 @@
         height: 78px;
         border-radius: 50%;
         transform: translateX(-50%);
-        top: -6px;
+        top: -6px; /* sits right at the top as the goal */
         display: flex;
         align-items: center;
         justify-content: center;
         background: transparent;
-        border: none;
+        border: none; /* no white ring */
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         z-index: 2;
       }
@@ -418,141 +413,6 @@
       .thermo-target {
         font-size: 0.9rem;
         opacity: 0.7;
-      }
-
-      /* CLAIM STATION */
-      .claim-station {
-        margin-top: 36px;
-        text-align: left;
-      }
-
-      .claim-title {
-        font-size: clamp(1.6rem, 3vw, 2.2rem);
-        text-transform: uppercase;
-        margin-bottom: 12px;
-        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
-      }
-
-      .claim-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        font-size: 1.3rem;
-        margin-bottom: 24px;
-      }
-
-      .claim-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.45);
-        padding: 8px 14px;
-        border-radius: 10px;
-      }
-
-      .claim-label {
-        text-align: left;
-      }
-
-      .claim-value {
-        text-align: right;
-      }
-
-      .claim-action {
-        margin-top: 8px;
-        font-size: 1.4rem;
-      }
-
-      .claim-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-        display: inline-block;
-        width: 220px;
-        height: 70px;
-        background-image: url("assets/images/claim.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
-
-      .claim-btn:hover {
-        background-image: url("assets/images/claimhover.png");
-        transform: scale(1.15);
-      }
-
-      .claim-btn:active {
-        transform: scale(0.98);
-      }
-
-      .no-claims-text {
-        font-size: 1.4rem;
-        opacity: 0.95;
-      }
-
-      /* LEADERBOARD */
-      .leaderboard {
-        margin-top: 60px;
-        width: 100%;
-        max-width: 600px;
-        background: rgba(0, 0, 0, 0.65);
-        border-radius: 18px;
-        padding: 20px 18px 24px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
-      }
-
-      .leaderboard-title {
-        text-align: center;
-        font-size: clamp(1.8rem, 3.5vw, 2.4rem);
-        text-transform: uppercase;
-        margin-bottom: 6px;
-      }
-
-      .leaderboard-subtitle {
-        text-align: center;
-        font-size: 1rem;
-        opacity: 0.8;
-        margin-bottom: 16px;
-      }
-
-      .leaderboard-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 1.1rem;
-      }
-
-      .leaderboard-table thead {
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        opacity: 0.7;
-      }
-
-      .leaderboard-table th,
-      .leaderboard-table td {
-        padding: 8px 6px;
-        text-align: left;
-      }
-
-      .leaderboard-table tbody tr:nth-child(odd) {
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      .leaderboard-rank {
-        width: 40px;
-      }
-
-      .leaderboard-address {
-        font-family: monospace;
-        font-size: 0.95rem;
-      }
-
-      .leaderboard-tag {
-        font-size: 0.9rem;
-        opacity: 0.8;
       }
 
       @media (max-width: 600px) {
@@ -598,12 +458,9 @@
         .thermo-wrapper {
           width: 220px;
         }
-
-        .leaderboard {
-          margin-top: 40px;
-        }
       }
 
+      /* helper: hidden class */
       .hidden {
         display: none !important;
       }
@@ -629,7 +486,7 @@
 
       <h1>DN Voting Platform</h1>
 
-      <!-- STATE 1: CONNECT -->
+      <!-- STATE 1: CONNECT (shown initially) -->
       <div class="connect-wrapper" id="connectSection">
         <button
           class="connect-btn"
@@ -644,17 +501,22 @@
 
       <!-- STATE 2: NOT PoH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
-        <p>
-          This wallet is not Proof of Humanity verified yet. Verify to start
-          causing hair-related damage.
-        </p>
-        <button class="verify-btn" id="verifyHereButton" aria-label="Verify Here"></button>
+        <p>This wallet is not PoH verified yet.</p>
+        <a
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="verify-button"
+          id="verifyLink"
+        >
+          Verify Here
+        </a>
       </div>
 
-      <!-- STATE 3: VOTING & CLAIM STATION -->
+      <!-- STATE 3: VOTING STATION -->
       <div class="voting-station hidden" id="votingSection">
         <div class="voting-layout">
-          <!-- LEFT: Thermometer -->
+          <!-- LEFT: Vote Thermometer -->
           <div class="thermo-wrapper">
             <div class="thermo-title">Vote Heat</div>
 
@@ -664,12 +526,14 @@
               </div>
               <div class="thermo-bulb"></div>
 
+              <!-- Goal face (Devlan bald) at the top -->
               <div class="thermo-face-goal">
-                <img src="assets/images/devlanbald.png" alt="Devlan bald" />
+                <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
               </div>
 
+              <!-- Moving face (Devlan with hair) following the mercury -->
               <div class="thermo-face" id="thermoFace">
-                <img src="assets/images/devlan.png" alt="Devlan face" />
+                <img src="assets/images/Devlan.png" alt="Devlan face" />
               </div>
             </div>
 
@@ -682,13 +546,14 @@
             </div>
           </div>
 
-          <!-- RIGHT: Voting + Claim -->
+          <!-- RIGHT: Existing content -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
+            <!-- PoH status line -->
             <div class="poh-status">
               <span class="poh-status-label">Proof of Humanity verified: </span>
-              <span id="pohStatus" class="poh-status-yes">Yes</span>
+              <span class="poh-status-yes">Yes</span>
             </div>
 
             <div class="vote-stats">
@@ -708,242 +573,222 @@
               </div>
             </div>
 
-            <div class="vote-action" id="voteAction"></div>
-
-            <!-- CLAIM STATION -->
-            <div class="claim-station">
-              <div class="claim-title">Claim station</div>
-
-              <div class="claim-stats">
-                <div class="claim-row">
-                  <div class="claim-label">Available claims</div>
-                  <div class="claim-value" id="availableClaims">0</div>
-                </div>
-                <div class="claim-row">
-                  <div class="claim-label">Claims left today</div>
-                  <div class="claim-value" id="claimsToday">0/10</div>
-                </div>
-              </div>
-
-              <div class="claim-action" id="claimAction"></div>
+            <div class="vote-action" id="voteAction">
+              <!-- JS drops VOTE button or "Come back later" text here -->
             </div>
           </div>
         </div>
       </div>
-
-      <!-- LEADERBOARD -->
-      <div class="leaderboard" id="leaderboardSection">
-        <div class="leaderboard-title">Top Brotato Voters</div>
-        <div class="leaderboard-subtitle">
-          The bravest hair saboteurs in the ecosystem.
-        </div>
-        <table class="leaderboard-table">
-          <thead>
-            <tr>
-              <th class="leaderboard-rank">#</th>
-              <th>Address</th>
-              <th>Votes</th>
-              <th>Tag</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboardBody"></tbody>
-        </table>
-      </div>
     </div>
 
-    <!-- Ethers v6 UMD -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+    <!-- ethers.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
     <script>
-      const { BrowserProvider, Contract } = ethers;
+      console.log("DN Voting script loaded");
 
-      // DOM elements
       const connectSection = document.getElementById("connectSection");
       const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
       const voteAction = document.getElementById("voteAction");
-      const claimAction = document.getElementById("claimAction");
 
       const totalVotesEl = document.getElementById("totalVotes");
       const userTotalVotesEl = document.getElementById("userTotalVotes");
       const votesTodayEl = document.getElementById("votesToday");
 
-      const availableClaimsEl = document.getElementById("availableClaims");
-      const claimsTodayEl = document.getElementById("claimsToday");
+      const connectWalletButton =
+        document.getElementById("connectWalletButton");
 
-      const connectWalletButton = document.getElementById("connectWalletButton");
-      const verifyHereButton = document.getElementById("verifyHereButton");
-      const pohStatusEl = document.getElementById("pohStatus");
-
+      // Thermometer elements
       const thermoMercury = document.getElementById("thermoMercury");
       const thermoFace = document.getElementById("thermoFace");
       const thermoCount = document.getElementById("thermoCount");
       const thermoPercent = document.getElementById("thermoPercent");
       const thermoTarget = document.getElementById("thermoTarget");
 
-      const leaderboardBody = document.getElementById("leaderboardBody");
+      // ---- Chain / contract config ----
+      const LINEA_SEPOLIA_DEC = 59141;
+      const LINEA_SEPOLIA_HEX = "0xe705";
 
-      // Config
-      const MAX_VOTES_PER_DAY_DEFAULT = 10;
-      const MAX_CLAIMS_PER_DAY = 10;
-      const TARGET_VOTES = 5000;
-
-      const VOTE_CONTRACT_ADDRESS =
+      const CONTRACT_ADDRESS =
         "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
-      const CLAIM_CONTRACT_ADDRESS =
-        "0x27d9afD099d947B6D04d2713c2fD357495E13fcd";
 
-      const VOTE_ABI = [
-        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint8 votesLeft)",
-        "function totalVotesGlobal() view returns (uint256)",
+      const CONTRACT_ABI = [
         "function maxVotesPerDay() view returns (uint8)",
         "function voteFeeWei() view returns (uint256)",
+        "function totalVotesGlobal() view returns (uint256)",
+        "function votesLeftToday(address user) view returns (uint8)",
+        "function getUserInfo(address user) view returns (uint64 dayIndex,uint8 votesToday,uint256 totalVotes,uint8 votesLeft)",
         "function vote() payable"
       ];
 
-      const CLAIM_ABI = [
-        "function claimableVotes(address user) view returns (uint256)",
-        "function claimsLeftToday(address user) view returns (uint8)",
-        "function claimOnce()"
-      ];
+      let provider = null;
+      let signer = null;
+      let votingContract = null;
+      let connectedAddress = null;
+      let voteFeeWei = null;
 
-      const POH_ADDRESSES = new Set([
-        "0x54115a13047fb10c3d5849fff1b23efaa010ce09"
-      ]);
+      let MAX_VOTES_PER_DAY = 10;
+      const DEFAULT_TARGET_VOTES = 5000;
+      let TARGET_VOTES = DEFAULT_TARGET_VOTES;
 
-      let provider;
-      let signer;
-      let voteContract;
-      let claimContract;
-      let currentWallet = null;
+      let voteButtonRef = null; // track current vote button for loading state
 
-      function isPohVerified(address) {
-        if (!address) return false;
-        return POH_ADDRESSES.has(address.toLowerCase());
-      }
+      console.log("connectWalletButton:", !!connectWalletButton);
 
-      function setPohStatus(isVerified) {
-        if (!pohStatusEl) return;
-        pohStatusEl.textContent = isVerified ? "Yes" : "No";
-        pohStatusEl.classList.toggle("poh-status-yes", isVerified);
-        pohStatusEl.classList.toggle("poh-status-no", !isVerified);
-      }
+      connectWalletButton.addEventListener("click", handleConnectClick);
 
-      function showConnectOnly() {
-        connectSection.classList.remove("hidden");
-        notVerifiedSection.classList.add("hidden");
-        votingSection.classList.add("hidden");
+      async function handleConnectClick() {
+        try {
+          console.log("Connect clicked");
+
+          // show loading style on connect button
+          connectWalletButton.classList.add("loading");
+
+          if (typeof window.ethereum === "undefined") {
+            alert(
+              "No Web3 wallet detected. Please install MetaMask or another wallet."
+            );
+            return;
+          }
+
+          if (typeof window.ethers === "undefined") {
+            alert("Internal error: ethers.js failed to load.");
+            return;
+          }
+
+          provider = new window.ethers.providers.Web3Provider(
+            window.ethereum
+          );
+          await provider.send("eth_requestAccounts", []);
+
+          let network = await provider.getNetwork();
+          console.log("Current network chainId:", network.chainId);
+
+          if (network.chainId !== LINEA_SEPOLIA_DEC) {
+            try {
+              await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: LINEA_SEPOLIA_HEX }]
+              });
+            } catch (switchError) {
+              if (switchError.code === 4902) {
+                try {
+                  await window.ethereum.request({
+                    method: "wallet_addEthereumChain",
+                    params: [
+                      {
+                        chainId: LINEA_SEPOLIA_HEX,
+                        chainName: "Linea Sepolia",
+                        rpcUrls: ["https://rpc.sepolia.linea.build"],
+                        nativeCurrency: {
+                          name: "Ether",
+                          symbol: "ETH",
+                          decimals: 18
+                        },
+                        blockExplorerUrls: ["https://sepolia.lineascan.build/"]
+                      }
+                    ]
+                  });
+                } catch (addError) {
+                  console.error(addError);
+                  alert(
+                    "Please add the Linea Sepolia network to your wallet and try again."
+                  );
+                  return;
+                }
+              } else {
+                console.error(switchError);
+                alert(
+                  "Please switch your wallet to the Linea Sepolia network and try again."
+                );
+                return;
+              }
+            }
+
+            // refresh provider after network switch
+            provider = new window.ethers.providers.Web3Provider(
+              window.ethereum
+            );
+            network = await provider.getNetwork();
+            console.log("Network after switch:", network.chainId);
+          }
+
+          signer = provider.getSigner();
+          connectedAddress = await signer.getAddress();
+          console.log("Connected address:", connectedAddress);
+
+          votingContract = new window.ethers.Contract(
+            CONTRACT_ADDRESS,
+            CONTRACT_ABI,
+            signer
+          );
+
+          const [maxPerDayFromChain, fee, userInfo, totalGlobal] =
+            await Promise.all([
+              votingContract.maxVotesPerDay(),
+              votingContract.voteFeeWei(),
+              votingContract.getUserInfo(connectedAddress),
+              votingContract.totalVotesGlobal()
+            ]);
+
+          MAX_VOTES_PER_DAY = Number(maxPerDayFromChain);
+          voteFeeWei = fee;
+
+          const votesTodayUsed = Number(
+            userInfo.votesToday !== undefined ? userInfo.votesToday : userInfo[1]
+          );
+          const userTotalVotes = Number(
+            userInfo.totalVotes !== undefined ? userInfo.totalVotes : userInfo[2]
+          );
+
+          // PoH still stubbed for now
+          const isVerified = await checkPohStub(connectedAddress);
+
+          if (!isVerified) {
+            showNotVerified();
+            return;
+          }
+
+          showVotingStation(
+            Number(totalGlobal),
+            userTotalVotes,
+            votesTodayUsed
+          );
+        } catch (err) {
+          console.error("handleConnectClick error:", err);
+          const msg =
+            (err && err.message) ||
+            "Error connecting wallet. Check the console for details.";
+          alert(msg);
+        } finally {
+          // always clear loading style
+          connectWalletButton.classList.remove("loading");
+        }
       }
 
       function showNotVerified() {
         connectSection.classList.add("hidden");
         votingSection.classList.add("hidden");
         notVerifiedSection.classList.remove("hidden");
-        setPohStatus(false);
       }
 
-      function showVotingStationWrapper(stats) {
+      function showVotingStation(totalVotes, userTotalVotes, votesTodayUsed) {
         connectSection.classList.add("hidden");
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
-        setPohStatus(true);
 
-        console.log("Vote + claim stats:", stats);
-        showVotingStation(stats);
-      }
+        // Basic stats
+        totalVotesEl.textContent = totalVotes.toString();
+        userTotalVotesEl.textContent = userTotalVotes.toString();
+        votesTodayEl.textContent = `${Math.max(
+          MAX_VOTES_PER_DAY - votesTodayUsed,
+          0
+        )}/${MAX_VOTES_PER_DAY}`;
 
-      function secondsUntilNextDayFromDayIndex(userDayIndex) {
-        const nowSec = Math.floor(Date.now() / 1000);
-        const todayIndex = Math.floor(nowSec / 86400);
-
-        if (userDayIndex < todayIndex) {
-          return 0;
-        }
-
-        const nextReset = (todayIndex + 1) * 86400;
-        const diff = nextReset - nowSec;
-        return diff > 0 ? diff : 0;
-      }
-
-      function formatCooldown(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        return { hours, minutes };
-      }
-
-      function shortenAddress(addr) {
-        if (!addr || addr.length < 10) return addr || "";
-        return addr.slice(0, 6) + "..." + addr.slice(-4);
-      }
-
-      const mockLeaders = [
-        {
-          rank: 1,
-          address: "0x54115A13047fB10C3D5849fFF1b23EFAa010CE09",
-          votes: 42,
-          tag: "Hair Nemesis"
-        },
-        {
-          rank: 2,
-          address: "0x1234000000000000000000000000000000BEEF",
-          votes: 24,
-          tag: "Follicle Foe"
-        },
-        {
-          rank: 3,
-          address: "0x9999000000000000000000000000000000DEAD",
-          votes: 17,
-          tag: "Clipper Casual"
-        }
-      ];
-
-      function renderLeaderboard(rows) {
-        leaderboardBody.innerHTML = "";
-        rows.forEach(row => {
-          const tr = document.createElement("tr");
-
-          const tdRank = document.createElement("td");
-          tdRank.className = "leaderboard-rank";
-          tdRank.textContent = row.rank;
-
-          const tdAddr = document.createElement("td");
-          tdAddr.className = "leaderboard-address";
-          tdAddr.textContent = shortenAddress(row.address);
-
-          const tdVotes = document.createElement("td");
-          tdVotes.textContent = row.votes.toString();
-
-          const tdTag = document.createElement("td");
-          tdTag.className = "leaderboard-tag";
-          tdTag.textContent = row.tag || "";
-
-          tr.appendChild(tdRank);
-          tr.appendChild(tdAddr);
-          tr.appendChild(tdVotes);
-          tr.appendChild(tdTag);
-          leaderboardBody.appendChild(tr);
-        });
-      }
-
-      function showVotingStation(stats) {
-        const {
-          totalVotesGlobal,
-          userTotalVotes,
-          votesLeftToday,
-          maxVotesPerDay,
-          dayIndex,
-          claimableVotes,
-          claimsLeftToday
-        } = stats;
-
-        totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
-        userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
-        votesTodayEl.textContent = `${votesLeftToday}/${
-          maxVotesPerDay || MAX_VOTES_PER_DAY_DEFAULT
-        }`;
-
+        // ---- Thermometer update ----
         const pctRaw =
-          TARGET_VOTES > 0 ? (totalVotesGlobal / TARGET_VOTES) * 100 : 0;
+          TARGET_VOTES > 0 ? (totalVotes / TARGET_VOTES) * 100 : 0;
         const pct = Math.max(0, Math.min(pctRaw, 100));
 
         const MERCURY_OFFSET = 7;
@@ -953,7 +798,7 @@
           thermoMercury.style.height = mercuryPct + "%";
         }
         if (thermoCount) {
-          thermoCount.textContent = totalVotesGlobal.toLocaleString();
+          thermoCount.textContent = totalVotes.toLocaleString();
         }
         if (thermoPercent) {
           thermoPercent.textContent = `${pct.toFixed(1)}% to target`;
@@ -965,213 +810,103 @@
         if (thermoFace) {
           const MIN_BOTTOM = 20;
           const MAX_BOTTOM = 340;
+
           const t = pct / 100;
           const eased = Math.pow(t, 0.6);
-          const faceBottom = MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
+
+          const faceBottom =
+            MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
+
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
-        // VOTE ACTION
+        // ---- Vote action (button vs "come back later") ----
         voteAction.innerHTML = "";
-        if (votesLeftToday > 0) {
+        voteButtonRef = null;
+
+        if (votesTodayUsed < MAX_VOTES_PER_DAY) {
           const btn = document.createElement("button");
           btn.className = "vote-btn";
           btn.setAttribute("aria-label", "Vote");
           btn.addEventListener("click", handleVoteClick);
+          voteButtonRef = btn;
           voteAction.appendChild(btn);
         } else {
-          const seconds = secondsUntilNextDayFromDayIndex(dayIndex);
-          const { hours, minutes } = formatCooldown(seconds);
-
           const p = document.createElement("p");
           p.className = "no-votes-text";
-
-          if (seconds <= 0) {
-            p.textContent =
-              "Woah there brotato, time to Do Nothing. You can vote again very soon.";
-          } else {
-            p.textContent = `Woah there brotato, time to Do Nothing, you can vote again in ${hours} hours ${minutes} minutes`;
-          }
+          p.textContent = "You’ve used all votes for now. Come back later.";
           voteAction.appendChild(p);
         }
-
-        // CLAIM STATION
-        availableClaimsEl.textContent = claimableVotes.toString();
-        claimsTodayEl.textContent = `${claimsLeftToday}/${MAX_CLAIMS_PER_DAY}`;
-
-        claimAction.innerHTML = "";
-        if (claimableVotes > 0 && claimsLeftToday > 0) {
-          const btn = document.createElement("button");
-          btn.className = "claim-btn";
-          btn.setAttribute("aria-label", "Claim");
-          btn.addEventListener("click", handleClaimClick);
-          claimAction.appendChild(btn);
-        } else {
-          const p = document.createElement("p");
-          p.className = "no-claims-text";
-          p.textContent = "No claims available right now.";
-          claimAction.appendChild(p);
-        }
-      }
-
-      async function ensureProvider() {
-        if (!window.ethereum) {
-          alert("No wallet found. Please install MetaMask or a compatible wallet.");
-          throw new Error("no ethereum");
-        }
-
-        if (!provider) {
-          provider = new BrowserProvider(window.ethereum);
-        }
-        if (!signer) {
-          signer = await provider.getSigner();
-        }
-
-        const network = await provider.getNetwork();
-        if (network.chainId !== 59141n) {
-          alert("Please switch your wallet to Linea Sepolia (chainId 59141).");
-          throw new Error("wrong network");
-        }
-
-        if (!voteContract) {
-          voteContract = new Contract(VOTE_CONTRACT_ADDRESS, VOTE_ABI, signer);
-        }
-
-        if (!claimContract) {
-          claimContract = new Contract(
-            CLAIM_CONTRACT_ADDRESS,
-            CLAIM_ABI,
-            signer
-          );
-        }
-      }
-
-      async function connectWallet() {
-        await ensureProvider();
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts"
-        });
-        if (!accounts || !accounts.length) {
-          throw new Error("No account returned");
-        }
-        currentWallet = accounts[0];
-        return currentWallet;
-      }
-
-      async function loadVoteAndClaimStats(walletAddress) {
-        await ensureProvider();
-
-        const [userInfo, totalVotesGlobal, maxVotesPerDayOnChain] =
-          await Promise.all([
-            voteContract.getUserInfo(walletAddress),
-            voteContract.totalVotesGlobal(),
-            voteContract.maxVotesPerDay()
-          ]);
-
-        const [dayIndex, votesToday, userTotalVotes, votesLeftToday] = userInfo;
-
-        let claimableVotes = 0;
-        let claimsLeftToday = 0;
-
-        try {
-          if (claimContract) {
-            const [claimableVotesRaw, claimsLeftTodayRaw] = await Promise.all([
-              claimContract.claimableVotes(walletAddress),
-              claimContract.claimsLeftToday(walletAddress)
-            ]);
-            claimableVotes = Number(claimableVotesRaw);
-            claimsLeftToday = Number(claimsLeftTodayRaw);
-          }
-        } catch (e) {
-          console.warn(
-            "Claim contract view calls failed, using optimistic defaults:",
-            e
-          );
-          // Optimistic fallback: user may have up to userTotalVotes claims, and up to daily cap.
-          claimableVotes = Number(userTotalVotes);
-          claimsLeftToday = MAX_CLAIMS_PER_DAY;
-        }
-
-        return {
-          dayIndex: Number(dayIndex),
-          votesTodayUsed: Number(votesToday),
-          votesLeftToday: Number(votesLeftToday),
-          userTotalVotes: Number(userTotalVotes),
-          totalVotesGlobal: Number(totalVotesGlobal),
-          maxVotesPerDay: Number(maxVotesPerDayOnChain),
-          claimableVotes,
-          claimsLeftToday
-        };
       }
 
       async function handleVoteClick() {
+        if (!votingContract || !signer || !connectedAddress) {
+          alert("Please connect your wallet first.");
+          return;
+        }
+
         try {
-          await ensureProvider();
-          if (!currentWallet) {
-            currentWallet = await connectWallet();
+          if (voteButtonRef) {
+            voteButtonRef.classList.add("loading");
           }
 
-          const fee = await voteContract.voteFeeWei();
-          const tx = await voteContract.vote({ value: fee });
+          const overrides = {};
+
+          if (voteFeeWei && !voteFeeWei.isZero()) {
+            overrides.value = voteFeeWei;
+          }
+
+          const tx = await votingContract.vote(overrides);
+          console.log("vote tx:", tx.hash);
           await tx.wait();
 
-          const stats = await loadVoteAndClaimStats(currentWallet);
-          showVotingStationWrapper(stats);
+          alert("Vote successful!");
+          await refreshVotingStats();
         } catch (err) {
-          console.error(err);
-          alert("Vote failed: " + (err?.shortMessage || err?.message || "Unknown error"));
+          console.error("handleVoteClick error:", err);
+          const msg =
+            (err && err.data && err.data.message) ||
+            (err && err.message) ||
+            "Voting transaction failed or was rejected.";
+          alert(msg);
+        } finally {
+          if (voteButtonRef) {
+            voteButtonRef.classList.remove("loading");
+          }
         }
       }
 
-      async function handleClaimClick() {
+      async function refreshVotingStats() {
+        if (!votingContract || !connectedAddress) return;
+
         try {
-          await ensureProvider();
-          if (!currentWallet) {
-            currentWallet = await connectWallet();
-          }
+          const [userInfo, totalGlobal] = await Promise.all([
+            votingContract.getUserInfo(connectedAddress),
+            votingContract.totalVotesGlobal()
+          ]);
 
-          const tx = await claimContract.claimOnce();
-          await tx.wait();
-
-          const stats = await loadVoteAndClaimStats(currentWallet);
-          showVotingStationWrapper(stats);
-        } catch (err) {
-          console.error(err);
-          alert("Claim failed: " + (err?.shortMessage || err?.message || "Unknown error"));
-        }
-      }
-
-      connectWalletButton.addEventListener("click", async () => {
-        try {
-          const walletAddress = await connectWallet();
-          const poh = isPohVerified(walletAddress);
-
-          if (!poh) {
-            showNotVerified();
-            return;
-          }
-
-          const stats = await loadVoteAndClaimStats(walletAddress);
-          showVotingStationWrapper(stats);
-        } catch (err) {
-          console.error(err);
-          alert(
-            "Failed to connect wallet: " +
-              (err?.shortMessage || err?.message || "Unknown error")
+          const votesTodayUsed = Number(
+            userInfo.votesToday !== undefined ? userInfo.votesToday : userInfo[1]
           );
+          const userTotalVotes = Number(
+            userInfo.totalVotes !== undefined ? userInfo.totalVotes : userInfo[2]
+          );
+
+          showVotingStation(
+            Number(totalGlobal),
+            userTotalVotes,
+            votesTodayUsed
+          );
+        } catch (err) {
+          console.error("Error refreshing stats:", err);
         }
-      });
+      }
 
-      verifyHereButton.addEventListener("click", () => {
-        window.open(
-          "https://linea.build/hub/apps/sumsub-reusable-identity",
-          "_blank",
-          "noopener"
-        );
-      });
-
-      renderLeaderboard(mockLeaders);
-      showConnectOnly();
+      // ---- STUB PoH (to be replaced with real Linea / Sumsub logic) ----
+      async function checkPohStub(walletAddress) {
+        console.log("Checking PoH for (stub)", walletAddress);
+        return true; // flip to false to see "Verify Here" state
+      }
     </script>
   </body>
 </html>
