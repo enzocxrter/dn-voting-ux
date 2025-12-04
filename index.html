@@ -106,7 +106,6 @@
         will-change: transform;
       }
 
-      /* Grow by 15% on hover + hover image */
       .connect-btn:hover {
         background-image: url("assets/images/connecthover.png");
         transform: scale(1.15);
@@ -546,6 +545,12 @@
         opacity: 0.8;
       }
 
+      #leaderboardBody {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
       @media (max-width: 600px) {
         .header {
           height: 80px;
@@ -600,7 +605,6 @@
         }
       }
 
-      /* helper: hidden class */
       .hidden {
         display: none !important;
       }
@@ -713,11 +717,9 @@
               </div>
             </div>
 
-            <div class="vote-action" id="voteAction">
-              <!-- JS will drop the image Vote button or "Come back later" text here -->
-            </div>
+            <div class="vote-action" id="voteAction"></div>
 
-            <!-- CLAIM STATION lives here, in same right-hand box -->
+            <!-- CLAIM STATION -->
             <div class="claim-station hidden" id="claimSection">
               <div class="claim-title">Claim station</div>
 
@@ -738,9 +740,7 @@
                 </div>
               </div>
 
-              <div class="claim-action" id="claimAction">
-                <!-- JS will insert a Claim button or explanatory text -->
-              </div>
+              <div class="claim-action" id="claimAction"></div>
             </div>
           </div>
         </div>
@@ -748,7 +748,7 @@
 
       <!-- LEADERBOARD (bottom full-width box) -->
       <div class="leaderboard" id="leaderboardSection">
-        <div class="leaderboard-title">Top Voters (Demo)</div>
+        <div class="leaderboard-title">Top Voters</div>
 
         <div class="leaderboard-table">
           <div class="leaderboard-row leaderboard-header">
@@ -757,40 +757,12 @@
             <div class="leaderboard-votes">Votes</div>
           </div>
 
-          <div class="leaderboard-row">
-            <div class="leaderboard-rank">#1</div>
-            <div class="leaderboard-address">0xDeAd...BEEF</div>
-            <div class="leaderboard-votes">420</div>
-          </div>
-
-          <div class="leaderboard-row">
-            <div class="leaderboard-rank">#2</div>
-            <div class="leaderboard-address">0xCafe...Babe</div>
-            <div class="leaderboard-votes">369</div>
-          </div>
-
-          <div class="leaderboard-row">
-            <div class="leaderboard-rank">#3</div>
-            <div class="leaderboard-address">0xBrot...Ato0</div>
-            <div class="leaderboard-votes">213</div>
-          </div>
-
-          <div class="leaderboard-row">
-            <div class="leaderboard-rank">#4</div>
-            <div class="leaderboard-address">0xLine...A420</div>
-            <div class="leaderboard-votes">150</div>
-          </div>
-
-          <div class="leaderboard-row">
-            <div class="leaderboard-rank">#5</div>
-            <div class="leaderboard-address">0xDoNu...Thin</div>
-            <div class="leaderboard-votes">99</div>
-          </div>
+          <!-- JS fills this -->
+          <div id="leaderboardBody"></div>
         </div>
 
-        <div class="leaderboard-note">
-          Leaderboard currently uses demo data. It’ll be wired to on-chain votes
-          soon.
+        <div class="leaderboard-note" id="leaderboardNote">
+          Loading leaderboard from on-chain votes...
         </div>
       </div>
     </div>
@@ -806,9 +778,11 @@
         "0x27d9afD099d947B6D04d2713c2fD357495E13fcd";
       const LINEA_SEPOLIA_CHAIN_ID_HEX = "0xe705"; // 59141
       const TARGET_VOTES = 5000; // goal for thermometer
+      const LEADERBOARD_LIMIT = 10; // top N wallets
 
-      // Minimal ABIs (only what the UI needs)
+      // Minimal ABIs
       const votingAbi = [
+        "event Voted(address indexed voter,uint64 dayIndex,uint8 votesToday,uint256 userTotalVotes,uint256 totalVotesGlobal)",
         "function maxVotesPerDay() view returns (uint8)",
         "function voteFeeWei() view returns (uint256)",
         "function votesLeftToday(address) view returns (uint8)",
@@ -854,6 +828,10 @@
       const claimsTodayEl = document.getElementById("claimsToday");
       const claimAction = document.getElementById("claimAction");
 
+      // Leaderboard
+      const leaderboardBody = document.getElementById("leaderboardBody");
+      const leaderboardNote = document.getElementById("leaderboardNote");
+
       // --------- ETHERS STATE ---------
       let provider;
       let signer;
@@ -881,7 +859,7 @@
       connectWalletButton.addEventListener("click", async () => {
         try {
           await connectWalletAndInit();
-          const isVerified = await checkPohStub(signerAddress); // PoH stub for now
+          const isVerified = await checkPohStub(signerAddress); // PoH stub
           if (!isVerified) {
             showNotVerified();
             return;
@@ -903,10 +881,8 @@
           throw new Error("No window.ethereum");
         }
 
-        // Request accounts
         await window.ethereum.request({ method: "eth_requestAccounts" });
 
-        // Ensure Linea Sepolia
         let chainId = await window.ethereum.request({ method: "eth_chainId" });
         if (chainId.toLowerCase() !== LINEA_SEPOLIA_CHAIN_ID_HEX) {
           try {
@@ -915,7 +891,6 @@
               params: [{ chainId: LINEA_SEPOLIA_CHAIN_ID_HEX }]
             });
           } catch (switchError) {
-            // If chain not added, try to add
             if (switchError.code === 4902) {
               await window.ethereum.request({
                 method: "wallet_addEthereumChain",
@@ -939,7 +914,6 @@
           }
         }
 
-        // Set up ethers v6 provider/signer
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         signerAddress = await signer.getAddress();
@@ -955,7 +929,6 @@
           signer
         );
 
-        // Load config from contracts
         const [maxVotesBn, maxClaimsBn] = await Promise.all([
           votingContract.maxVotesPerDay(),
           claimContract.maxClaimsPerDay()
@@ -976,7 +949,6 @@
       async function refreshUi() {
         if (!votingContract || !claimContract || !signerAddress) return;
 
-        // Load everything we need in parallel
         const [
           voteFeeWeiBn,
           userInfo,
@@ -993,7 +965,6 @@
 
         lastVoteFeeWei = voteFeeWeiBn;
 
-        // Voting stats
         const totalVotesGlobal = Number(totalVotesGlobalBn);
         const userTotalVotes = Number(userInfo.totalVotes);
         const votesTodayUsed = Number(userInfo.votesToday);
@@ -1006,12 +977,14 @@
           votesRemaining
         );
 
-        // Claim stats
         const claimableVotes = Number(userClaimInfo.votesAvailable);
         const claimsLeftToday = Number(userClaimInfo.claimsLeftToday);
         const claimableEthStr = ethers.formatEther(claimableEthWeiBn);
 
         updateClaimSection(claimableVotes, claimableEthStr, claimsLeftToday);
+
+        // Also update leaderboard from on-chain events
+        await loadLeaderboard();
       }
 
       function updateVotingSection(
@@ -1028,12 +1001,10 @@
         userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
         votesTodayEl.textContent = `${votesRemaining}/${maxVotesPerDay}`;
 
-        // ---- Thermometer update ----
         const pctRaw =
           TARGET_VOTES > 0 ? (totalVotesGlobal / TARGET_VOTES) * 100 : 0;
-        const pct = Math.max(0, Math.min(pctRaw, 100)); // clamp 0–100
+        const pct = Math.max(0, Math.min(pctRaw, 100));
 
-        // Mercury slightly "behind" for style
         const MERCURY_OFFSET = 7;
         const mercuryPct = Math.max(0, Math.min(pct - MERCURY_OFFSET, 100));
 
@@ -1050,13 +1021,12 @@
           thermoTarget.textContent = `Target: ${TARGET_VOTES.toLocaleString()} votes`;
         }
 
-        // Devlan face mapping with easing
         if (thermoFace) {
-          const MIN_BOTTOM = 20; // your calibrated 0% position
-          const MAX_BOTTOM = 340; // approximate top of the column
+          const MIN_BOTTOM = 20;
+          const MAX_BOTTOM = 340;
 
-          const t = pct / 100; // 0 → 1
-          const eased = Math.pow(t, 0.6); // tuned exponent
+          const t = pct / 100;
+          const eased = Math.pow(t, 0.6);
 
           const faceBottom =
             MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
@@ -1064,7 +1034,6 @@
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
-        // ---- Vote action ----
         voteAction.innerHTML = "";
 
         if (votesRemaining > 0) {
@@ -1090,7 +1059,6 @@
 
         claimableVotesEl.textContent = claimableVotes.toLocaleString();
 
-        // Format ETH (shorten a bit)
         const ethNum = Number(claimableEthStr);
         const prettyEth =
           !isNaN(ethNum) && ethNum > 0
@@ -1106,7 +1074,6 @@
           const btn = document.createElement("button");
           btn.className = "claim-btn";
           btn.setAttribute("aria-label", "Claim");
-          // no text content – pure image button
           btn.addEventListener("click", handleClaimClick);
           claimAction.appendChild(btn);
         } else if (claimableVotes === 0 && claimsLeftToday > 0) {
@@ -1121,6 +1088,86 @@
           p.textContent =
             "You’ve used all claims for this 24-hour window. Come back later.";
           claimAction.appendChild(p);
+        }
+      }
+
+      // --------- LEADERBOARD (from Voted events) ---------
+      function shortenAddress(addr) {
+        if (!addr || addr.length < 10) return addr;
+        return addr.slice(0, 6) + "..." + addr.slice(-4);
+      }
+
+      async function loadLeaderboard() {
+        if (!votingContract || !leaderboardBody) return;
+
+        try {
+          leaderboardNote.textContent =
+            "Loading leaderboard from on-chain votes...";
+
+          const filter = votingContract.filters.Voted();
+          // fromBlock can be tuned later to the deployment block if needed
+          const logs = await votingContract.queryFilter(filter, 0, "latest");
+
+          const map = new Map(); // address -> BigInt totalVotes
+
+          for (const log of logs) {
+            const args = log.args;
+            if (!args) continue;
+            const voter = args.voter;
+            const userTotalVotes = args.userTotalVotes;
+            // Keep the latest totalVotes we see (events are in ascending block order)
+            map.set(voter, userTotalVotes);
+          }
+
+          const entries = Array.from(map.entries()).map(([addr, total]) => ({
+            address: addr,
+            totalVotes: BigInt(total.toString())
+          }));
+
+          entries.sort((a, b) => {
+            if (a.totalVotes === b.totalVotes) return 0;
+            return a.totalVotes > b.totalVotes ? -1 : 1;
+          });
+
+          const top = entries.slice(0, LEADERBOARD_LIMIT);
+
+          leaderboardBody.innerHTML = "";
+
+          if (top.length === 0) {
+            leaderboardNote.textContent =
+              "No votes yet. Be the first degens to push Devlan to the top.";
+            return;
+          }
+
+          top.forEach((item, index) => {
+            const row = document.createElement("div");
+            row.className = "leaderboard-row";
+
+            const rank = document.createElement("div");
+            rank.className = "leaderboard-rank";
+            rank.textContent = "#" + (index + 1);
+
+            const addr = document.createElement("div");
+            addr.className = "leaderboard-address";
+            addr.textContent = shortenAddress(item.address);
+
+            const votes = document.createElement("div");
+            votes.className = "leaderboard-votes";
+            votes.textContent = item.totalVotes.toString();
+
+            row.appendChild(rank);
+            row.appendChild(addr);
+            row.appendChild(votes);
+
+            leaderboardBody.appendChild(row);
+          });
+
+          leaderboardNote.textContent =
+            "Leaderboard updates automatically as votes are cast.";
+        } catch (err) {
+          console.error("Leaderboard error:", err);
+          leaderboardNote.textContent =
+            "Unable to load leaderboard from chain right now.";
         }
       }
 
@@ -1188,7 +1235,6 @@
 
       // --------- PoH STUB (always true for now) ---------
       async function checkPohStub(_walletAddress) {
-        // Hook Sumsub / Linea PoH here later.
         return true;
       }
     </script>
