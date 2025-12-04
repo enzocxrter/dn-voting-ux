@@ -180,11 +180,11 @@
       }
 
       .poh-status-yes {
-        color: #1f7a3a; /* darker forest green */
+        color: #00ffe8; /* same cyan as rank text */
         text-shadow:
           0 0 3px #000,
           0 0 6px #000,
-          0 0 10px #000; /* stronger edge so it pops */
+          0 0 10px #000;
       }
 
       .poh-rank {
@@ -197,8 +197,8 @@
         text-shadow:
           0 0 3px #000,
           0 0 8px #000,
-          0 0 12px #000;
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.7); /* dark outline behind pill */
+          0 0 12px #000; /* black glow only */
+        /* removed outer black ring box-shadow */
       }
 
       .vote-stats,
@@ -560,7 +560,7 @@
         }
 
         .poh-status {
-          font-size: 1.4rem; /* still bigger on mobile */
+          font-size: 1.4rem;
         }
 
         .voting-layout {
@@ -860,7 +860,7 @@
 
         if (userRank && userRank > 0) {
           const title = getRankTitle(userRank);
-          userRankLabel.textContent = `#${userRank} — ${title}`;
+          userRankLabel.textContent = `Your rank = #${userRank} - ${title}`;
           userRankLabel.classList.remove("hidden");
         } else {
           userRankLabel.textContent = "";
