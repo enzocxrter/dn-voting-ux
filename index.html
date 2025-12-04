@@ -146,7 +146,7 @@
         color: #ffffff;
       }
 
-      /* Layout: thermometer on left, stats on right */
+      /* Layout: thermometer on left, vote+claim on right */
       .voting-layout {
         display: flex;
         gap: 24px;
@@ -346,8 +346,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent; /* no black */
-        border: none; /* no white ring */
+        background: transparent;
+        border: none;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         bottom: 20px; /* JS will adjust based on percentage */
         transition: bottom 0.6s ease-out;
@@ -374,7 +374,7 @@
         align-items: center;
         justify-content: center;
         background: transparent;
-        border: none; /* no white ring */
+        border: none;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         z-index: 2;
       }
@@ -407,7 +407,7 @@
         opacity: 0.7;
       }
 
-      /* CLAIM STATION (inside same box, under vote UX) */
+      /* CLAIM STATION (inside SAME right-hand box as vote UX) */
       .claim-station {
         margin-top: 30px;
         width: 100%;
@@ -452,32 +452,32 @@
         font-size: 1.4rem;
       }
 
+      /* Image-based CLAIM button (same style as vote) */
       .claim-btn {
         border: none;
-        border-radius: 999px;
-        padding: 10px 32px;
-        font-family: inherit;
-        font-size: 1.4rem;
-        text-transform: uppercase;
+        padding: 0;
+        background: transparent;
         cursor: pointer;
-        background: #000000;
-        color: #ffffff;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+        display: inline-block;
+        width: 220px;
+        height: 70px;
+        background-image: url("assets/images/claim.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
         transition:
           transform 0.15s ease-out,
-          box-shadow 0.15s ease-out,
-          opacity 0.15s ease-out;
+          background-image 0.15s ease-out;
         will-change: transform;
       }
 
       .claim-btn:hover {
-        transform: scale(1.05) translateY(-1px);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
+        background-image: url("assets/images/claimhover.png");
+        transform: scale(1.15);
       }
 
       .claim-btn:active {
-        transform: scale(0.97) translateY(0);
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+        transform: scale(0.98);
       }
 
       .no-claims-text {
@@ -485,7 +485,7 @@
         opacity: 0.9;
       }
 
-      /* LEADERBOARD (dummy, at bottom) */
+      /* LEADERBOARD (bottom full-width box) */
       .leaderboard {
         margin-top: 50px;
         width: 100%;
@@ -590,10 +590,6 @@
           width: 220px;
         }
 
-        .claim-station {
-          max-width: 100%;
-        }
-
         .leaderboard {
           max-width: 100%;
         }
@@ -690,7 +686,7 @@
             </div>
           </div>
 
-          <!-- RIGHT: Stats + vote action -->
+          <!-- RIGHT: Vote + Claim in SAME box -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
@@ -720,37 +716,37 @@
             <div class="vote-action" id="voteAction">
               <!-- JS will drop the image Vote button or "Come back later" text here -->
             </div>
-          </div>
-        </div>
 
-        <!-- CLAIM STATION (inside same box, under vote UX) -->
-        <div class="claim-station hidden" id="claimSection">
-          <div class="claim-title">Claim station</div>
+            <!-- CLAIM STATION lives here, in same right-hand box -->
+            <div class="claim-station hidden" id="claimSection">
+              <div class="claim-title">Claim station</div>
 
-          <div class="claim-stats">
-            <div class="claim-stat-row">
-              <div class="claim-stat-label">Claimable votes</div>
-              <div class="claim-stat-value" id="claimableVotes">0</div>
+              <div class="claim-stats">
+                <div class="claim-stat-row">
+                  <div class="claim-stat-label">Claimable votes</div>
+                  <div class="claim-stat-value" id="claimableVotes">0</div>
+                </div>
+
+                <div class="claim-stat-row">
+                  <div class="claim-stat-label">Claimable ETH</div>
+                  <div class="claim-stat-value" id="claimableEth">0</div>
+                </div>
+
+                <div class="claim-stat-row">
+                  <div class="claim-stat-label">Claims left today</div>
+                  <div class="claim-stat-value" id="claimsToday">0/10</div>
+                </div>
+              </div>
+
+              <div class="claim-action" id="claimAction">
+                <!-- JS will insert a Claim button or explanatory text -->
+              </div>
             </div>
-
-            <div class="claim-stat-row">
-              <div class="claim-stat-label">Claimable ETH</div>
-              <div class="claim-stat-value" id="claimableEth">0</div>
-            </div>
-
-            <div class="claim-stat-row">
-              <div class="claim-stat-label">Claims left today</div>
-              <div class="claim-stat-value" id="claimsToday">0/10</div>
-            </div>
-          </div>
-
-          <div class="claim-action" id="claimAction">
-            <!-- JS will insert a Claim button or explanatory text -->
           </div>
         </div>
       </div>
 
-      <!-- LEADERBOARD (dummy for now) -->
+      <!-- LEADERBOARD (bottom full-width box) -->
       <div class="leaderboard" id="leaderboardSection">
         <div class="leaderboard-title">Top Voters (Demo)</div>
 
@@ -836,7 +832,6 @@
       const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
       const claimSection = document.getElementById("claimSection");
-      const leaderboardSection = document.getElementById("leaderboardSection");
 
       const voteAction = document.getElementById("voteAction");
       const connectWalletButton =
@@ -873,7 +868,8 @@
       (function preloadButtons() {
         const imgs = [
           "assets/images/connecthover.png",
-          "assets/images/votehover.png"
+          "assets/images/votehover.png",
+          "assets/images/claimhover.png"
         ];
         imgs.forEach((src) => {
           const img = new Image();
@@ -974,7 +970,6 @@
         connectSection.classList.add("hidden");
         votingSection.classList.add("hidden");
         claimSection.classList.add("hidden");
-        // leaderboard can stay visible or be hidden; here we keep it visible as promo
         notVerifiedSection.classList.remove("hidden");
       }
 
@@ -1028,8 +1023,6 @@
         connectSection.classList.add("hidden");
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
-        claimSection.classList.remove("hidden");
-        // leaderboard stays always visible as a separate block
 
         totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
         userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
@@ -1112,7 +1105,8 @@
         if (claimableVotes > 0 && claimsLeftToday > 0) {
           const btn = document.createElement("button");
           btn.className = "claim-btn";
-          btn.textContent = "Claim";
+          btn.setAttribute("aria-label", "Claim");
+          // no text content – pure image button
           btn.addEventListener("click", handleClaimClick);
           claimAction.appendChild(btn);
         } else if (claimableVotes === 0 && claimsLeftToday > 0) {
