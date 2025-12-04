@@ -407,17 +407,12 @@
         opacity: 0.7;
       }
 
-      /* CLAIM STATION */
+      /* CLAIM STATION (inside same box, under vote UX) */
       .claim-station {
-        margin-top: 40px;
+        margin-top: 30px;
         width: 100%;
-        max-width: 540px;
         text-align: center;
         color: #ffffff;
-        background: rgba(0, 0, 0, 0.55);
-        border-radius: 16px;
-        padding: 20px 18px 24px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
       }
 
       .claim-title {
@@ -490,6 +485,67 @@
         opacity: 0.9;
       }
 
+      /* LEADERBOARD (dummy, at bottom) */
+      .leaderboard {
+        margin-top: 50px;
+        width: 100%;
+        max-width: 540px;
+        text-align: center;
+        color: #ffffff;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 16px;
+        padding: 20px 18px 24px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+      }
+
+      .leaderboard-title {
+        font-size: clamp(1.6rem, 3vw, 2.4rem);
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      }
+
+      .leaderboard-table {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .leaderboard-row {
+        display: grid;
+        grid-template-columns: 1.2fr 1.4fr 0.8fr;
+        align-items: center;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.45);
+        border-radius: 10px;
+        font-size: 1.1rem;
+      }
+
+      .leaderboard-header {
+        font-size: 1.15rem;
+        text-transform: uppercase;
+        background: rgba(0, 0, 0, 0.7);
+      }
+
+      .leaderboard-rank {
+        text-align: left;
+      }
+
+      .leaderboard-address {
+        text-align: center;
+      }
+
+      .leaderboard-votes {
+        text-align: right;
+      }
+
+      .leaderboard-note {
+        margin-top: 10px;
+        font-size: 0.95rem;
+        opacity: 0.8;
+      }
+
       @media (max-width: 600px) {
         .header {
           height: 80px;
@@ -536,6 +592,15 @@
 
         .claim-station {
           max-width: 100%;
+        }
+
+        .leaderboard {
+          max-width: 100%;
+        }
+
+        .leaderboard-row {
+          grid-template-columns: 0.8fr 1.4fr 0.8fr;
+          font-size: 1rem;
         }
       }
 
@@ -625,7 +690,7 @@
             </div>
           </div>
 
-          <!-- RIGHT: Stats + action -->
+          <!-- RIGHT: Stats + vote action -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
@@ -657,31 +722,79 @@
             </div>
           </div>
         </div>
+
+        <!-- CLAIM STATION (inside same box, under vote UX) -->
+        <div class="claim-station hidden" id="claimSection">
+          <div class="claim-title">Claim station</div>
+
+          <div class="claim-stats">
+            <div class="claim-stat-row">
+              <div class="claim-stat-label">Claimable votes</div>
+              <div class="claim-stat-value" id="claimableVotes">0</div>
+            </div>
+
+            <div class="claim-stat-row">
+              <div class="claim-stat-label">Claimable ETH</div>
+              <div class="claim-stat-value" id="claimableEth">0</div>
+            </div>
+
+            <div class="claim-stat-row">
+              <div class="claim-stat-label">Claims left today</div>
+              <div class="claim-stat-value" id="claimsToday">0/10</div>
+            </div>
+          </div>
+
+          <div class="claim-action" id="claimAction">
+            <!-- JS will insert a Claim button or explanatory text -->
+          </div>
+        </div>
       </div>
 
-      <!-- CLAIM STATION -->
-      <div class="claim-station hidden" id="claimSection">
-        <div class="claim-title">Claim station</div>
+      <!-- LEADERBOARD (dummy for now) -->
+      <div class="leaderboard" id="leaderboardSection">
+        <div class="leaderboard-title">Top Voters (Demo)</div>
 
-        <div class="claim-stats">
-          <div class="claim-stat-row">
-            <div class="claim-stat-label">Claimable votes</div>
-            <div class="claim-stat-value" id="claimableVotes">0</div>
+        <div class="leaderboard-table">
+          <div class="leaderboard-row leaderboard-header">
+            <div class="leaderboard-rank">Rank</div>
+            <div class="leaderboard-address">Wallet</div>
+            <div class="leaderboard-votes">Votes</div>
           </div>
 
-          <div class="claim-stat-row">
-            <div class="claim-stat-label">Claimable ETH</div>
-            <div class="claim-stat-value" id="claimableEth">0</div>
+          <div class="leaderboard-row">
+            <div class="leaderboard-rank">#1</div>
+            <div class="leaderboard-address">0xDeAd...BEEF</div>
+            <div class="leaderboard-votes">420</div>
           </div>
 
-          <div class="claim-stat-row">
-            <div class="claim-stat-label">Claims left today</div>
-            <div class="claim-stat-value" id="claimsToday">0/10</div>
+          <div class="leaderboard-row">
+            <div class="leaderboard-rank">#2</div>
+            <div class="leaderboard-address">0xCafe...Babe</div>
+            <div class="leaderboard-votes">369</div>
+          </div>
+
+          <div class="leaderboard-row">
+            <div class="leaderboard-rank">#3</div>
+            <div class="leaderboard-address">0xBrot...Ato0</div>
+            <div class="leaderboard-votes">213</div>
+          </div>
+
+          <div class="leaderboard-row">
+            <div class="leaderboard-rank">#4</div>
+            <div class="leaderboard-address">0xLine...A420</div>
+            <div class="leaderboard-votes">150</div>
+          </div>
+
+          <div class="leaderboard-row">
+            <div class="leaderboard-rank">#5</div>
+            <div class="leaderboard-address">0xDoNu...Thin</div>
+            <div class="leaderboard-votes">99</div>
           </div>
         </div>
 
-        <div class="claim-action" id="claimAction">
-          <!-- JS will insert a Claim button or explanatory text -->
+        <div class="leaderboard-note">
+          Leaderboard currently uses demo data. It’ll be wired to on-chain votes
+          soon.
         </div>
       </div>
     </div>
@@ -699,7 +812,6 @@
       const TARGET_VOTES = 5000; // goal for thermometer
 
       // Minimal ABIs (only what the UI needs)
-
       const votingAbi = [
         "function maxVotesPerDay() view returns (uint8)",
         "function voteFeeWei() view returns (uint256)",
@@ -724,6 +836,7 @@
       const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
       const claimSection = document.getElementById("claimSection");
+      const leaderboardSection = document.getElementById("leaderboardSection");
 
       const voteAction = document.getElementById("voteAction");
       const connectWalletButton =
@@ -780,7 +893,10 @@
           await refreshUi();
         } catch (err) {
           console.error(err);
-          alert("Failed to connect wallet: " + (err.shortMessage || err.message || "Unknown error"));
+          alert(
+            "Failed to connect wallet: " +
+              (err.shortMessage || err.message || "Unknown error")
+          );
         }
       });
 
@@ -817,9 +933,7 @@
                       symbol: "ETH",
                       decimals: 18
                     },
-                    blockExplorerUrls: [
-                      "https://sepolia.lineascan.build"
-                    ]
+                    blockExplorerUrls: ["https://sepolia.lineascan.build"]
                   }
                 ]
               });
@@ -860,6 +974,7 @@
         connectSection.classList.add("hidden");
         votingSection.classList.add("hidden");
         claimSection.classList.add("hidden");
+        // leaderboard can stay visible or be hidden; here we keep it visible as promo
         notVerifiedSection.classList.remove("hidden");
       }
 
@@ -901,11 +1016,7 @@
         const claimsLeftToday = Number(userClaimInfo.claimsLeftToday);
         const claimableEthStr = ethers.formatEther(claimableEthWeiBn);
 
-        updateClaimSection(
-          claimableVotes,
-          claimableEthStr,
-          claimsLeftToday
-        );
+        updateClaimSection(claimableVotes, claimableEthStr, claimsLeftToday);
       }
 
       function updateVotingSection(
@@ -918,6 +1029,7 @@
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
         claimSection.classList.remove("hidden");
+        // leaderboard stays always visible as a separate block
 
         totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
         userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
@@ -1039,7 +1151,10 @@
           await refreshUi();
         } catch (err) {
           console.error(err);
-          alert("Vote failed: " + (err.shortMessage || err.message || "Unknown error"));
+          alert(
+            "Vote failed: " +
+              (err.shortMessage || err.message || "Unknown error")
+          );
         } finally {
           const btn = document.querySelector(".vote-btn");
           if (btn) {
@@ -1064,7 +1179,10 @@
           await refreshUi();
         } catch (err) {
           console.error(err);
-          alert("Claim failed: " + (err.shortMessage || err.message || "Unknown error"));
+          alert(
+            "Claim failed: " +
+              (err.shortMessage || err.message || "Unknown error")
+          );
         } finally {
           const btn = document.querySelector(".claim-btn");
           if (btn) {
