@@ -6,11 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <!-- Simple data URI favicon to avoid 404s -->
-    <link rel="icon" href="data:," />
-
-    <!-- Ethers.js v5 (UMD build) -->
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <link rel="icon" href="fabicon.png" />
 
     <style>
       @font-face {
@@ -103,12 +99,12 @@
         background-position: center;
         background-repeat: no-repeat;
         background-size: contain;
+        transform: scale(1);
         transition:
           transform 0.15s ease-out,
           background-image 0.15s ease-out;
       }
 
-      /* Grow by 15% on hover + hover image */
       .connect-btn:hover {
         background-image: url("assets/images/connecthover.png");
         transform: scale(1.15);
@@ -139,219 +135,14 @@
         transform: translateY(0);
       }
 
-      /* VOTING STATION */
-      .voting-station {
-        margin-top: 20px;
+      /* TOP SECTION: THERMO + VOTE/CLAIM */
+      .top-layout {
+        margin-top: 30px;
         width: 100%;
-        max-width: 540px; /* narrower center box */
-        text-align: center;
-        color: #ffffff;
-      }
-
-      /* Layout: thermometer on left, stats on right */
-      .voting-layout {
         display: flex;
+        justify-content: center;
         gap: 24px;
         align-items: flex-start;
-        justify-content: center;
-      }
-
-      .voting-content {
-        flex: 1;
-        min-width: 0;
-      }
-
-      .voting-title {
-        font-size: clamp(2rem, 4vw, 3rem);
-        text-transform: uppercase;
-        margin-bottom: 16px;
-        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
-      }
-
-      /* PoH status line */
-      .poh-status {
-        margin-bottom: 6px;
-        font-size: 1.4rem;
-      }
-
-      .poh-status-label {
-        color: #ffffff;
-      }
-
-      .poh-status-yes {
-        color: #00ffe8;
-        text-shadow:
-          0 0 3px #000,
-          0 0 6px #000;
-        font-weight: 700;
-      }
-
-      /* Rank line */
-      .rank-line {
-        margin-bottom: 20px;
-      }
-
-      .rank-label {
-        display: inline-block;
-        padding: 4px 14px;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.6);
-        color: #00ffe8;
-        text-shadow:
-          0 0 3px #000,
-          0 0 6px #000;
-        font-size: 1.4rem;
-        font-weight: 700;
-      }
-
-      .vote-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        font-size: 1.4rem;
-        margin-bottom: 20px;
-      }
-
-      .vote-stat-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.45);
-        padding: 10px 16px;
-        border-radius: 10px;
-      }
-
-      .vote-stat-label {
-        text-align: left;
-      }
-
-      .vote-stat-value {
-        text-align: right;
-      }
-
-      /* Vote action area */
-      .vote-action {
-        margin-top: 10px;
-        font-size: 1.6rem;
-      }
-
-      /* Image-based VOTE button */
-      .vote-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-        display: inline-block;
-        width: 220px;
-        height: 70px;
-        background-image: url("assets/images/vote.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
-
-      .vote-btn:hover {
-        background-image: url("assets/images/votehover.png");
-        transform: scale(1.15);
-      }
-
-      .vote-btn:active {
-        transform: scale(0.98);
-      }
-
-      .no-votes-text {
-        font-size: 1.6rem;
-        opacity: 0.9;
-      }
-
-      /* CLAIM STATION (inside same box, under vote UX) */
-      .claim-section {
-        margin-top: 26px;
-        padding-top: 16px;
-        border-top: 1px dashed rgba(255, 255, 255, 0.25);
-      }
-
-      .claim-title {
-        font-size: 1.4rem;
-        text-transform: uppercase;
-        margin-bottom: 12px;
-        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
-      }
-
-      .claim-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        font-size: 1.3rem;
-        margin-bottom: 18px;
-      }
-
-      .claim-stat-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.4);
-        padding: 8px 14px;
-        border-radius: 10px;
-      }
-
-      .claim-action {
-        margin-top: 6px;
-        font-size: 1.4rem;
-      }
-
-      .claim-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-        display: inline-block;
-        width: 220px;
-        height: 70px;
-        background-image: url("assets/images/claim.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
-
-      .claim-btn:hover {
-        background-image: url("assets/images/claimhover.png");
-        transform: scale(1.15);
-      }
-
-      .claim-btn:active {
-        transform: scale(0.98);
-      }
-
-      .no-claims-text {
-        font-size: 1.4rem;
-        opacity: 0.9;
-      }
-
-      /* Not PoH verified panel */
-      .not-verified {
-        margin-top: 24px;
-        text-align: center;
-        font-size: 1.4rem;
-      }
-
-      .verify-button {
-        margin-top: 12px;
-        display: inline-block;
-        padding: 10px 24px;
-        border-radius: 999px;
-        background: #000000;
-        color: #ffffff;
-        text-decoration: none;
-        text-transform: uppercase;
-        font-size: 1.2rem;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
       }
 
       /* LEFT SIDE: VOTE THERMOMETER */
@@ -435,8 +226,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent; /* no black */
-        border: none; /* no white ring */
+        background: transparent;
+        border: none;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         bottom: 20px; /* JS will adjust based on percentage */
         transition: bottom 0.6s ease-out;
@@ -458,12 +249,12 @@
         height: 78px;
         border-radius: 50%;
         transform: translateX(-50%);
-        top: -6px; /* sits right at the top as the goal */
+        top: -6px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: transparent;
-        border: none; /* no white ring */
+        border: none;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
         z-index: 2;
       }
@@ -496,37 +287,249 @@
         opacity: 0.7;
       }
 
-      /* LEADERBOARD */
-      .leaderboard-wrapper {
+      /* RIGHT COLUMN: VOTE + CLAIM BOXES */
+      .right-column {
+        flex: 1;
+        max-width: 540px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* VOTING STATION */
+      .voting-station {
         width: 100%;
-        max-width: 720px; /* narrower than page */
+        text-align: center;
+        color: #ffffff;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 18px;
+        padding: 18px 18px 22px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+      }
+
+      .voting-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      }
+
+      /* PoH status + Rank line */
+      .poh-status {
+        margin-bottom: 8px;
+        font-size: 1.4rem;
+      }
+
+      .poh-status-label {
+        color: #ffffff;
+      }
+
+      .poh-status-yes {
+        color: #00ffe8;
+        text-shadow: 0 0 4px #000, 0 0 10px #000;
+      }
+
+      .rank-status {
+        margin-bottom: 18px;
+      }
+
+      .rank-pill {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #00ffe8;
+        font-size: 1.4rem;
+        text-shadow: 0 0 4px #000, 0 0 10px #000;
+      }
+
+      .vote-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+      }
+
+      .vote-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 10px 16px;
+        border-radius: 10px;
+      }
+
+      .vote-stat-label {
+        text-align: left;
+      }
+
+      .vote-stat-value {
+        text-align: right;
+      }
+
+      /* Vote action area */
+      .vote-action {
+        margin-top: 10px;
+        font-size: 1.6rem;
+      }
+
+      /* Image-based VOTE button */
+      .vote-btn {
+        border: none;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+        display: inline-block;
+        width: 220px;
+        height: 70px;
+        background-image: url("assets/images/vote.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        transform: scale(1);
+        transition:
+          transform 0.15s ease-out,
+          background-image 0.15s ease-out;
+      }
+
+      .vote-btn:hover {
+        background-image: url("assets/images/votehover.png");
+        transform: scale(1.15);
+      }
+
+      .vote-btn:active {
+        transform: scale(0.98);
+      }
+
+      .no-votes-text {
+        font-size: 1.6rem;
+        opacity: 0.9;
+      }
+
+      /* CLAIM STATION (same box column as vote, just below) */
+      .claim-station {
+        width: 100%;
+        text-align: center;
+        color: #ffffff;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 18px;
+        padding: 18px 18px 22px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+      }
+
+      .claim-title {
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      }
+
+      .claim-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+      }
+
+      .claim-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 10px 16px;
+        border-radius: 10px;
+      }
+
+      .claim-label {
+        text-align: left;
+      }
+
+      .claim-value {
+        text-align: right;
+      }
+
+      .claim-action {
+        margin-top: 10px;
+        font-size: 1.6rem;
+      }
+
+      .claim-btn {
+        border: none;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+        display: inline-block;
+        width: 220px;
+        height: 70px;
+        background-image: url("assets/images/claim.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        transform: scale(1);
+        transition:
+          transform 0.15s ease-out,
+          background-image 0.15s ease-out;
+      }
+
+      .claim-btn:hover {
+        background-image: url("assets/images/claimhover.png");
+        transform: scale(1.15);
+      }
+
+      .claim-btn:active {
+        transform: scale(0.98);
+      }
+
+      .no-claims-text {
+        font-size: 1.6rem;
+        opacity: 0.9;
+      }
+
+      /* Not PoH verified panel */
+      .not-verified {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 1.4rem;
+      }
+
+      .verify-button {
+        margin-top: 12px;
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 999px;
+        background: #000000;
+        color: #ffffff;
+        text-decoration: none;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+      }
+
+      /* LEADERBOARD */
+      .leaderboard {
         margin: 40px auto 0;
-        padding: 18px 16px 22px;
-        background: rgba(0, 0, 0, 0.65);
-        border-radius: 20px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
+        width: 100%;
+        max-width: 720px; /* narrower than full page */
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 18px;
+        padding: 18px 18px 24px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
       }
 
       .leaderboard-title {
-        text-align: center;
-        margin: 0 0 14px;
         font-size: 1.8rem;
         text-transform: uppercase;
-        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+        margin-bottom: 12px;
+        text-align: center;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
       }
 
-      .leaderboard-table-wrapper {
-        overflow-x: auto;
-      }
-
-      table.leaderboard-table {
+      .leaderboard-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 1.1rem;
-      }
-
-      .leaderboard-table thead {
-        background: rgba(255, 255, 255, 0.04);
       }
 
       .leaderboard-table th,
@@ -535,43 +538,40 @@
         text-align: left;
       }
 
-      .leaderboard-table th {
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 0.95rem;
-        letter-spacing: 0.04em;
-      }
-
-      .leaderboard-table tbody tr:nth-child(odd) {
-        background: rgba(0, 0, 0, 0.35);
+      .leaderboard-table thead {
+        background: rgba(255, 255, 255, 0.08);
       }
 
       .leaderboard-table tbody tr:nth-child(even) {
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(255, 255, 255, 0.03);
       }
 
-      .leaderboard-rank-col {
-        width: 60px;
+      .leaderboard-table tbody tr:nth-child(odd) {
+        background: rgba(0, 0, 0, 0.15);
       }
 
-      .leaderboard-wallet-col {
-        width: 50%;
+      .leaderboard-wallet {
         font-family: monospace;
+        font-size: 0.98rem;
       }
 
-      .leaderboard-votes-col {
-        text-align: right;
+      .leaderboard-row-current {
+        outline: 2px solid #00ffe8;
       }
 
-      .leaderboard-empty {
-        text-align: center;
-        padding: 10px 0;
-        opacity: 0.9;
-      }
+      @media (max-width: 800px) {
+        .top-layout {
+          flex-direction: column;
+          align-items: center;
+        }
 
-      .leaderboard-row-me {
-        outline: 2px solid rgba(0, 255, 232, 0.8);
-        outline-offset: -1px;
+        .right-column {
+          max-width: 100%;
+        }
+
+        .thermo-wrapper {
+          width: 220px;
+        }
       }
 
       @media (max-width: 600px) {
@@ -596,12 +596,15 @@
           font-size: 1.6rem;
         }
 
-        .vote-stats {
+        .vote-stats,
+        .claim-stats {
           font-size: 1.2rem;
         }
 
         .vote-btn,
-        .no-votes-text {
+        .claim-btn,
+        .no-votes-text,
+        .no-claims-text {
           font-size: 1.4rem;
         }
 
@@ -609,18 +612,8 @@
           font-size: 1.2rem;
         }
 
-        .voting-layout {
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .thermo-wrapper {
-          width: 220px;
-        }
-
-        .leaderboard-wrapper {
+        .leaderboard {
           max-width: 100%;
-          padding: 14px 10px 18px;
         }
       }
 
@@ -677,41 +670,42 @@
         </a>
       </div>
 
-      <!-- STATE 3: VOTING + CLAIM STATION -->
-      <div class="voting-station hidden" id="votingSection">
-        <div class="voting-layout">
-          <!-- LEFT: Vote Thermometer -->
-          <div class="thermo-wrapper">
-            <div class="thermo-title">Vote Heat</div>
+      <!-- STATE 3: TOP LAYOUT (THERMO + VOTE/CLAIM) -->
+      <div class="top-layout hidden" id="topLayout">
+        <!-- LEFT: Vote Thermometer -->
+        <div class="thermo-wrapper">
+          <div class="thermo-title">Vote Heat</div>
 
-            <div class="thermo-body">
-              <div class="thermo-column">
-                <div class="thermo-mercury" id="thermoMercury"></div>
-              </div>
-              <div class="thermo-bulb"></div>
+          <div class="thermo-body">
+            <div class="thermo-column">
+              <div class="thermo-mercury" id="thermoMercury"></div>
+            </div>
+            <div class="thermo-bulb"></div>
 
-              <!-- Goal face (Devlan bald) at the top -->
-              <div class="thermo-face-goal">
-                <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
-              </div>
-
-              <!-- Moving face (Devlan with hair) following the mercury -->
-              <div class="thermo-face" id="thermoFace">
-                <img src="assets/images/Devlan.png" alt="Devlan face" />
-              </div>
+            <!-- Goal face (Devlan bald) at the top -->
+            <div class="thermo-face-goal">
+              <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
             </div>
 
-            <div class="thermo-labels">
-              <div id="thermoCount">0</div>
-              <div id="thermoPercent">0% to target</div>
-              <div class="thermo-target" id="thermoTarget">
-                Target: 100,000 votes
-              </div>
+            <!-- Moving face (Devlan with hair) following the mercury -->
+            <div class="thermo-face" id="thermoFace">
+              <img src="assets/images/Devlan.png" alt="Devlan face" />
             </div>
           </div>
 
-          <!-- RIGHT: Voting + Claim content -->
-          <div class="voting-content">
+          <div class="thermo-labels">
+            <div id="thermoCount">0</div>
+            <div id="thermoPercent">0% to target</div>
+            <div class="thermo-target" id="thermoTarget">
+              Target: 5,000 votes
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Vote + Claim boxes -->
+        <div class="right-column">
+          <!-- VOTING STATION -->
+          <div class="voting-station" id="votingSection">
             <div class="voting-title">Voting station</div>
 
             <!-- PoH status line -->
@@ -721,13 +715,12 @@
             </div>
 
             <!-- Rank line -->
-            <div class="rank-line">
-              <span class="rank-label" id="rankLabel"
-                >Your rank = #– Not ranked yet</span
-              >
+            <div class="rank-status">
+              <span class="rank-pill" id="rankText">
+                Your rank = #? - Brotato Overlord
+              </span>
             </div>
 
-            <!-- Vote stats -->
             <div class="vote-stats">
               <div class="vote-stat-row">
                 <div class="vote-stat-label">Total votes</div>
@@ -746,541 +739,547 @@
             </div>
 
             <div class="vote-action" id="voteAction">
-              <!-- JS will drop the image Vote button or "Come back later" text here -->
+              <!-- JS will drop the Vote button or "Come back later" text here -->
+            </div>
+          </div>
+
+          <!-- CLAIM STATION -->
+          <div class="claim-station" id="claimSection">
+            <div class="claim-title">Claim station</div>
+
+            <div class="claim-stats">
+              <div class="claim-row">
+                <div class="claim-label">Claimable votes</div>
+                <div class="claim-value" id="claimableVotes">0</div>
+              </div>
+
+              <div class="claim-row">
+                <div class="claim-label">Claims today</div>
+                <div class="claim-value" id="claimsTodayText">0/10</div>
+              </div>
             </div>
 
-            <!-- CLAIM STATION -->
-            <div class="claim-section" id="claimSection">
-              <div class="claim-title">Claim station</div>
-
-              <div class="claim-stats">
-                <div class="claim-stat-row">
-                  <div class="claim-stat-label">Claimable votes</div>
-                  <div class="claim-stat-value" id="claimableVotes">0</div>
-                </div>
-                <div class="claim-stat-row">
-                  <div class="claim-stat-label">Claims today</div>
-                  <div class="claim-stat-value" id="claimsToday">0/10</div>
-                </div>
-              </div>
-
-              <div class="claim-action" id="claimAction">
-                <!-- JS will drop claim button or hint text here -->
-              </div>
+            <div class="claim-action" id="claimAction">
+              <!-- JS drops Claim button or "nothing to claim" text here -->
             </div>
           </div>
         </div>
       </div>
 
-      <!-- LEADERBOARD (bottom, full-width-ish) -->
-      <div class="leaderboard-wrapper" id="leaderboardSection">
+      <!-- LEADERBOARD (bottom, full-ish width) -->
+      <div class="leaderboard hidden" id="leaderboard">
         <div class="leaderboard-title">Top Voters</div>
-        <div class="leaderboard-table-wrapper">
-          <table class="leaderboard-table">
-            <thead>
-              <tr>
-                <th class="leaderboard-rank-col">Rank</th>
-                <th class="leaderboard-wallet-col">Wallet</th>
-                <th class="leaderboard-votes-col">Total Votes</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboardBody">
-              <tr>
-                <td colspan="3" class="leaderboard-empty">
-                  No votes yet. Be the first Brotato.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Wallet</th>
+              <th>Total votes</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <!-- JS populates rows -->
+          </tbody>
+        </table>
       </div>
     </div>
 
+    <!-- Ethers.js v5 UMD -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
     <script>
-      // ---------- CONSTANTS ----------
-      const VOTE_CONTRACT_ADDRESS =
-        "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
-      const CLAIM_CONTRACT_ADDRESS =
-        "0x27d9afD099d947B6D04d2713c2fD357495e13fcd";
-      const LINEA_SEPOLIA_CHAIN_ID = "0xe705"; // 59141 in hex
+      (function () {
+        const VOTING_ADDRESS =
+          "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
+        const CLAIM_ADDRESS =
+          "0x27d9afD099d947B6D04d2713c2fD357495E13fcd";
+        const LINEA_SEPOLIA_CHAIN_ID_DEC = 59141;
+        const LINEA_SEPOLIA_CHAIN_ID_HEX = "0xe705";
 
-      // Voting contract ABI (minimal needed)
-      const VOTING_ABI = [
-        "function maxVotesPerDay() view returns (uint8)",
-        "function votesLeftToday(address user) view returns (uint8)",
-        "function totalVotesOf(address user) view returns (uint256)",
-        "function totalVotesGlobal() view returns (uint256)",
-        "function voteFeeWei() view returns (uint256)",
-        "function vote() external payable",
-        "event Voted(address indexed voter, uint64 indexed dayIndex, uint8 votesToday, uint256 userTotalVotes, uint256 totalVotesGlobal)"
-      ];
+        const VOTING_ABI = [
+          "function totalVotesGlobal() view returns (uint256)",
+          "function totalVotesOf(address) view returns (uint256)",
+          "function votesLeftToday(address) view returns (uint8)",
+          "function maxVotesPerDay() view returns (uint8)",
+          "function vote() payable"
+        ];
 
-      // Claim contract ABI (minimal needed)
-      const CLAIM_ABI = [
-        "function maxClaimsPerDay() view returns (uint8)",
-        "function ethPerVoteWei() view returns (uint256)",
-        "function claimableVotes(address user) view returns (uint256)",
-        "function dailyClaimsLeft(address user) view returns (uint8)",
-        "function getUserClaimInfo(address user) view returns (uint64 dayIndex, uint8 claimsToday, uint256 votesClaimed, uint256 totalVotes, uint256 votesAvailable, uint8 claimsLeftToday)",
-        "function claim() external"
-      ];
+        const CLAIM_ABI = [
+          "function getUserClaimInfo(address) view returns (uint64,uint8,uint256,uint256,uint256,uint8)",
+          "function maxClaimsPerDay() view returns (uint8)",
+          "function claim()"
+        ];
 
-      const RANK_LABELS = [
-        "Brotato Overlord",
-        "Shaven Prophet",
-        "Razor’s Edge",
-        "Lather Lord",
-        "Clipper Commander",
-        "Buzzcut Baron",
-        "Fade Fanatic",
-        "Trim Tyrant",
-        "Comb-Over Casualty",
-        "Hairline Hero",
-        "Follicle Fighter",
-        "Scalp Scout",
-        "Snip Soldier",
-        "Mane Menace",
-        "Brush Bandit",
-        "Split-End Survivor",
-        "Gel Goblin",
-        "Foam Footsoldier",
-        "Comb Crusader",
-        "Lint Lurker"
-      ];
+        const RANK_TITLES = [
+          "Brotato Overlord",
+          "Spud General",
+          "Hashbrown Hero",
+          "Tater Titan",
+          "Mash Master",
+          "Waffle Fry Warlord",
+          "Potato Paladin",
+          "Starch Sergeant",
+          "Golden Chip Chieftain",
+          "Do-Nothing Demi-God"
+        ];
 
-      // Thermometer tuning
-      const TARGET_VOTES = 100000; // you can later change to 5000 if you want
-      const MERCURY_OFFSET = 7; // mercury slightly behind Devlan
-      const MIN_BOTTOM = 20; // your calibrated 0% position
-      const MAX_BOTTOM = 340; // top
+        const LEADERBOARD_KEY = "davy-voting-leaderboard-v1";
 
-      // ---------- DOM ELEMENTS ----------
-      const connectSection = document.getElementById("connectSection");
-      const notVerifiedSection = document.getElementById("notVerifiedSection");
-      const votingSection = document.getElementById("votingSection");
-      const voteAction = document.getElementById("voteAction");
-      const claimAction = document.getElementById("claimAction");
-      const rankLabel = document.getElementById("rankLabel");
+        const connectSection = document.getElementById("connectSection");
+        const notVerifiedSection =
+          document.getElementById("notVerifiedSection");
+        const topLayout = document.getElementById("topLayout");
+        const leaderboardEl = document.getElementById("leaderboard");
 
-      const totalVotesEl = document.getElementById("totalVotes");
-      const userTotalVotesEl = document.getElementById("userTotalVotes");
-      const votesTodayEl = document.getElementById("votesToday");
+        const connectWalletButton =
+          document.getElementById("connectWalletButton");
 
-      const claimableVotesEl = document.getElementById("claimableVotes");
-      const claimsTodayEl = document.getElementById("claimsToday");
+        // Voting UI elements
+        const totalVotesEl = document.getElementById("totalVotes");
+        const userTotalVotesEl =
+          document.getElementById("userTotalVotes");
+        const votesTodayEl = document.getElementById("votesToday");
+        const voteAction = document.getElementById("voteAction");
 
-      const connectWalletButton = document.getElementById("connectWalletButton");
+        // Claim UI elements
+        const claimableVotesEl =
+          document.getElementById("claimableVotes");
+        const claimsTodayTextEl =
+          document.getElementById("claimsTodayText");
+        const claimAction = document.getElementById("claimAction");
 
-      // Thermometer elements
-      const thermoMercury = document.getElementById("thermoMercury");
-      const thermoFace = document.getElementById("thermoFace");
-      const thermoCount = document.getElementById("thermoCount");
-      const thermoPercent = document.getElementById("thermoPercent");
-      const thermoTarget = document.getElementById("thermoTarget");
+        // Thermometer elements
+        const thermoMercury = document.getElementById("thermoMercury");
+        const thermoFace = document.getElementById("thermoFace");
+        const thermoCount = document.getElementById("thermoCount");
+        const thermoPercent = document.getElementById("thermoPercent");
+        const thermoTarget = document.getElementById("thermoTarget");
 
-      // Leaderboard
-      const leaderboardBody = document.getElementById("leaderboardBody");
+        // Rank UI
+        const rankTextEl = document.getElementById("rankText");
 
-      // ---------- ETHERS STATE ----------
-      let provider = null;
-      let signer = null;
-      let voteContract = null;
-      let claimContract = null;
-      let connectedAddress = null;
+        // Leaderboard table body
+        const leaderboardBody =
+          document.getElementById("leaderboardBody");
 
-      // ---------- HELPERS ----------
-      function bnToNumber(bn) {
-        if (!bn) return 0;
-        try {
-          return Number(bn.toString());
-        } catch {
-          return 0;
-        }
-      }
+        const TARGET_VOTES = 5000; // new realistic target
+        let provider = null;
+        let signer = null;
+        let votingContract = null;
+        let claimContract = null;
+        let currentAddress = null;
 
-      function shortenAddress(addr) {
-        if (!addr) return "";
-        return addr.slice(0, 6) + "..." + addr.slice(-4);
-      }
+        // ---------- Local Leaderboard Helpers ----------
 
-      function setHidden(el, hidden) {
-        if (!el) return;
-        if (hidden) el.classList.add("hidden");
-        else el.classList.remove("hidden");
-      }
-
-      // ---------- UI STATE ----------
-      function showNotVerified() {
-        setHidden(connectSection, true);
-        setHidden(votingSection, true);
-        setHidden(notVerifiedSection, false);
-      }
-
-      function showVotingStation() {
-        setHidden(connectSection, true);
-        setHidden(notVerifiedSection, true);
-        setHidden(votingSection, false);
-      }
-
-      // ---------- THERMOMETER ----------
-      function updateThermometer(totalVotes) {
-        const pctRaw =
-          TARGET_VOTES > 0 ? (totalVotes / TARGET_VOTES) * 100 : 0;
-        const pct = Math.max(0, Math.min(pctRaw, 100));
-
-        const mercuryPct = Math.max(
-          0,
-          Math.min(pct - MERCURY_OFFSET, 100)
-        );
-
-        if (thermoMercury) {
-          thermoMercury.style.height = mercuryPct + "%";
-        }
-        if (thermoCount) {
-          thermoCount.textContent = totalVotes.toLocaleString();
-        }
-        if (thermoPercent) {
-          thermoPercent.textContent = `${pct.toFixed(1)}% to target`;
-        }
-        if (thermoTarget) {
-          thermoTarget.textContent = `Target: ${TARGET_VOTES.toLocaleString()} votes`;
-        }
-
-        if (thermoFace) {
-          const t = pct / 100;
-          const eased = Math.pow(t, 0.6);
-          const faceBottom =
-            MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
-          thermoFace.style.bottom = `${faceBottom}px`;
-        }
-      }
-
-      // ---------- DATA LOADERS ----------
-      async function loadVoteStats(address) {
-        if (!voteContract || !address) return;
-
-        const [
-          totalVotesGlobalBN,
-          userTotalVotesBN,
-          votesLeftTodayBN,
-          maxVotesPerDayBN
-        ] = await Promise.all([
-          voteContract.totalVotesGlobal(),
-          voteContract.totalVotesOf(address),
-          voteContract.votesLeftToday(address),
-          voteContract.maxVotesPerDay()
-        ]);
-
-        const totalVotesGlobal = bnToNumber(totalVotesGlobalBN);
-        const userTotalVotes = bnToNumber(userTotalVotesBN);
-        const votesLeftToday = bnToNumber(votesLeftTodayBN);
-        const maxVotesPerDay = bnToNumber(maxVotesPerDayBN);
-
-        const votesUsedToday = Math.max(
-          0,
-          maxVotesPerDay - votesLeftToday
-        );
-
-        totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
-        userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
-        votesTodayEl.textContent = `${votesLeftToday}/${maxVotesPerDay}`;
-
-        updateThermometer(totalVotesGlobal);
-        updateVoteAction(votesLeftToday, maxVotesPerDay);
-      }
-
-      function updateVoteAction(votesLeftToday, maxVotesPerDay) {
-        voteAction.innerHTML = "";
-
-        if (votesLeftToday > 0) {
-          const btn = document.createElement("button");
-          btn.className = "vote-btn";
-          btn.setAttribute("aria-label", "Vote");
-          btn.addEventListener("click", async () => {
-            try {
-              await voteOnChain();
-            } catch (err) {
-              console.error("Vote error:", err);
-              alert("Vote failed. Check console for details.");
-            }
-          });
-          voteAction.appendChild(btn);
-        } else {
-          const p = document.createElement("p");
-          p.className = "no-votes-text";
-          p.textContent =
-            "You’ve used all votes for now. Come back later.";
-          voteAction.appendChild(p);
-        }
-      }
-
-      async function loadClaimInfo(address) {
-        if (!claimContract || !address) return;
-
-        const [info, maxClaimsPerDayBN] = await Promise.all([
-          claimContract.getUserClaimInfo(address),
-          claimContract.maxClaimsPerDay()
-        ]);
-
-        // info is both array-like and has named props (depending on ethers)
-        const claimsToday = bnToNumber(info.claimsToday ?? info[1]);
-        const votesAvailable = bnToNumber(
-          info.votesAvailable ?? info[4]
-        );
-        const claimsLeftToday = bnToNumber(
-          info.claimsLeftToday ?? info[5]
-        );
-        const maxClaimsPerDay = bnToNumber(maxClaimsPerDayBN);
-
-        claimableVotesEl.textContent = votesAvailable.toString();
-        claimsTodayEl.textContent = `${claimsToday}/${maxClaimsPerDay}`;
-
-        claimAction.innerHTML = "";
-
-        if (votesAvailable > 0 && claimsLeftToday > 0) {
-          const btn = document.createElement("button");
-          btn.className = "claim-btn";
-          btn.setAttribute("aria-label", "Claim");
-          btn.addEventListener("click", async () => {
-            try {
-              await claimOnChain();
-            } catch (err) {
-              console.error("Claim error:", err);
-              alert("Claim failed. Check console for details.");
-            }
-          });
-          claimAction.appendChild(btn);
-        } else if (votesAvailable === 0) {
-          const p = document.createElement("p");
-          p.className = "no-claims-text";
-          p.textContent = "No claimable votes yet. Go cast some votes.";
-          claimAction.appendChild(p);
-        } else {
-          const p = document.createElement("p");
-          p.className = "no-claims-text";
-          p.textContent =
-            "You’ve used all claims for now. Come back later.";
-          claimAction.appendChild(p);
-        }
-      }
-
-      async function loadLeaderboard(currentAddr) {
-        if (!voteContract || !provider) return;
-
-        const iface = new ethers.utils.Interface(VOTING_ABI);
-        const eventFragment = iface.getEvent("Voted");
-        const topicVoted = iface.getEventTopic(eventFragment);
-
-        const currentBlock = await provider.getBlockNumber();
-        const fromBlock = Math.max(0, currentBlock - 50000); // recent window
-
-        let logs = [];
-        try {
-          logs = await provider.getLogs({
-            address: VOTE_CONTRACT_ADDRESS,
-            topics: [topicVoted],
-            fromBlock,
-            toBlock: "latest"
-          });
-        } catch (err) {
-          console.error("getLogs error:", err);
-          return;
-        }
-
-        const totals = new Map();
-
-        for (const log of logs) {
+        function loadLeaderboard() {
           try {
-            const parsed = iface.parseLog(log);
-            const voter = parsed.args.voter;
-            const userTotalVotes = bnToNumber(parsed.args.userTotalVotes);
-
-            const prev = totals.get(voter) || 0;
-            // Use the MAX seen so we don't overcount
-            totals.set(voter, Math.max(prev, userTotalVotes));
-          } catch (err) {
-            console.warn("parseLog failed:", err);
+            const raw = localStorage.getItem(LEADERBOARD_KEY);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) return [];
+            return parsed;
+          } catch (e) {
+            console.error("Error loading leaderboard from localStorage", e);
+            return [];
           }
         }
 
-        const entries = Array.from(totals.entries())
-          .map(([address, votes]) => ({ address, votes }))
-          .sort((a, b) => b.votes - a.votes);
-
-        leaderboardBody.innerHTML = "";
-
-        if (entries.length === 0) {
-          const tr = document.createElement("tr");
-          const td = document.createElement("td");
-          td.colSpan = 3;
-          td.className = "leaderboard-empty";
-          td.textContent =
-            "No votes yet. Be the first Brotato.";
-          tr.appendChild(td);
-          leaderboardBody.appendChild(tr);
-          rankLabel.textContent =
-            "Your rank = #– Not ranked yet";
-          return;
-        }
-
-        let myRankIndex = -1;
-        const lowerCurrent = currentAddr
-          ? currentAddr.toLowerCase()
-          : null;
-
-        entries.forEach((entry, index) => {
-          const tr = document.createElement("tr");
-          const rankTd = document.createElement("td");
-          const walletTd = document.createElement("td");
-          const votesTd = document.createElement("td");
-
-          rankTd.textContent = "#" + (index + 1).toString();
-          walletTd.textContent = shortenAddress(entry.address);
-          votesTd.textContent = entry.votes.toLocaleString();
-
-          rankTd.className = "leaderboard-rank-col";
-          walletTd.className = "leaderboard-wallet-col";
-          votesTd.className = "leaderboard-votes-col";
-
-          if (
-            lowerCurrent &&
-            entry.address.toLowerCase() === lowerCurrent
-          ) {
-            myRankIndex = index;
-            tr.classList.add("leaderboard-row-me");
-          }
-
-          tr.appendChild(rankTd);
-          tr.appendChild(walletTd);
-          tr.appendChild(votesTd);
-          leaderboardBody.appendChild(tr);
-        });
-
-        if (myRankIndex >= 0) {
-          const rankNum = myRankIndex + 1;
-          const labelIndex = Math.min(
-            myRankIndex,
-            RANK_LABELS.length - 1
-          );
-          const label = RANK_LABELS[labelIndex];
-          rankLabel.textContent = `Your rank = #${rankNum} - ${label}`;
-        } else {
-          rankLabel.textContent =
-            "Your rank = #– Not ranked yet";
-        }
-      }
-
-      // ---------- ON-CHAIN ACTIONS ----------
-      async function voteOnChain() {
-        if (!voteContract || !signer) throw new Error("Not ready");
-
-        const feeBN = await voteContract.voteFeeWei();
-        const tx = await voteContract.vote({ value: feeBN });
-        console.log("Vote tx sent:", tx.hash);
-        await tx.wait();
-        console.log("Vote tx confirmed");
-
-        await Promise.all([
-          loadVoteStats(connectedAddress),
-          loadClaimInfo(connectedAddress),
-          loadLeaderboard(connectedAddress)
-        ]);
-      }
-
-      async function claimOnChain() {
-        if (!claimContract || !signer) throw new Error("Not ready");
-
-        const tx = await claimContract.claim();
-        console.log("Claim tx sent:", tx.hash);
-        await tx.wait();
-        console.log("Claim tx confirmed");
-
-        await Promise.all([
-          loadClaimInfo(connectedAddress),
-          loadLeaderboard(connectedAddress)
-        ]);
-      }
-
-      // ---------- PoH STUB ----------
-      async function checkPohStub(walletAddress) {
-        console.log("Checking PoH (stub) for", walletAddress);
-        // Always true for now
-        return true;
-      }
-
-      // ---------- CONNECT FLOW ----------
-      async function connectAndInit() {
-        try {
-          if (typeof window.ethereum === "undefined") {
-            alert(
-              "No wallet detected. Please install MetaMask or a compatible wallet."
+        function saveLeaderboard(list) {
+          try {
+            localStorage.setItem(
+              LEADERBOARD_KEY,
+              JSON.stringify(list)
             );
+          } catch (e) {
+            console.error("Error saving leaderboard to localStorage", e);
+          }
+        }
+
+        function upsertLeaderboardEntry(address, totalVotes) {
+          if (!address) return;
+          let list = loadLeaderboard();
+          const addrLower = address.toLowerCase();
+          const existingIndex = list.findIndex(
+            (e) => e.address.toLowerCase() === addrLower
+          );
+          if (existingIndex >= 0) {
+            list[existingIndex].totalVotes = totalVotes;
+          } else {
+            list.push({ address, totalVotes });
+          }
+          list.sort((a, b) => b.totalVotes - a.totalVotes);
+          // keep top 50 only
+          if (list.length > 50) list = list.slice(0, 50);
+          saveLeaderboard(list);
+          return list;
+        }
+
+        function shortAddress(addr) {
+          if (!addr || addr.length < 10) return addr || "";
+          return addr.slice(0, 6) + "..." + addr.slice(-4);
+        }
+
+        function renderLeaderboard(currentAddr) {
+          const list = loadLeaderboard();
+          leaderboardBody.innerHTML = "";
+          if (!list.length) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 3;
+            td.textContent = "No votes yet. Be the first Brotato.";
+            tr.appendChild(td);
+            leaderboardBody.appendChild(tr);
             return;
           }
+          const currentLower = currentAddr
+            ? currentAddr.toLowerCase()
+            : "";
 
-          provider = new ethers.providers.Web3Provider(
-            window.ethereum,
-            "any"
+          list.forEach((entry, index) => {
+            const tr = document.createElement("tr");
+            if (
+              currentLower &&
+              entry.address.toLowerCase() === currentLower
+            ) {
+              tr.classList.add("leaderboard-row-current");
+            }
+
+            const rankTd = document.createElement("td");
+            rankTd.textContent = index + 1;
+
+            const walletTd = document.createElement("td");
+            walletTd.textContent = shortAddress(entry.address);
+            walletTd.className = "leaderboard-wallet";
+
+            const votesTd = document.createElement("td");
+            votesTd.textContent = entry.totalVotes.toString();
+
+            tr.appendChild(rankTd);
+            tr.appendChild(walletTd);
+            tr.appendChild(votesTd);
+            leaderboardBody.appendChild(tr);
+          });
+        }
+
+        function getRankForWallet(addr) {
+          if (!addr) return null;
+          const list = loadLeaderboard();
+          const lower = addr.toLowerCase();
+          const idx = list.findIndex(
+            (e) => e.address.toLowerCase() === lower
+          );
+          if (idx === -1) return null;
+          return idx + 1; // 1-based
+        }
+
+        function updateRankText(addr) {
+          const rank = getRankForWallet(addr);
+          if (!rank) {
+            rankTextEl.textContent =
+              "Your rank = ? - Certified Brotato";
+            return;
+          }
+          const title =
+            RANK_TITLES[rank - 1] || "Certified Brotato";
+          rankTextEl.textContent = `Your rank = #${rank} - ${title}`;
+        }
+
+        // ---------- Thermometer ----------
+
+        function updateThermometer(totalVotes) {
+          const pctRaw =
+            TARGET_VOTES > 0
+              ? (totalVotes / TARGET_VOTES) * 100
+              : 0;
+          const pct = Math.max(0, Math.min(pctRaw, 100));
+
+          const MERCURY_OFFSET = 7;
+          const mercuryPct = Math.max(
+            0,
+            Math.min(pct - MERCURY_OFFSET, 100)
           );
 
-          await provider.send("eth_requestAccounts", []);
-          signer = provider.getSigner();
-          const address = await signer.getAddress();
-          connectedAddress = address;
-          console.log("Connected:", address);
+          if (thermoMercury) {
+            thermoMercury.style.height = mercuryPct + "%";
+          }
+          if (thermoCount) {
+            thermoCount.textContent =
+              (totalVotes || 0).toLocaleString();
+          }
+          if (thermoPercent) {
+            thermoPercent.textContent = `${pct.toFixed(
+              1
+            )}% to target`;
+          }
+          if (thermoTarget) {
+            thermoTarget.textContent = `Target: ${TARGET_VOTES.toLocaleString()} votes`;
+          }
 
-          const network = await provider.getNetwork();
-          const chainHex = "0x" + network.chainId.toString(16);
+          if (thermoFace) {
+            const MIN_BOTTOM = 20;
+            const MAX_BOTTOM = 340;
+            const t = pct / 100;
+            const eased = Math.pow(t, 0.6);
+            const faceBottom =
+              MIN_BOTTOM +
+              (MAX_BOTTOM - MIN_BOTTOM) * eased;
+            thermoFace.style.bottom = `${faceBottom}px`;
+          }
+        }
 
-          if (chainHex !== LINEA_SEPOLIA_CHAIN_ID) {
-            try {
-              await window.ethereum.request({
-                method: "wallet_switchEthereumChain",
-                params: [{ chainId: LINEA_SEPOLIA_CHAIN_ID }]
-              });
-            } catch (switchErr) {
-              console.error("Switch network error:", switchErr);
-              alert(
-                "Please switch your wallet network to Linea Sepolia testnet."
-              );
+        // ---------- UI Update Helpers ----------
+
+        function updateVotingUI({
+          totalVotesGlobal,
+          userTotalVotes,
+          votesLeftToday,
+          maxVotesPerDay
+        }) {
+          totalVotesEl.textContent =
+            (totalVotesGlobal || 0).toLocaleString();
+          userTotalVotesEl.textContent =
+            (userTotalVotes || 0).toLocaleString();
+
+          const left =
+            typeof votesLeftToday === "number"
+              ? votesLeftToday
+              : 0;
+          const max =
+            typeof maxVotesPerDay === "number"
+              ? maxVotesPerDay
+              : 10;
+          votesTodayEl.textContent = `${left}/${max}`;
+
+          voteAction.innerHTML = "";
+          if (left > 0) {
+            const btn = document.createElement("button");
+            btn.className = "vote-btn";
+            btn.setAttribute("aria-label", "Vote");
+            btn.addEventListener("click", onVoteClick);
+            voteAction.appendChild(btn);
+          } else {
+            const p = document.createElement("p");
+            p.className = "no-votes-text";
+            p.textContent =
+              "You’ve used all votes for now. Come back later.";
+            voteAction.appendChild(p);
+          }
+        }
+
+        function updateClaimUI({
+          votesAvailable,
+          claimsToday,
+          claimsLeftToday,
+          maxClaimsPerDay
+        }) {
+          const available =
+            typeof votesAvailable === "number"
+              ? votesAvailable
+              : 0;
+          const leftToday =
+            typeof claimsLeftToday === "number"
+              ? claimsLeftToday
+              : 0;
+          const maxClaims =
+            typeof maxClaimsPerDay === "number"
+              ? maxClaimsPerDay
+              : 10;
+          const usedToday = maxClaims - leftToday;
+
+          claimableVotesEl.textContent =
+            available.toLocaleString();
+          claimsTodayTextEl.textContent = `${usedToday}/${maxClaims}`;
+
+          claimAction.innerHTML = "";
+
+          if (available > 0 && leftToday > 0) {
+            const btn = document.createElement("button");
+            btn.className = "claim-btn";
+            btn.setAttribute("aria-label", "Claim");
+            btn.addEventListener("click", onClaimClick);
+            claimAction.appendChild(btn);
+          } else if (available <= 0) {
+            const p = document.createElement("p");
+            p.className = "no-claims-text";
+            p.textContent =
+              "Nothing to claim yet. Go vote, Brotato.";
+            claimAction.appendChild(p);
+          } else {
+            const p = document.createElement("p");
+            p.className = "no-claims-text";
+            p.textContent =
+              "You’ve used all claims for now. Come back later.";
+            claimAction.appendChild(p);
+          }
+        }
+
+        // ---------- On-chain Fetch ----------
+
+        async function refreshAll() {
+          if (!signer || !votingContract || !claimContract) return;
+
+          const addr = currentAddress;
+          if (!addr) return;
+
+          // Parallel fetch for speed
+          const [
+            totalVotesGlobalBN,
+            userTotalVotesBN,
+            votesLeftTodayBN,
+            maxVotesPerDayBN,
+            claimInfo,
+            maxClaimsPerDayBN
+          ] = await Promise.all([
+            votingContract.totalVotesGlobal(),
+            votingContract.totalVotesOf(addr),
+            votingContract.votesLeftToday(addr),
+            votingContract.maxVotesPerDay(),
+            claimContract.getUserClaimInfo(addr),
+            claimContract.maxClaimsPerDay()
+          ]);
+
+          const totalVotesGlobal = totalVotesGlobalBN.toNumber();
+          const userTotalVotes = userTotalVotesBN.toNumber();
+          const votesLeftToday = votesLeftTodayBN.toNumber();
+          const maxVotesPerDay = maxVotesPerDayBN.toNumber();
+
+          const maxClaimsPerDay = maxClaimsPerDayBN.toNumber();
+
+          // claimInfo = (dayIndex, claimsToday, votesClaimed, totalVotes, votesAvailable, claimsLeftToday)
+          const claimsToday = claimInfo[1].toNumber();
+          const votesAvailable = claimInfo[4].toNumber();
+          const claimsLeftToday = claimInfo[5].toNumber();
+
+          // Update thermometer
+          updateThermometer(totalVotesGlobal);
+
+          // Update voting UI
+          updateVotingUI({
+            totalVotesGlobal,
+            userTotalVotes,
+            votesLeftToday,
+            maxVotesPerDay
+          });
+
+          // Update claim UI
+          updateClaimUI({
+            votesAvailable,
+            claimsToday,
+            claimsLeftToday,
+            maxClaimsPerDay
+          });
+
+          // Leaderboard + rank
+          const list = upsertLeaderboardEntry(
+            addr,
+            userTotalVotes
+          );
+          renderLeaderboard(addr);
+          updateRankText(addr);
+
+          // Show bottom leaderboard if we have any data
+          if (list && list.length > 0) {
+            leaderboardEl.classList.remove("hidden");
+          }
+        }
+
+        // ---------- Click Handlers ----------
+
+        async function onVoteClick() {
+          if (!votingContract || !signer) return;
+          try {
+            const tx = await votingContract.vote({ value: 0 });
+            await tx.wait();
+            await refreshAll();
+          } catch (err) {
+            console.error("Vote tx failed", err);
+            alert("Vote failed. Check console for details.");
+          }
+        }
+
+        async function onClaimClick() {
+          if (!claimContract || !signer) return;
+          try {
+            const tx = await claimContract.claim();
+            await tx.wait();
+            await refreshAll();
+          } catch (err) {
+            console.error("Claim tx failed", err);
+            alert("Claim failed. Check console for details.");
+          }
+        }
+
+        // ---------- Connect + Init ----------
+
+        async function connectAndInit() {
+          try {
+            if (typeof window.ethereum === "undefined") {
+              alert("No wallet found. Please install MetaMask.");
               return;
             }
+
+            const eth = window.ethereum;
+
+            // Ensure Linea Sepolia
+            let chainIdHex = await eth.request({
+              method: "eth_chainId"
+            });
+            if (chainIdHex !== LINEA_SEPOLIA_CHAIN_ID_HEX) {
+              try {
+                await eth.request({
+                  method: "wallet_switchEthereumChain",
+                  params: [{ chainId: LINEA_SEPOLIA_CHAIN_ID_HEX }]
+                });
+                chainIdHex = LINEA_SEPOLIA_CHAIN_ID_HEX;
+              } catch (switchErr) {
+                console.error(
+                  "Could not switch to Linea Sepolia",
+                  switchErr
+                );
+                alert(
+                  "Please switch your wallet to Linea Sepolia (chainId 59141)."
+                );
+                return;
+              }
+            }
+
+            provider = new ethers.providers.Web3Provider(eth);
+            await provider.send("eth_requestAccounts", []);
+            signer = provider.getSigner();
+            currentAddress = await signer.getAddress();
+
+            votingContract = new ethers.Contract(
+              VOTING_ADDRESS,
+              VOTING_ABI,
+              signer
+            );
+
+            claimContract = new ethers.Contract(
+              CLAIM_ADDRESS,
+              CLAIM_ABI,
+              signer
+            );
+
+            // Show main UI
+            connectSection.classList.add("hidden");
+            notVerifiedSection.classList.add("hidden");
+            topLayout.classList.remove("hidden");
+            leaderboardEl.classList.remove("hidden");
+
+            await refreshAll();
+
+            // Optional PoH check stub – always true for now
+            // In future, wire to Linea Sumsub PoH API and show notVerifiedSection if false.
+          } catch (err) {
+            console.error("Connect/init error:", err);
+            alert(
+              "Could not connect wallet. Check console for details."
+            );
           }
-
-          voteContract = new ethers.Contract(
-            VOTE_CONTRACT_ADDRESS,
-            VOTING_ABI,
-            signer
-          );
-          claimContract = new ethers.Contract(
-            CLAIM_CONTRACT_ADDRESS,
-            CLAIM_ABI,
-            signer
-          );
-
-          const isVerified = await checkPohStub(address);
-
-          if (!isVerified) {
-            showNotVerified();
-            return;
-          }
-
-          showVotingStation();
-
-          await Promise.all([
-            loadVoteStats(address),
-            loadClaimInfo(address),
-            loadLeaderboard(address)
-          ]);
-        } catch (err) {
-          console.error("Connect/init error:", err);
-          alert("Could not connect wallet. Check console for details.");
         }
-      }
 
-      connectWalletButton.addEventListener("click", () => {
-        connectAndInit();
-      });
+        connectWalletButton.addEventListener("click", connectAndInit);
+      })();
     </script>
   </body>
 </html>
