@@ -197,7 +197,7 @@
         text-shadow:
           0 0 3px #000,
           0 0 8px #000,
-          0 0 12px #000;
+          0 0 12px #000; /* black glow only */
       }
 
       .vote-stats,
@@ -262,7 +262,7 @@
         transform: scale(0.98);
       }
 
-      /* Image-based CLAIM button */
+      /* Image-based CLAIM button (always visible once connected) */
       .claim-btn {
         border: none;
         padding: 0;
@@ -780,7 +780,9 @@
         "function ethPerVoteWei() view returns (uint256)",
         "function maxClaimsPerDay() view returns (uint8)",
         "function claimableVotes(address user) view returns (uint256)",
+        "function claimableEth(address user) view returns (uint256)",
         "function dailyClaimsLeft(address user) view returns (uint8)",
+        "function getUserClaimInfo(address user) view returns (uint64 dayIndex, uint8 claimsToday, uint256 votesClaimed, uint256 totalVotes, uint256 votesAvailable, uint8 claimsLeftToday)",
         "function claim()",
         "event ClaimedEth(address indexed user, uint64 indexed dayIndex, uint8 claimsToday, uint256 totalVotes, uint256 votesClaimed, uint256 ethAmount)"
       ];
@@ -795,6 +797,14 @@
       function shortenAddress(addr) {
         if (!addr) return "";
         return addr.slice(0, 6) + "..." + addr.slice(-4);
+      }
+
+      function ethFromWei(wei) {
+        try {
+          return window.ethers.formatEther(wei);
+        } catch {
+          return "0";
+        }
       }
 
       function getRankTitle(rank) {
@@ -859,9 +869,7 @@
 
       async function ensureProvider() {
         if (!window.ethereum) {
-          alert(
-            "No injected wallet found. Please install MetaMask or a compatible wallet."
-          );
+          alert("No injected wallet found. Please install MetaMask or a compatible wallet.");
           throw new Error("No wallet");
         }
 
@@ -926,7 +934,6 @@
           await connectAndInit();
         } catch (err) {
           console.error("Connect/init error:", err);
-          alert("Could not connect wallet. Check console for details.");
         }
       });
 
@@ -983,6 +990,7 @@
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
+        // ---- Vote action (button vs "come back later") ----
         voteAction.innerHTML = "";
 
         if (votesTodayUsed < maxVotesPerDay) {
@@ -996,6 +1004,16 @@
           p.className = "no-votes-text";
           p.textContent = "You’ve used all votes for now. Come back later.";
           voteAction.appendChild(p);
+        }
+
+        // ---- Claim button: ALWAYS visible after connect ----
+        if (claimAction) {
+          claimAction.innerHTML = "";
+          const cbtn = document.createElement("button");
+          cbtn.className = "claim-btn";
+          cbtn.setAttribute("aria-label", "Claim");
+          cbtn.addEventListener("click", onClaimClick);
+          claimAction.appendChild(cbtn);
         }
       }
 
@@ -1039,53 +1057,23 @@
         if (!claimContract || !signerAddress) return;
 
         try {
-          const [votesAvailableBN, claimsLeftTodayBN, maxClaimsPerDayBN] =
-            await Promise.all([
-              claimContract.claimableVotes(signerAddress),
-              claimContract.dailyClaimsLeft(signerAddress),
-              claimContract.maxClaimsPerDay()
-            ]);
+          const [info, maxClaimsPerDayBN] = await Promise.all([
+            claimContract.getUserClaimInfo(signerAddress),
+            claimContract.maxClaimsPerDay()
+          ]);
 
-          const votesAvailable = Number(votesAvailableBN);
-          const claimsLeftToday = Number(claimsLeftTodayBN);
+          const votesAvailable = Number(info[4]);
+          const claimsLeftToday = Number(info[5]);
           const maxClaimsPerDay = Number(maxClaimsPerDayBN);
-
-          console.log("Claim info:", {
-            votesAvailable,
-            claimsLeftToday,
-            maxClaimsPerDay
-          });
 
           claimableVotesEl.textContent = votesAvailable.toString();
           claimsLeftTodayEl.textContent = `${claimsLeftToday}/${maxClaimsPerDay}`;
-
-          claimAction.innerHTML = "";
-
-          if (votesAvailable > 0 && claimsLeftToday > 0) {
-            const btn = document.createElement("button");
-            btn.className = "claim-btn";
-            btn.setAttribute("aria-label", "Claim");
-            btn.addEventListener("click", onClaimClick);
-            claimAction.appendChild(btn);
-          } else if (votesAvailable === 0) {
-            const p = document.createElement("p");
-            p.className = "no-votes-text";
-            p.textContent = "No claimable votes yet. Go vote first.";
-            claimAction.appendChild(p);
-          } else {
-            const p = document.createElement("p");
-            p.className = "no-votes-text";
-            p.textContent =
-              "You’ve used all your claims for now. Come back later.";
-            claimAction.appendChild(p);
-          }
+          // IMPORTANT: we do NOT touch claimAction here anymore.
         } catch (err) {
           console.error("loadClaimInfo error:", err);
-          claimAction.innerHTML = "";
-          const p = document.createElement("p");
-          p.className = "no-votes-text";
-          p.textContent = "Could not load claim data. Check console.";
-          claimAction.appendChild(p);
+          // If it fails, keep whatever was there; don't remove the button.
+          claimableVotesEl.textContent = "?";
+          claimsLeftTodayEl.textContent = "?/?";
         }
       }
 
@@ -1098,7 +1086,10 @@
           await loadClaimInfo();
         } catch (err) {
           console.error("Claim tx error:", err);
-          alert("Claim transaction failed or was rejected.");
+          alert(
+            "Claim transaction failed or was rejected.\n" +
+              "You might have no unclaimed votes or have used all claims for today."
+          );
         }
       }
 
@@ -1112,8 +1103,7 @@
 
         try {
           const currentBlock = await provider.getBlockNumber();
-          const fromBlock =
-            currentBlock > 200_000 ? currentBlock - 200_000 : 0;
+          const fromBlock = currentBlock > 200_000 ? currentBlock - 200_000 : 0;
 
           const filter = voteContract.filters.Voted();
           const events = await voteContract.queryFilter(
@@ -1189,10 +1179,7 @@
           const rank = index + 1;
           const tr = document.createElement("tr");
 
-          if (
-            signerAddress &&
-            entry.address === signerAddress.toLowerCase()
-          ) {
+          if (signerAddress && entry.address === signerAddress.toLowerCase()) {
             tr.classList.add("leaderboard-row-me");
             userRankLocal = rank;
           }
