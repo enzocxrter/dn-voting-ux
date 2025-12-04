@@ -641,8 +641,6 @@
       async function handleConnectClick() {
         try {
           console.log("Connect clicked");
-
-          // show loading style on connect button
           connectWalletButton.classList.add("loading");
 
           if (typeof window.ethereum === "undefined") {
@@ -706,7 +704,6 @@
               }
             }
 
-            // refresh provider after network switch
             provider = new window.ethers.providers.Web3Provider(
               window.ethereum
             );
@@ -732,6 +729,8 @@
               votingContract.totalVotesGlobal()
             ]);
 
+          console.log("getUserInfo raw:", userInfo);
+
           MAX_VOTES_PER_DAY = Number(maxPerDayFromChain);
           voteFeeWei = fee;
 
@@ -740,6 +739,9 @@
           );
           const userTotalVotes = Number(
             userInfo.totalVotes !== undefined ? userInfo.totalVotes : userInfo[2]
+          );
+          const votesLeft = Number(
+            userInfo.votesLeft !== undefined ? userInfo.votesLeft : userInfo[3]
           );
 
           // PoH still stubbed for now
@@ -753,7 +755,8 @@
           showVotingStation(
             Number(totalGlobal),
             userTotalVotes,
-            votesTodayUsed
+            votesTodayUsed,
+            votesLeft
           );
         } catch (err) {
           console.error("handleConnectClick error:", err);
@@ -762,7 +765,6 @@
             "Error connecting wallet. Check the console for details.";
           alert(msg);
         } finally {
-          // always clear loading style
           connectWalletButton.classList.remove("loading");
         }
       }
@@ -773,7 +775,12 @@
         notVerifiedSection.classList.remove("hidden");
       }
 
-      function showVotingStation(totalVotes, userTotalVotes, votesTodayUsed) {
+      function showVotingStation(
+        totalVotes,
+        userTotalVotes,
+        votesTodayUsed,
+        votesLeft
+      ) {
         connectSection.classList.add("hidden");
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
@@ -781,10 +788,10 @@
         // Basic stats
         totalVotesEl.textContent = totalVotes.toString();
         userTotalVotesEl.textContent = userTotalVotes.toString();
-        votesTodayEl.textContent = `${Math.max(
-          MAX_VOTES_PER_DAY - votesTodayUsed,
-          0
-        )}/${MAX_VOTES_PER_DAY}`;
+
+        // Show votes LEFT today, not used
+        const safeVotesLeft = Math.max(0, votesLeft);
+        votesTodayEl.textContent = `${safeVotesLeft}/${MAX_VOTES_PER_DAY}`;
 
         // ---- Thermometer update ----
         const pctRaw =
@@ -824,7 +831,7 @@
         voteAction.innerHTML = "";
         voteButtonRef = null;
 
-        if (votesTodayUsed < MAX_VOTES_PER_DAY) {
+        if (safeVotesLeft > 0) {
           const btn = document.createElement("button");
           btn.className = "vote-btn";
           btn.setAttribute("aria-label", "Vote");
@@ -834,7 +841,7 @@
         } else {
           const p = document.createElement("p");
           p.className = "no-votes-text";
-          p.textContent = "You’ve used all votes for now. Come back later.";
+          p.textContent = `You’ve used all votes for now. 0/${MAX_VOTES_PER_DAY} votes left. Come back later.`;
           voteAction.appendChild(p);
         }
       }
@@ -885,17 +892,23 @@
             votingContract.totalVotesGlobal()
           ]);
 
+          console.log("refresh userInfo raw:", userInfo);
+
           const votesTodayUsed = Number(
             userInfo.votesToday !== undefined ? userInfo.votesToday : userInfo[1]
           );
           const userTotalVotes = Number(
             userInfo.totalVotes !== undefined ? userInfo.totalVotes : userInfo[2]
           );
+          const votesLeft = Number(
+            userInfo.votesLeft !== undefined ? userInfo.votesLeft : userInfo[3]
+          );
 
           showVotingStation(
             Number(totalGlobal),
             userTotalVotes,
-            votesTodayUsed
+            votesTodayUsed,
+            votesLeft
           );
         } catch (err) {
           console.error("Error refreshing stats:", err);
