@@ -612,12 +612,12 @@
 
               <!-- Goal face (Devlan bald) at the top -->
               <div class="thermo-face-goal">
-                <img src="assets/images/devlanbald.png" alt="Devlan bald" />
+                <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
               </div>
 
               <!-- Moving face (Devlan with hair) following the mercury -->
               <div class="thermo-face" id="thermoFace">
-                <img src="assets/images/devlan.png" alt="Devlan face" />
+                <img src="assets/images/Devlan.png" alt="Devlan face" />
               </div>
             </div>
 
@@ -756,7 +756,7 @@
       const CLAIM_CONTRACT_ADDRESS =
         "0x27d9afD099d947B6D04d2713c2fD357495e13fcd";
 
-      // Minimal ABIs needed (events + view + core functions)
+      // Minimal ABIs needed
       const VOTE_ABI = [
         "function maxVotesPerDay() view returns (uint8)",
         "function votesLeftToday(address user) view returns (uint8)",
@@ -768,6 +768,7 @@
       ];
 
       const CLAIM_ABI = [
+        "function ethPerVoteWei() view returns (uint256)",
         "function maxClaimsPerDay() view returns (uint8)",
         "function claimableVotes(address user) view returns (uint256)",
         "function claimableEth(address user) view returns (uint256)",
@@ -835,16 +836,17 @@
         );
 
         // Load voting stats from vote contract
-        const [userInfo, totalGlobal, maxPerDay] = await Promise.all([
+        const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
           voteContract.getUserInfo(signerAddress),
           voteContract.totalVotesGlobal(),
           voteContract.maxVotesPerDay()
         ]);
 
-        const dayIndex = Number(userInfo[0]);
         const votesTodayUsed = Number(userInfo[1]);
         const userTotalVotes = Number(userInfo[2]);
         const votesLeft = Number(userInfo[3]);
+        const maxPerDay = Number(maxPerDayBN);
+
         const computedUsed =
           maxPerDay > votesLeft ? maxPerDay - votesLeft : votesTodayUsed;
 
@@ -852,7 +854,7 @@
           totalVotesGlobal: Number(totalGlobal),
           userTotalVotes,
           votesTodayUsed: computedUsed,
-          maxVotesPerDay: Number(maxPerDay)
+          maxVotesPerDay: maxPerDay
         });
 
         // Load claim info
@@ -952,7 +954,7 @@
           await tx.wait();
 
           // Reload stats + claim info + leaderboard after a successful vote
-          const [userInfo, totalGlobal, maxPerDay] = await Promise.all([
+          const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
             voteContract.getUserInfo(signerAddress),
             voteContract.totalVotesGlobal(),
             voteContract.maxVotesPerDay()
@@ -961,6 +963,8 @@
           const votesTodayUsed = Number(userInfo[1]);
           const userTotalVotes = Number(userInfo[2]);
           const votesLeft = Number(userInfo[3]);
+          const maxPerDay = Number(maxPerDayBN);
+
           const computedUsed =
             maxPerDay > votesLeft ? maxPerDay - votesLeft : votesTodayUsed;
 
@@ -968,7 +972,7 @@
             totalVotesGlobal: Number(totalGlobal),
             userTotalVotes,
             votesTodayUsed: computedUsed,
-            maxVotesPerDay: Number(maxPerDay)
+            maxVotesPerDay: maxPerDay
           });
 
           await loadClaimInfo();
@@ -983,7 +987,7 @@
         if (!claimContract || !signerAddress) return;
 
         try {
-          const [info, ethPerVoteWei, maxClaimsPerDay] = await Promise.all([
+          const [info, ethPerVoteWeiBN, maxClaimsPerDayBN] = await Promise.all([
             claimContract.getUserClaimInfo(signerAddress),
             claimContract.ethPerVoteWei(),
             claimContract.maxClaimsPerDay()
@@ -991,9 +995,11 @@
 
           const votesAvailable = Number(info[4]);
           const claimsLeftToday = Number(info[5]);
+          const maxClaimsPerDay = Number(maxClaimsPerDayBN);
 
-          const claimableEthWei = BigInt(votesAvailable) * BigInt(ethPerVoteWei);
-          const claimsUsed = maxClaimsPerDay - claimsLeftToday;
+          // BigInt math for total claimable ETH
+          const claimableEthWei =
+            BigInt(votesAvailable) * BigInt(ethPerVoteWeiBN);
 
           claimableVotesEl.textContent = votesAvailable.toString();
           claimableEthEl.textContent = ethFromWei(claimableEthWei) + " ETH";
