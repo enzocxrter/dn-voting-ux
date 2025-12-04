@@ -104,7 +104,6 @@
           background-image 0.15s ease-out;
       }
 
-      /* Grow by 15% on hover + hover image */
       .connect-btn:hover {
         background-image: url("assets/images/connecthover.png");
         transform: scale(1.15);
@@ -139,7 +138,7 @@
       .voting-station {
         margin-top: 20px;
         width: 100%;
-        max-width: 600px; /* narrower center box (was 900px) */
+        max-width: 600px;
         text-align: center;
         color: #ffffff;
       }
@@ -147,7 +146,7 @@
       /* Layout: thermometer on left, stats on right (vote + claim stack) */
       .voting-layout {
         display: flex;
-        gap: 16px; /* tighter gap than before */
+        gap: 16px;
         align-items: flex-start;
         justify-content: center;
       }
@@ -167,12 +166,13 @@
       /* PoH status line */
       .poh-status {
         margin-bottom: 20px;
-        font-size: 1.4rem;
+        font-size: 1.6rem; /* bumped up */
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
         align-items: center;
         justify-content: center;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
       }
 
       .poh-status-label {
@@ -181,15 +181,24 @@
 
       .poh-status-yes {
         color: #1f7a3a; /* darker forest green */
+        text-shadow:
+          0 0 3px #000,
+          0 0 6px #000,
+          0 0 10px #000; /* stronger edge so it pops */
       }
 
       .poh-rank {
-        font-size: 1.1rem;
-        padding: 4px 10px;
+        font-size: 1.6rem; /* match PoH text */
+        padding: 4px 12px;
         border-radius: 999px;
         background: rgba(18, 206, 236, 0.2);
-        border: 1px solid rgba(0, 255, 232, 0.5);
+        border: 1px solid rgba(0, 255, 232, 0.7);
         color: #00ffe8;
+        text-shadow:
+          0 0 3px #000,
+          0 0 8px #000,
+          0 0 12px #000;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.7); /* dark outline behind pill */
       }
 
       .vote-stats,
@@ -221,7 +230,6 @@
         text-align: right;
       }
 
-      /* Vote action area */
       .vote-action,
       .claim-action {
         margin-top: 10px;
@@ -326,7 +334,7 @@
       .thermo-body {
         position: relative;
         width: 90px;
-        height: 460px; /* tall thermometer */
+        height: 460px;
         margin: 0 auto 12px;
         display: flex;
         flex-direction: column;
@@ -353,7 +361,7 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 0%; /* JS updates this */
+        height: 0%;
         background: linear-gradient(
           to top,
           #12ceec,
@@ -377,7 +385,6 @@
         margin-top: -6px;
       }
 
-      /* Moving face riding the mercury (Devlan with hair) */
       .thermo-face {
         position: absolute;
         left: 50%;
@@ -391,7 +398,7 @@
         background: transparent;
         border: none;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
-        bottom: 20px; /* JS will adjust based on percentage */
+        bottom: 20px;
         transition: bottom 0.6s ease-out;
         z-index: 2;
       }
@@ -403,7 +410,6 @@
         object-fit: contain;
       }
 
-      /* Goal face at the top (Devlan bald) */
       .thermo-face-goal {
         position: absolute;
         left: 50%;
@@ -411,7 +417,7 @@
         height: 78px;
         border-radius: 50%;
         transform: translateX(-50%);
-        top: -6px; /* sits right at the top as the goal */
+        top: -6px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -467,7 +473,7 @@
       .leaderboard {
         margin-top: 40px;
         width: 100%;
-        max-width: 600px; /* was 900px */
+        max-width: 600px;
         background: rgba(0, 0, 0, 0.6);
         border-radius: 16px;
         padding: 16px 20px 24px;
@@ -554,7 +560,7 @@
         }
 
         .poh-status {
-          font-size: 1.2rem;
+          font-size: 1.4rem; /* still bigger on mobile */
         }
 
         .voting-layout {
@@ -567,7 +573,6 @@
         }
       }
 
-      /* helper: hidden class */
       .hidden {
         display: none !important;
       }
@@ -633,12 +638,10 @@
               </div>
               <div class="thermo-bulb"></div>
 
-              <!-- Goal face (Devlan bald) at the top -->
               <div class="thermo-face-goal">
                 <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
               </div>
 
-              <!-- Moving face (Devlan with hair) following the mercury -->
               <div class="thermo-face" id="thermoFace">
                 <img src="assets/images/Devlan.png" alt="Devlan face" />
               </div>
@@ -657,7 +660,6 @@
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
-            <!-- PoH status line (stubbed yes for now) -->
             <div class="poh-status">
               <span class="poh-status-label">Proof of Humanity verified: </span>
               <span class="poh-status-yes">Yes</span>
@@ -682,9 +684,7 @@
               </div>
             </div>
 
-            <div class="vote-action" id="voteAction">
-              <!-- JS will drop the image Vote button or "Come back later" text here -->
-            </div>
+            <div class="vote-action" id="voteAction"></div>
 
             <!-- CLAIM STATION -->
             <div class="claim-block">
@@ -693,16 +693,7 @@
               <div class="claim-stats">
                 <div class="claim-stat-row">
                   <div class="claim-stat-label">Claimable votes</div>
-                  <div class="claim-stat-value" id="claimableVotes">
-                    0
-                  </div>
-                </div>
-
-                <div class="claim-stat-row">
-                  <div class="claim-stat-label">Claimable ETH</div>
-                  <div class="claim-stat-value" id="claimableEth">
-                    0
-                  </div>
+                  <div class="claim-stat-value" id="claimableVotes">0</div>
                 </div>
 
                 <div class="claim-stat-row">
@@ -713,15 +704,13 @@
                 </div>
               </div>
 
-              <div class="claim-action" id="claimAction">
-                <!-- JS will drop claim button or "no claims" text here -->
-              </div>
+              <div class="claim-action" id="claimAction"></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- LEADERBOARD (full width at bottom) -->
+      <!-- LEADERBOARD -->
       <div class="leaderboard" id="leaderboardSection">
         <div class="leaderboard-title">Top Voters</div>
         <table class="leaderboard-table">
@@ -742,7 +731,6 @@
       </div>
     </div>
 
-    <!-- Ethers UMD bundle -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 
     <script>
@@ -758,7 +746,6 @@
       const votesTodayEl = document.getElementById("votesToday");
 
       const claimableVotesEl = document.getElementById("claimableVotes");
-      const claimableEthEl = document.getElementById("claimableEth");
       const claimsLeftTodayEl = document.getElementById("claimsLeftToday");
 
       const thermoMercury = document.getElementById("thermoMercury");
@@ -772,18 +759,14 @@
 
       const userRankLabel = document.getElementById("userRankLabel");
 
-      const TARGET_VOTES = 5000; // closer to what you mentioned
-
-      // Linea Sepolia chain id (hex: 0xe704, dec: 59141)
+      const TARGET_VOTES = 5000;
       const LINEA_SEPOLIA_CHAIN_ID = 59141n;
 
-      // Contract addresses
       const VOTE_CONTRACT_ADDRESS =
         "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
       const CLAIM_CONTRACT_ADDRESS =
         "0x27d9afD099d947B6D04d2713c2fD357495e13fcd";
 
-      // Minimal ABIs needed
       const VOTE_ABI = [
         "function maxVotesPerDay() view returns (uint8)",
         "function votesLeftToday(address user) view returns (uint8)",
@@ -810,8 +793,7 @@
       let signerAddress;
       let voteContract;
       let claimContract;
-
-      let userRank = null; // numeric rank (1-based) in leaderboard
+      let userRank = null;
 
       function shortenAddress(addr) {
         if (!addr) return "";
@@ -901,7 +883,6 @@
       async function connectAndInit() {
         await ensureProvider();
 
-        // Request accounts
         await window.ethereum.request({ method: "eth_requestAccounts" });
         signer = await provider.getSigner();
         signerAddress = await signer.getAddress();
@@ -924,7 +905,6 @@
           signer
         );
 
-        // Load voting stats from vote contract
         const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
           voteContract.getUserInfo(signerAddress),
           voteContract.totalVotesGlobal(),
@@ -946,10 +926,7 @@
           maxVotesPerDay: maxPerDay
         });
 
-        // Load claim info
         await loadClaimInfo();
-
-        // Load leaderboard
         await loadLeaderboard();
       }
 
@@ -977,17 +954,14 @@
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
 
-        // Basic stats
         totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
         userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
         votesTodayEl.textContent = `${maxVotesPerDay - votesTodayUsed}/${maxVotesPerDay}`;
 
-        // ---- Thermometer update ----
         const pctRaw =
           TARGET_VOTES > 0 ? (totalVotesGlobal / TARGET_VOTES) * 100 : 0;
-        const pct = Math.max(0, Math.min(pctRaw, 100)); // clamp 0–100
+        const pct = Math.max(0, Math.min(pctRaw, 100));
 
-        // Mercury: slightly slower than Devlan's pct
         const MERCURY_OFFSET = 7;
         const mercuryPct = Math.max(0, Math.min(pct - MERCURY_OFFSET, 100));
 
@@ -1004,12 +978,11 @@
           thermoTarget.textContent = `Target: ${TARGET_VOTES.toLocaleString()} votes`;
         }
 
-        // Devlan face mapping with easing
         if (thermoFace) {
-          const MIN_BOTTOM = 20; // your calibrated 0% position
-          const MAX_BOTTOM = 340; // approximate top of the column
+          const MIN_BOTTOM = 20;
+          const MAX_BOTTOM = 340;
 
-          const t = pct / 100; // 0 → 1
+          const t = pct / 100;
           const eased = Math.pow(t, 0.6);
 
           const faceBottom =
@@ -1018,7 +991,6 @@
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
-        // ---- Vote action (button vs "come back later") ----
         voteAction.innerHTML = "";
 
         if (votesTodayUsed < maxVotesPerDay) {
@@ -1042,7 +1014,6 @@
           const tx = await voteContract.vote({ value: 0 });
           await tx.wait();
 
-          // Reload stats + claim info + leaderboard after a successful vote
           const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
             voteContract.getUserInfo(signerAddress),
             voteContract.totalVotesGlobal(),
@@ -1076,9 +1047,8 @@
         if (!claimContract || !signerAddress) return;
 
         try {
-          const [info, ethPerVoteWeiBN, maxClaimsPerDayBN] = await Promise.all([
+          const [info, maxClaimsPerDayBN] = await Promise.all([
             claimContract.getUserClaimInfo(signerAddress),
-            claimContract.ethPerVoteWei(),
             claimContract.maxClaimsPerDay()
           ]);
 
@@ -1086,12 +1056,7 @@
           const claimsLeftToday = Number(info[5]);
           const maxClaimsPerDay = Number(maxClaimsPerDayBN);
 
-          // BigInt math for total claimable ETH
-          const claimableEthWei =
-            BigInt(votesAvailable) * BigInt(ethPerVoteWeiBN);
-
           claimableVotesEl.textContent = votesAvailable.toString();
-          claimableEthEl.textContent = ethFromWei(claimableEthWei) + " ETH";
           claimsLeftTodayEl.textContent = `${claimsLeftToday}/${maxClaimsPerDay}`;
 
           claimAction.innerHTML = "";
@@ -1110,7 +1075,8 @@
           } else {
             const p = document.createElement("p");
             p.className = "no-votes-text";
-            p.textContent = "You’ve used all your claims for now. Come back later.";
+            p.textContent =
+              "You’ve used all your claims for now. Come back later.";
             claimAction.appendChild(p);
           }
         } catch (err) {
@@ -1124,7 +1090,6 @@
         try {
           const tx = await claimContract.claim();
           await tx.wait();
-
           await loadClaimInfo();
         } catch (err) {
           console.error("Claim tx error:", err);
@@ -1140,7 +1105,6 @@
 
         let entries = [];
 
-        // 1) Try to build from recent Voted events
         try {
           const currentBlock = await provider.getBlockNumber();
           const fromBlock = currentBlock > 200_000 ? currentBlock - 200_000 : 0;
@@ -1152,7 +1116,7 @@
             currentBlock
           );
 
-          const map = new Map(); // addr -> max totalVotes
+          const map = new Map();
 
           for (const ev of events) {
             const voter = ev.args.voter.toLowerCase();
@@ -1171,7 +1135,6 @@
           console.error("Leaderboard event fetch failed:", err);
         }
 
-        // 2) Ensure connected wallet appears, using direct totalVotesOf
         if (signerAddress && voteContract.totalVotesOf) {
           try {
             const directTotalBN = await voteContract.totalVotesOf(
@@ -1192,11 +1155,13 @@
               }
             }
           } catch (err) {
-            console.error("Direct totalVotesOf for leaderboard failed:", err);
+            console.error(
+              "Direct totalVotesOf for leaderboard failed:",
+              err
+            );
           }
         }
 
-        // Sort and trim
         entries.sort((a, b) => b.totalVotes - a.totalVotes);
         entries = entries.slice(0, 10);
 
