@@ -139,7 +139,7 @@
       .voting-station {
         margin-top: 20px;
         width: 100%;
-        max-width: 900px;
+        max-width: 600px; /* narrower center box (was 900px) */
         text-align: center;
         color: #ffffff;
       }
@@ -147,7 +147,7 @@
       /* Layout: thermometer on left, stats on right (vote + claim stack) */
       .voting-layout {
         display: flex;
-        gap: 24px;
+        gap: 16px; /* tighter gap than before */
         align-items: flex-start;
         justify-content: center;
       }
@@ -168,6 +168,11 @@
       .poh-status {
         margin-bottom: 20px;
         font-size: 1.4rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
       }
 
       .poh-status-label {
@@ -176,6 +181,15 @@
 
       .poh-status-yes {
         color: #1f7a3a; /* darker forest green */
+      }
+
+      .poh-rank {
+        font-size: 1.1rem;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(18, 206, 236, 0.2);
+        border: 1px solid rgba(0, 255, 232, 0.5);
+        color: #00ffe8;
       }
 
       .vote-stats,
@@ -453,7 +467,7 @@
       .leaderboard {
         margin-top: 40px;
         width: 100%;
-        max-width: 900px;
+        max-width: 600px; /* was 900px */
         background: rgba(0, 0, 0, 0.6);
         border-radius: 16px;
         padding: 16px 20px 24px;
@@ -489,12 +503,21 @@
       }
 
       .leaderboard-table td.rank-col {
-        width: 50px;
+        width: 40px;
+      }
+
+      .leaderboard-table td.title-col {
+        width: 160px;
       }
 
       .leaderboard-table td.votes-col {
         text-align: right;
         width: 120px;
+      }
+
+      .leaderboard-row-me td {
+        background: rgba(18, 206, 236, 0.18) !important;
+        font-weight: 600;
       }
 
       @media (max-width: 600px) {
@@ -638,6 +661,7 @@
             <div class="poh-status">
               <span class="poh-status-label">Proof of Humanity verified: </span>
               <span class="poh-status-yes">Yes</span>
+              <span class="poh-rank hidden" id="userRankLabel"></span>
             </div>
 
             <!-- VOTE STATS -->
@@ -704,13 +728,14 @@
           <thead>
             <tr>
               <th class="rank-col">#</th>
+              <th class="title-col">Title</th>
               <th>Wallet</th>
               <th class="votes-col">Total Votes</th>
             </tr>
           </thead>
           <tbody id="leaderboardBody">
             <tr>
-              <td colspan="3">No votes yet. Be the first to vote.</td>
+              <td colspan="4">No votes yet. Be the first to vote.</td>
             </tr>
           </tbody>
         </table>
@@ -744,6 +769,8 @@
 
       const connectWalletButton =
         document.getElementById("connectWalletButton");
+
+      const userRankLabel = document.getElementById("userRankLabel");
 
       const TARGET_VOTES = 5000; // closer to what you mentioned
 
@@ -784,6 +811,8 @@
       let voteContract;
       let claimContract;
 
+      let userRank = null; // numeric rank (1-based) in leaderboard
+
       function shortenAddress(addr) {
         if (!addr) return "";
         return addr.slice(0, 6) + "..." + addr.slice(-4);
@@ -794,6 +823,66 @@
           return window.ethers.formatEther(wei);
         } catch {
           return "0";
+        }
+      }
+
+      function getRankTitle(rank) {
+        switch (rank) {
+          case 1:
+            return "Brotato Overlord";
+          case 2:
+            return "Supreme Spud";
+          case 3:
+            return "Mashed Mayor";
+          case 4:
+            return "Tater Tyrant";
+          case 5:
+            return "Hashbrown Hero";
+          case 6:
+            return "Couch Commander";
+          case 7:
+            return "Lazy Legend";
+          case 8:
+            return "Serious Voter";
+          case 9:
+            return "Potato Paladin";
+          case 10:
+            return "Do-Nothing Duke";
+          case 11:
+            return "Fries Fanatic";
+          case 12:
+            return "Baked Baron";
+          case 13:
+            return "Chip Champion";
+          case 14:
+            return "Starch General";
+          case 15:
+            return "Tuber Tactician";
+          case 16:
+            return "Crispy Captain";
+          case 17:
+            return "Grease Guardian";
+          case 18:
+            return "Snack Strategist";
+          case 19:
+            return "Boiled Boss";
+          case 20:
+            return "Mash Master";
+          default:
+            return "Serious Voter";
+        }
+      }
+
+      function updateRankLabel() {
+        if (!userRankLabel) return;
+
+        if (userRank && userRank > 0) {
+          const title = getRankTitle(userRank);
+          userRankLabel.textContent = `#${userRank} — ${title}`;
+          userRankLabel.classList.remove("hidden");
+        } else {
+          userRankLabel.textContent = "";
+          userRankLabel.classList.add("hidden");
         }
       }
 
@@ -1114,19 +1203,33 @@
         if (!entries.length) {
           const tr = document.createElement("tr");
           const td = document.createElement("td");
-          td.colSpan = 3;
+          td.colSpan = 4;
           td.textContent = "No votes yet. Be the first to vote.";
           tr.appendChild(td);
           leaderboardBody.appendChild(tr);
+          userRank = null;
+          updateRankLabel();
           return;
         }
 
+        let userRankLocal = null;
+
         entries.forEach((entry, index) => {
+          const rank = index + 1;
           const tr = document.createElement("tr");
+
+          if (signerAddress && entry.address === signerAddress.toLowerCase()) {
+            tr.classList.add("leaderboard-row-me");
+            userRankLocal = rank;
+          }
 
           const rankTd = document.createElement("td");
           rankTd.className = "rank-col";
-          rankTd.textContent = (index + 1).toString();
+          rankTd.textContent = rank.toString();
+
+          const titleTd = document.createElement("td");
+          titleTd.className = "title-col";
+          titleTd.textContent = getRankTitle(rank);
 
           const addrTd = document.createElement("td");
           addrTd.textContent = shortenAddress(entry.address);
@@ -1135,9 +1238,12 @@
           votesTd.className = "votes-col";
           votesTd.textContent = entry.totalVotes.toLocaleString();
 
-          tr.append(rankTd, addrTd, votesTd);
+          tr.append(rankTd, titleTd, addrTd, votesTd);
           leaderboardBody.appendChild(tr);
         });
+
+        userRank = userRankLocal;
+        updateRankLabel();
       }
     </script>
   </body>
