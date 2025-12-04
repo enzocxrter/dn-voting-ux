@@ -197,8 +197,7 @@
         text-shadow:
           0 0 3px #000,
           0 0 8px #000,
-          0 0 12px #000; /* black glow only */
-        /* removed outer black ring box-shadow */
+          0 0 12px #000;
       }
 
       .vote-stats,
@@ -781,9 +780,7 @@
         "function ethPerVoteWei() view returns (uint256)",
         "function maxClaimsPerDay() view returns (uint8)",
         "function claimableVotes(address user) view returns (uint256)",
-        "function claimableEth(address user) view returns (uint256)",
         "function dailyClaimsLeft(address user) view returns (uint8)",
-        "function getUserClaimInfo(address user) view returns (uint64 dayIndex, uint8 claimsToday, uint256 votesClaimed, uint256 totalVotes, uint256 votesAvailable, uint8 claimsLeftToday)",
         "function claim()",
         "event ClaimedEth(address indexed user, uint64 indexed dayIndex, uint8 claimsToday, uint256 totalVotes, uint256 votesClaimed, uint256 ethAmount)"
       ];
@@ -798,14 +795,6 @@
       function shortenAddress(addr) {
         if (!addr) return "";
         return addr.slice(0, 6) + "..." + addr.slice(-4);
-      }
-
-      function ethFromWei(wei) {
-        try {
-          return window.ethers.formatEther(wei);
-        } catch {
-          return "0";
-        }
       }
 
       function getRankTitle(rank) {
@@ -870,7 +859,9 @@
 
       async function ensureProvider() {
         if (!window.ethereum) {
-          alert("No injected wallet found. Please install MetaMask or a compatible wallet.");
+          alert(
+            "No injected wallet found. Please install MetaMask or a compatible wallet."
+          );
           throw new Error("No wallet");
         }
 
@@ -935,6 +926,7 @@
           await connectAndInit();
         } catch (err) {
           console.error("Connect/init error:", err);
+          alert("Could not connect wallet. Check console for details.");
         }
       });
 
@@ -1047,14 +1039,22 @@
         if (!claimContract || !signerAddress) return;
 
         try {
-          const [info, maxClaimsPerDayBN] = await Promise.all([
-            claimContract.getUserClaimInfo(signerAddress),
-            claimContract.maxClaimsPerDay()
-          ]);
+          const [votesAvailableBN, claimsLeftTodayBN, maxClaimsPerDayBN] =
+            await Promise.all([
+              claimContract.claimableVotes(signerAddress),
+              claimContract.dailyClaimsLeft(signerAddress),
+              claimContract.maxClaimsPerDay()
+            ]);
 
-          const votesAvailable = Number(info[4]);
-          const claimsLeftToday = Number(info[5]);
+          const votesAvailable = Number(votesAvailableBN);
+          const claimsLeftToday = Number(claimsLeftTodayBN);
           const maxClaimsPerDay = Number(maxClaimsPerDayBN);
+
+          console.log("Claim info:", {
+            votesAvailable,
+            claimsLeftToday,
+            maxClaimsPerDay
+          });
 
           claimableVotesEl.textContent = votesAvailable.toString();
           claimsLeftTodayEl.textContent = `${claimsLeftToday}/${maxClaimsPerDay}`;
@@ -1081,6 +1081,11 @@
           }
         } catch (err) {
           console.error("loadClaimInfo error:", err);
+          claimAction.innerHTML = "";
+          const p = document.createElement("p");
+          p.className = "no-votes-text";
+          p.textContent = "Could not load claim data. Check console.";
+          claimAction.appendChild(p);
         }
       }
 
@@ -1107,7 +1112,8 @@
 
         try {
           const currentBlock = await provider.getBlockNumber();
-          const fromBlock = currentBlock > 200_000 ? currentBlock - 200_000 : 0;
+          const fromBlock =
+            currentBlock > 200_000 ? currentBlock - 200_000 : 0;
 
           const filter = voteContract.filters.Voted();
           const events = await voteContract.queryFilter(
@@ -1183,7 +1189,10 @@
           const rank = index + 1;
           const tr = document.createElement("tr");
 
-          if (signerAddress && entry.address === signerAddress.toLowerCase()) {
+          if (
+            signerAddress &&
+            entry.address === signerAddress.toLowerCase()
+          ) {
             tr.classList.add("leaderboard-row-me");
             userRankLocal = rank;
           }
