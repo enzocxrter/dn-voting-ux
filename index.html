@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <link rel="icon" href="fabicon.png" />
+    <link rel="icon" href="favicon.png" />
 
     <style>
       @font-face {
@@ -113,7 +113,6 @@
         transform: scale(0.98);
       }
 
-      /* Hover text under connect */
       .connect-hover-text {
         margin-top: 16px;
         width: 100%;
@@ -166,7 +165,7 @@
       /* PoH status line */
       .poh-status {
         margin-bottom: 20px;
-        font-size: 1.6rem; /* bumped up */
+        font-size: 1.6rem;
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
@@ -180,7 +179,7 @@
       }
 
       .poh-status-yes {
-        color: #00ffe8; /* same cyan as rank text */
+        color: #00ffe8;
         text-shadow:
           0 0 3px #000,
           0 0 6px #000,
@@ -188,7 +187,7 @@
       }
 
       .poh-rank {
-        font-size: 1.6rem; /* match PoH text */
+        font-size: 1.6rem;
         padding: 4px 12px;
         border-radius: 999px;
         background: rgba(18, 206, 236, 0.2);
@@ -235,7 +234,7 @@
         font-size: 1.6rem;
       }
 
-      /* Image-based VOTE button */
+      /* VOTE button (now logically a "claim = vote" trigger, still named vote for UX) */
       .vote-btn {
         border: none;
         padding: 0;
@@ -262,7 +261,7 @@
         transform: scale(0.98);
       }
 
-      /* Image-based CLAIM button */
+      /* CLAIM button */
       .claim-btn {
         border: none;
         padding: 0;
@@ -597,7 +596,7 @@
 
       <h1>DN Voting Platform</h1>
 
-      <!-- STATE 1: CONNECT (shown initially) -->
+      <!-- STATE 1: CONNECT -->
       <div class="connect-wrapper" id="connectSection">
         <button
           class="connect-btn"
@@ -610,7 +609,7 @@
         </div>
       </div>
 
-      <!-- STATE 2: NOT POH VERIFIED -->
+      <!-- STATE 2: NOT POH VERIFIED (we'll use this later when PoH is real) -->
       <div class="not-verified hidden" id="notVerifiedSection">
         <p>This wallet is not PoH verified yet.</p>
         <a
@@ -627,7 +626,7 @@
       <!-- STATE 3: VOTING + CLAIM STATION -->
       <div class="voting-station hidden" id="votingSection">
         <div class="voting-layout">
-          <!-- LEFT: Vote Thermometer -->
+          <!-- LEFT: Thermometer -->
           <div class="thermo-wrapper">
             <div class="thermo-title">Vote Heat</div>
 
@@ -655,7 +654,7 @@
             </div>
           </div>
 
-          <!-- RIGHT: Vote content + Claim content -->
+          <!-- RIGHT: Vote (stats) + Claim -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
@@ -665,7 +664,7 @@
               <span class="poh-rank hidden" id="userRankLabel"></span>
             </div>
 
-            <!-- VOTE STATS -->
+            <!-- VOTE STATS (backed by ClaimStation counters) -->
             <div class="vote-stats">
               <div class="vote-stat-row">
                 <div class="vote-stat-label">Total votes (global)</div>
@@ -685,7 +684,7 @@
 
             <div class="vote-action" id="voteAction"></div>
 
-            <!-- CLAIM STATION -->
+            <!-- CLAIM STATION (same contract) -->
             <div class="claim-block">
               <div class="claim-title">Claim station</div>
 
@@ -730,11 +729,10 @@
       </div>
     </div>
 
-    <!-- Ethers UMD -->
+    <!-- ethers v6 UMD -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 
     <script>
-      // -------- DOM ELEMENTS --------
       const connectSection = document.getElementById("connectSection");
       const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
@@ -760,45 +758,30 @@
 
       const userRankLabel = document.getElementById("userRankLabel");
 
-      // -------- CONFIG --------
       const TARGET_VOTES = 5000;
       const LINEA_SEPOLIA_CHAIN_ID = 59141n;
 
-      const VOTE_CONTRACT_ADDRESS =
-        "0xF2e347e7E7D86Ec1CD90914514b4Ee7dC09cB2bD";
+      // Single combined contract (claims == votes)
       const CLAIM_CONTRACT_ADDRESS =
-        "0x27d9afd099d947b6d04d2713c2fd357495e13fcd"; // lowercase checksum-safe
-
-      const VOTE_ABI = [
-        "function maxVotesPerDay() view returns (uint8)",
-        "function votesLeftToday(address user) view returns (uint8)",
-        "function totalVotesOf(address user) view returns (uint256)",
-        "function totalVotesGlobal() view returns (uint256)",
-        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint8 votesLeft)",
-        "function vote() payable",
-        "event Voted(address indexed voter, uint64 indexed dayIndex, uint8 votesToday, uint256 totalVotes, uint256 totalVotesGlobal)"
-      ];
+        "0x433e3d3Bb2bB2fE275b9B90376d20517FAaB6b1B";
 
       const CLAIM_ABI = [
-        "function ethPerVoteWei() view returns (uint256)",
         "function maxClaimsPerDay() view returns (uint8)",
-        "function claimableVotes(address user) view returns (uint256)",
-        "function claimableEth(address user) view returns (uint256)",
-        "function dailyClaimsLeft(address user) view returns (uint8)",
-        "function getUserClaimInfo(address user) view returns (uint64 dayIndex, uint8 claimsToday, uint256 votesClaimed, uint256 totalVotes, uint256 votesAvailable, uint8 claimsLeftToday)",
-        "function claim()",
-        "event ClaimedEth(address indexed user, uint64 indexed dayIndex, uint8 claimsToday, uint256 totalVotes, uint256 votesClaimed, uint256 ethAmount)"
+        "function ethPerClaimWei() view returns (uint256)",
+        "function claimsLeftToday(address user) view returns (uint8)",
+        "function totalClaimsOf(address user) view returns (uint256)",
+        "function totalClaimsGlobal() view returns (uint256)",
+        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 claimsToday, uint256 totalClaims, uint8 claimsLeftToday_)",
+        "function claim(bytes pohSignature)",
+        "event Claimed(address indexed user, uint64 indexed dayIndex, uint8 claimsToday, uint256 userTotalClaims, uint256 totalClaimsGlobal, uint256 ethAmount)"
       ];
 
-      // -------- STATE --------
       let provider;
       let signer;
       let signerAddress;
-      let voteContract;
       let claimContract;
       let userRank = null;
 
-      // -------- HELPERS --------
       function shortenAddress(addr) {
         if (!addr) return "";
         return addr.slice(0, 6) + "..." + addr.slice(-4);
@@ -865,15 +848,8 @@
       }
 
       async function ensureProvider() {
-        if (!window.ethers) {
-          alert("Internal error: ethers.js failed to load.");
-          throw new Error("ethers not loaded");
-        }
-
         if (!window.ethereum) {
-          alert(
-            "No injected wallet found. Please install MetaMask or a compatible wallet."
-          );
+          alert("No injected wallet found. Please install MetaMask or a compatible wallet.");
           throw new Error("No wallet");
         }
 
@@ -883,85 +859,83 @@
         return provider;
       }
 
-      // -------- CONNECT FLOW --------
       async function connectAndInit() {
+        await ensureProvider();
+
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        signer = await provider.getSigner();
+        signerAddress = await signer.getAddress();
+
+        const network = await provider.getNetwork();
+        if (network.chainId !== LINEA_SEPOLIA_CHAIN_ID) {
+          alert("Please switch your wallet to Linea Sepolia testnet.");
+          throw new Error("Wrong chain");
+        }
+
+        claimContract = new window.ethers.Contract(
+          CLAIM_CONTRACT_ADDRESS,
+          CLAIM_ABI,
+          signer
+        );
+
+        // Pull user + global stats from ClaimStation
+        const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
+          claimContract.getUserInfo(signerAddress),
+          claimContract.totalClaimsGlobal(),
+          claimContract.maxClaimsPerDay()
+        ]);
+
+        const claimsToday = Number(userInfo[1]);
+        const totalClaims = Number(userInfo[2]);
+        const claimsLeft = Number(userInfo[3]);
+        const maxPerDay = Number(maxPerDayBN);
+
+        const computedUsed =
+          maxPerDay > claimsLeft ? maxPerDay - claimsLeft : claimsToday;
+
+        showVotingStation({
+          totalClaimsGlobal: Number(totalGlobal),
+          userTotalClaims: totalClaims,
+          claimsTodayUsed: computedUsed,
+          maxClaimsPerDay: maxPerDay
+        });
+
+        await loadClaimInfo();
+        await loadLeaderboard();
+      }
+
+      connectWalletButton.addEventListener("click", async () => {
         try {
-          await ensureProvider();
-
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          signer = await provider.getSigner();
-          signerAddress = await signer.getAddress();
-
-          const network = await provider.getNetwork();
-          if (network.chainId !== LINEA_SEPOLIA_CHAIN_ID) {
-            alert("Please switch your wallet to Linea Sepolia testnet.");
-            throw new Error(
-              `Wrong chain: got ${network.chainId}, expected ${LINEA_SEPOLIA_CHAIN_ID}`
-            );
-          }
-
-          voteContract = new window.ethers.Contract(
-            VOTE_CONTRACT_ADDRESS,
-            VOTE_ABI,
-            signer
-          );
-
-          claimContract = new window.ethers.Contract(
-            CLAIM_CONTRACT_ADDRESS,
-            CLAIM_ABI,
-            signer
-          );
-
-          const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
-            voteContract.getUserInfo(signerAddress),
-            voteContract.totalVotesGlobal(),
-            voteContract.maxVotesPerDay()
-          ]);
-
-          const votesTodayUsed = Number(userInfo[1]);
-          const userTotalVotes = Number(userInfo[2]);
-          const votesLeft = Number(userInfo[3]);
-          const maxPerDay = Number(maxPerDayBN);
-
-          const computedUsed =
-            maxPerDay > votesLeft ? maxPerDay - votesLeft : votesTodayUsed;
-
-          showVotingStation({
-            totalVotesGlobal: Number(totalGlobal),
-            userTotalVotes,
-            votesTodayUsed: computedUsed,
-            maxVotesPerDay: maxPerDay
-          });
-
-          await loadClaimInfo();
-          await loadLeaderboard();
+          await connectAndInit();
         } catch (err) {
           console.error("Connect/init error:", err);
           alert("Could not connect wallet. Check console for details.");
         }
-      }
-
-      connectWalletButton.addEventListener("click", () => {
-        connectAndInit();
       });
 
-      // -------- UI RENDER --------
+      function showNotVerified() {
+        connectSection.classList.add("hidden");
+        votingSection.classList.add("hidden");
+        notVerifiedSection.classList.remove("hidden");
+      }
+
       function showVotingStation({
-        totalVotesGlobal,
-        userTotalVotes,
-        votesTodayUsed,
-        maxVotesPerDay
+        totalClaimsGlobal,
+        userTotalClaims,
+        claimsTodayUsed,
+        maxClaimsPerDay
       }) {
         connectSection.classList.add("hidden");
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
 
-        totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
-        userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
-        votesTodayEl.textContent = `${maxVotesPerDay - votesTodayUsed}/${maxVotesPerDay}`;
+        totalVotesEl.textContent = totalClaimsGlobal.toLocaleString();
+        userTotalVotesEl.textContent = userTotalClaims.toLocaleString();
+        votesTodayEl.textContent = `${maxClaimsPerDay - claimsTodayUsed}/${maxClaimsPerDay}`;
 
+        // Thermometer based on global claims (votes)
         const pctRaw =
-          TARGET_VOTES > 0 ? (totalVotesGlobal / TARGET_VOTES) * 100 : 0;
+          TARGET_VOTES > 0 ? (totalClaimsGlobal / TARGET_VOTES) * 100 : 0;
         const pct = Math.max(0, Math.min(pctRaw, 100));
 
         const MERCURY_OFFSET = 7;
@@ -971,7 +945,7 @@
           thermoMercury.style.height = mercuryPct + "%";
         }
         if (thermoCount) {
-          thermoCount.textContent = totalVotesGlobal.toLocaleString();
+          thermoCount.textContent = totalClaimsGlobal.toLocaleString();
         }
         if (thermoPercent) {
           thermoPercent.textContent = `${pct.toFixed(1)}% to target`;
@@ -993,13 +967,14 @@
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
-        // Vote button
+        // "Vote" button (really: 1 claim = 1 vote)
         voteAction.innerHTML = "";
-        if (votesTodayUsed < maxVotesPerDay) {
+
+        if (claimsTodayUsed < maxClaimsPerDay) {
           const btn = document.createElement("button");
           btn.className = "vote-btn";
           btn.setAttribute("aria-label", "Vote");
-          btn.addEventListener("click", onVoteClick);
+          btn.addEventListener("click", onClaimClick); // single flow
           voteAction.appendChild(btn);
         } else {
           const p = document.createElement("p");
@@ -1007,75 +982,50 @@
           p.textContent = "You’ve used all votes for now. Come back later.";
           voteAction.appendChild(p);
         }
-
-        // Claim button – always visible after connect
-        if (claimAction) {
-          claimAction.innerHTML = "";
-          const cbtn = document.createElement("button");
-          cbtn.className = "claim-btn";
-          cbtn.setAttribute("aria-label", "Claim");
-          cbtn.addEventListener("click", onClaimClick);
-          claimAction.appendChild(cbtn);
-        }
       }
 
-      // -------- VOTING --------
-      async function onVoteClick() {
-        if (!voteContract || !signerAddress) return;
-
-        try {
-          const tx = await voteContract.vote({ value: 0 });
-          await tx.wait();
-
-          const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
-            voteContract.getUserInfo(signerAddress),
-            voteContract.totalVotesGlobal(),
-            voteContract.maxVotesPerDay()
-          ]);
-
-          const votesTodayUsed = Number(userInfo[1]);
-          const userTotalVotes = Number(userInfo[2]);
-          const votesLeft = Number(userInfo[3]);
-          const maxPerDay = Number(maxPerDayBN);
-
-          const computedUsed =
-            maxPerDay > votesLeft ? maxPerDay - votesLeft : votesTodayUsed;
-
-          showVotingStation({
-            totalVotesGlobal: Number(totalGlobal),
-            userTotalVotes,
-            votesTodayUsed: computedUsed,
-            maxVotesPerDay: maxPerDay
-          });
-
-          await loadClaimInfo();
-          await loadLeaderboard();
-        } catch (err) {
-          console.error("Vote tx error:", err);
-          alert("Vote transaction failed or was rejected.");
-        }
-      }
-
-      // -------- CLAIMS --------
       async function loadClaimInfo() {
         if (!claimContract || !signerAddress) return;
 
         try {
           const [info, maxClaimsPerDayBN] = await Promise.all([
-            claimContract.getUserClaimInfo(signerAddress),
+            claimContract.getUserInfo(signerAddress),
             claimContract.maxClaimsPerDay()
           ]);
 
-          const votesAvailable = Number(info[4]);
-          const claimsLeftToday = Number(info[5]);
+          const claimsToday = Number(info[1]);
+          const totalClaims = Number(info[2]);
+          const claimsLeftToday = Number(info[3]);
           const maxClaimsPerDay = Number(maxClaimsPerDayBN);
 
-          claimableVotesEl.textContent = votesAvailable.toString();
+          // For this new contract, "claimable votes" == how many claims you can still do today
+          claimableVotesEl.textContent = claimsLeftToday.toString();
           claimsLeftTodayEl.textContent = `${claimsLeftToday}/${maxClaimsPerDay}`;
+
+          claimAction.innerHTML = "";
+
+          if (claimsLeftToday > 0) {
+            const btn = document.createElement("button");
+            btn.className = "claim-btn";
+            btn.setAttribute("aria-label", "Claim");
+            btn.addEventListener("click", onClaimClick);
+            claimAction.appendChild(btn);
+          } else {
+            const p = document.createElement("p");
+            p.className = "no-votes-text";
+            p.textContent =
+              "You’ve used all your claims for now. Come back later.";
+            claimAction.appendChild(p);
+          }
         } catch (err) {
           console.error("loadClaimInfo error:", err);
           claimableVotesEl.textContent = "?";
           claimsLeftTodayEl.textContent = "?/?";
+          claimAction.innerHTML = "";
+          const p = document.createElement("p");
+          p.className = "no-votes-text";
+          p.textContent = "Could not load claim data. Check console.";
+          claimAction.appendChild(p);
         }
       }
 
@@ -1083,21 +1033,45 @@
         if (!claimContract || !signerAddress) return;
 
         try {
-          const tx = await claimContract.claim();
+          // NOTE: On Sepolia testnet we pass empty bytes.
+          // On mainnet, this will be replaced with a real PoH signature from the PoH signer API.
+          const pohSignature = "0x";
+
+          const tx = await claimContract.claim(pohSignature);
           await tx.wait();
+
+          // Refresh stats after claim
+          const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
+            claimContract.getUserInfo(signerAddress),
+            claimContract.totalClaimsGlobal(),
+            claimContract.maxClaimsPerDay()
+          ]);
+
+          const claimsToday = Number(userInfo[1]);
+          const totalClaims = Number(userInfo[2]);
+          const claimsLeft = Number(userInfo[3]);
+          const maxPerDay = Number(maxPerDayBN);
+
+          const computedUsed =
+            maxPerDay > claimsLeft ? maxPerDay - claimsLeft : claimsToday;
+
+          showVotingStation({
+            totalClaimsGlobal: Number(totalGlobal),
+            userTotalClaims: totalClaims,
+            claimsTodayUsed: computedUsed,
+            maxClaimsPerDay: maxPerDay
+          });
+
           await loadClaimInfo();
+          await loadLeaderboard();
         } catch (err) {
           console.error("Claim tx error:", err);
-          alert(
-            "Claim transaction failed or was rejected.\n" +
-              "You might have no unclaimed votes or have used all claims for today."
-          );
+          alert("Claim transaction failed or was rejected.");
         }
       }
 
-      // -------- LEADERBOARD --------
       async function loadLeaderboard() {
-        if (!voteContract || !provider) return;
+        if (!claimContract || !provider) return;
         if (!leaderboardBody) return;
 
         leaderboardBody.innerHTML = "";
@@ -1108,8 +1082,8 @@
           const currentBlock = await provider.getBlockNumber();
           const fromBlock = currentBlock > 200_000 ? currentBlock - 200_000 : 0;
 
-          const filter = voteContract.filters.Voted();
-          const events = await voteContract.queryFilter(
+          const filter = claimContract.filters.Claimed();
+          const events = await claimContract.queryFilter(
             filter,
             fromBlock,
             currentBlock
@@ -1118,25 +1092,26 @@
           const map = new Map();
 
           for (const ev of events) {
-            const voter = ev.args.voter.toLowerCase();
-            const userTotalVotes = Number(ev.args.totalVotes);
-            const prev = map.get(voter);
-            if (!prev || userTotalVotes > prev) {
-              map.set(voter, userTotalVotes);
+            const user = ev.args.user.toLowerCase();
+            const userTotalClaims = Number(ev.args.userTotalClaims);
+            const prev = map.get(user);
+            if (!prev || userTotalClaims > prev) {
+              map.set(user, userTotalClaims);
             }
           }
 
-          entries = Array.from(map.entries()).map(([address, totalVotes]) => ({
+          entries = Array.from(map.entries()).map(([address, totalClaims]) => ({
             address,
-            totalVotes
+            totalVotes: totalClaims
           }));
         } catch (err) {
           console.error("Leaderboard event fetch failed:", err);
         }
 
-        if (signerAddress && voteContract.totalVotesOf) {
+        // Ensure connected wallet is included
+        if (signerAddress && claimContract.totalClaimsOf) {
           try {
-            const directTotalBN = await voteContract.totalVotesOf(
+            const directTotalBN = await claimContract.totalClaimsOf(
               signerAddress
             );
             const directTotal = Number(directTotalBN);
@@ -1155,7 +1130,7 @@
             }
           } catch (err) {
             console.error(
-              "Direct totalVotesOf for leaderboard failed:",
+              "Direct totalClaimsOf for leaderboard failed:",
               err
             );
           }
