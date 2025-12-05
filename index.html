@@ -185,14 +185,6 @@
           0 0 10px #000;
       }
 
-      .poh-status-no {
-        color: #ff6b6b;
-        text-shadow:
-          0 0 3px #000,
-          0 0 6px #000,
-          0 0 10px #000;
-      }
-
       .poh-rank {
         font-size: 1.6rem;
         padding: 4px 12px;
@@ -471,7 +463,7 @@
       }
 
       .leaderboard-table td.title-col {
-        width: 200px;
+        width: 190px;
       }
 
       .leaderboard-table td.votes-col {
@@ -554,7 +546,7 @@
 
       <h1>DN Voting Platform</h1>
 
-      <!-- STATE 1: CONNECT -->
+      <!-- STATE 1: CONNECT (shown initially) -->
       <div class="connect-wrapper" id="connectSection">
         <button
           class="connect-btn"
@@ -567,13 +559,11 @@
         </div>
       </div>
 
-      <!-- STATE 2: NOT POH VERIFIED -->
+      <!-- STATE 2: NOT PoH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
-        <p id="notVerifiedMessage">
-          This wallet is not PoH verified yet according to Linea.
-        </p>
+        <p>This wallet is not PoH verified yet.</p>
         <a
-          href="https://linea.build/hub/apps/sumsub-reusable-identity"
+          href="#"
           target="_blank"
           rel="noopener noreferrer"
           class="verify-button"
@@ -614,13 +604,13 @@
             </div>
           </div>
 
-          <!-- RIGHT: Vote content -->
+          <!-- RIGHT: Voting content -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
             <div class="poh-status">
               <span class="poh-status-label">Proof of Humanity verified: </span>
-              <span id="pohStatusText" class="poh-status-yes">Yes</span>
+              <span class="poh-status-yes">Yes</span>
               <span class="poh-rank hidden" id="userRankLabel"></span>
             </div>
 
@@ -667,13 +657,12 @@
       </div>
     </div>
 
-    <!-- ethers v6 -->
+    <!-- ethers v6 UMD -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 
     <script>
       const connectSection = document.getElementById("connectSection");
       const notVerifiedSection = document.getElementById("notVerifiedSection");
-      const notVerifiedMessage = document.getElementById("notVerifiedMessage");
       const votingSection = document.getElementById("votingSection");
       const voteAction = document.getElementById("voteAction");
       const leaderboardBody = document.getElementById("leaderboardBody");
@@ -691,28 +680,24 @@
       const connectWalletButton =
         document.getElementById("connectWalletButton");
 
-      const pohStatusText = document.getElementById("pohStatusText");
       const userRankLabel = document.getElementById("userRankLabel");
+      const verifyLink = document.getElementById("verifyLink");
 
-      const TARGET_VOTES_DEFAULT = 5000; // fallback; contract can override
-      let TARGET_VOTES = TARGET_VOTES_DEFAULT;
-
+      const TARGET_VOTES = 5000;
       const LINEA_MAINNET_CHAIN_ID = 59144n;
 
-      const CONTRACT_ADDRESS = "0xBE817fd849FbF8DBd07840F2F3a89F2D649994A3";
+      // MAINNET combined claim+vote contract
+      const VOTE_CONTRACT_ADDRESS =
+        "0xBE817fd849FbF8DBd07840F2F3a89F2D649994A3";
 
-      const POH_HTTP_BASE = "https://poh-api.linea.build/poh/v2";
-
-      // Single combined contract ABI (claim == vote)
-      const CONTRACT_ABI = [
+      // ABI for combined "claim-as-vote" contract
+      const VOTE_ABI = [
         "function maxClaimsPerDay() view returns (uint8)",
         "function dailyClaimsLeft(address user) view returns (uint8)",
+        "function claimableVotes(address user) view returns (uint256)",
         "function totalVotesOf(address user) view returns (uint256)",
         "function totalVotesGlobal() view returns (uint256)",
-        "function claim()",
-        // Optional target votes getter (if you added it on-chain)
-        "function targetVotes() view returns (uint256)",
-        // Events for leaderboard
+        "function claim()", // this is our 'vote' under the hood
         "event Voted(address indexed voter, uint64 indexed dayIndex, uint8 votesToday, uint256 totalVotes, uint256 totalVotesGlobal)"
       ];
 
@@ -727,6 +712,7 @@
         return addr.slice(0, 6) + "..." + addr.slice(-4);
       }
 
+      // Rank names for leaderboard
       function getRankTitle(rank) {
         switch (rank) {
           case 1:
@@ -770,7 +756,7 @@
           case 20:
             return "Clean Shave Sgt";
           default:
-            return "Bald Enforcer";
+            return "Bald Enforcer"; // 21+
         }
       }
 
@@ -787,92 +773,109 @@
         }
       }
 
-      async function ensureProvider() {
-        if (!window.ethereum) {
-          alert(
-            "No injected wallet found. Please install MetaMask or a compatible wallet."
-          );
-          throw new Error("No wallet");
+      // ---- OFFCHAIN PoH CHECK (HTTP API) ----
+      async function checkPohOffchain(address) {
+        const url = `https://poh-api.linea.build/poh/v2/${address}`;
+        const res = await fetch(url, { method: "GET" });
+
+        if (!res.ok) {
+          throw new Error(`PoH API HTTP ${res.status}`);
         }
 
+        const text = (await res.text()).trim().toLowerCase();
+        console.log("PoH API result:", text);
+        return text === "true";
+      }
+
+      function showNotVerified() {
+        connectSection.classList.add("hidden");
+        votingSection.classList.add("hidden");
+        notVerifiedSection.classList.remove("hidden");
+
+        if (verifyLink) {
+          verifyLink.href =
+            "https://linea.build/hub/apps/sumsub-reusable-identity";
+        }
+      }
+
+      async function ensureProvider() {
+        if (!window.ethereum) {
+          alert("No injected wallet found. Please install MetaMask or a compatible wallet.");
+          throw new Error("No wallet");
+        }
         if (!provider) {
           provider = new window.ethers.BrowserProvider(window.ethereum);
         }
         return provider;
       }
 
-      async function checkPoHHttp(address) {
-        try {
-          const url = `${POH_HTTP_BASE}/${address}`;
-          const res = await fetch(url, { method: "GET" });
-          if (!res.ok) {
-            console.warn("PoH HTTP non-OK:", res.status, res.statusText);
-            return false;
-          }
-          const data = await res.json();
-          const isVerified =
-            (typeof data.verified === "boolean" && data.verified) ||
-            data.proof_of_humanity === true ||
-            data.proofOfHumanity === true ||
-            data.status === "verified";
-
-          return !!isVerified;
-        } catch (err) {
-          console.error("PoH HTTP check error:", err);
-          return false;
-        }
-      }
-
       async function connectAndInit() {
         await ensureProvider();
 
+        // Request accounts & signer
         await window.ethereum.request({ method: "eth_requestAccounts" });
         signer = await provider.getSigner();
         signerAddress = await signer.getAddress();
 
+        // Ensure Linea mainnet
         const network = await provider.getNetwork();
         if (network.chainId !== LINEA_MAINNET_CHAIN_ID) {
-          alert("Please switch your wallet to Linea mainnet.");
-          throw new Error(
-            `Wrong chain. Expected ${LINEA_MAINNET_CHAIN_ID}, got ${network.chainId}`
-          );
+          alert("Please switch your wallet to Linea Mainnet.");
+          throw new Error("Wrong chain");
         }
 
-        // HTTP PoH gate
-        const isPoh = await checkPoHHttp(signerAddress);
-        if (!isPoh) {
-          showNotVerified(
-            "This wallet is not PoH verified yet according to Linea. Please verify to participate."
+        // OFFCHAIN PoH gate
+        let isHuman = false;
+        try {
+          isHuman = await checkPohOffchain(signerAddress);
+        } catch (err) {
+          console.error("PoH API check failed:", err);
+          alert(
+            "Could not verify your Proof of Humanity status right now. Please try again later."
           );
           return;
         }
 
-        // Update PoH label
-        if (pohStatusText) {
-          pohStatusText.textContent = "Yes";
-          pohStatusText.classList.remove("poh-status-no");
-          pohStatusText.classList.add("poh-status-yes");
+        if (!isHuman) {
+          showNotVerified();
+          return;
         }
 
+        // If we get here, wallet is PoH-verified (offchain).
         voteContract = new window.ethers.Contract(
-          CONTRACT_ADDRESS,
-          CONTRACT_ABI,
+          VOTE_CONTRACT_ADDRESS,
+          VOTE_ABI,
           signer
         );
 
-        // Try to read targetVotes() from contract if it exists
-        try {
-          const targetVotesBN = await voteContract.targetVotes();
-          const targetVotesNum = Number(targetVotesBN);
-          if (targetVotesNum > 0) {
-            TARGET_VOTES = targetVotesNum;
-          }
-        } catch (e) {
-          // If function doesn't exist, just keep default
-          console.warn("targetVotes() not available, using default:", e);
-        }
+        // Get votes left today, total votes, etc. using combined contract.
+        const [
+          maxClaimsPerDayBN,
+          claimsLeftBN,
+          userTotalVotesBN,
+          totalGlobalBN
+        ] = await Promise.all([
+          voteContract.maxClaimsPerDay(),
+          voteContract.dailyClaimsLeft(signerAddress),
+          voteContract.totalVotesOf(signerAddress),
+          voteContract.totalVotesGlobal()
+        ]);
 
-        await refreshVotingState();
+        const maxPerDay = Number(maxClaimsPerDayBN);
+        const claimsLeft = Number(claimsLeftBN);
+        const userTotalVotes = Number(userTotalVotesBN);
+        const totalGlobal = Number(totalGlobalBN);
+
+        const votesTodayUsed =
+          maxPerDay > claimsLeft ? maxPerDay - claimsLeft : 0;
+
+        showVotingStation({
+          totalVotesGlobal: totalGlobal,
+          userTotalVotes,
+          votesTodayUsed,
+          maxVotesPerDay: maxPerDay
+        });
+
         await loadLeaderboard();
       }
 
@@ -881,52 +884,14 @@
           await connectAndInit();
         } catch (err) {
           console.error("Connect/init error:", err);
-          alert("Could not connect wallet. Check console for details.");
         }
       });
-
-      function showNotVerified(message) {
-        if (message && notVerifiedMessage) {
-          notVerifiedMessage.textContent = message;
-        }
-        connectSection.classList.add("hidden");
-        votingSection.classList.add("hidden");
-        notVerifiedSection.classList.remove("hidden");
-      }
-
-      async function refreshVotingState() {
-        if (!voteContract || !signerAddress) return;
-
-        const [
-          totalGlobalBN,
-          userTotalBN,
-          maxClaimsPerDayBN,
-          claimsLeftTodayBN
-        ] = await Promise.all([
-          voteContract.totalVotesGlobal(),
-          voteContract.totalVotesOf(signerAddress),
-          voteContract.maxClaimsPerDay(),
-          voteContract.dailyClaimsLeft(signerAddress)
-        ]);
-
-        const totalVotesGlobal = Number(totalGlobalBN);
-        const userTotalVotes = Number(userTotalBN);
-        const maxClaimsPerDay = Number(maxClaimsPerDayBN);
-        const claimsLeftToday = Number(claimsLeftTodayBN);
-
-        showVotingStation({
-          totalVotesGlobal,
-          userTotalVotes,
-          claimsLeftToday,
-          maxClaimsPerDay
-        });
-      }
 
       function showVotingStation({
         totalVotesGlobal,
         userTotalVotes,
-        claimsLeftToday,
-        maxClaimsPerDay
+        votesTodayUsed,
+        maxVotesPerDay
       }) {
         connectSection.classList.add("hidden");
         notVerifiedSection.classList.add("hidden");
@@ -934,14 +899,8 @@
 
         totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
         userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
+        votesTodayEl.textContent = `${maxVotesPerDay - votesTodayUsed}/${maxVotesPerDay}`;
 
-        if (maxClaimsPerDay > 0) {
-          votesTodayEl.textContent = `${claimsLeftToday}/${maxClaimsPerDay}`;
-        } else {
-          votesTodayEl.textContent = "0/0";
-        }
-
-        // Thermometer
         const pctRaw =
           TARGET_VOTES > 0 ? (totalVotesGlobal / TARGET_VOTES) * 100 : 0;
         const pct = Math.max(0, Math.min(pctRaw, 100));
@@ -965,10 +924,8 @@
         if (thermoFace) {
           const MIN_BOTTOM = 20;
           const MAX_BOTTOM = 340;
-
           const t = pct / 100;
           const eased = Math.pow(t, 0.6);
-
           const faceBottom =
             MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
 
@@ -977,7 +934,8 @@
 
         // Vote button vs "come back later"
         voteAction.innerHTML = "";
-        if (maxClaimsPerDay > 0 && claimsLeftToday > 0) {
+
+        if (votesTodayUsed < maxVotesPerDay) {
           const btn = document.createElement("button");
           btn.className = "vote-btn";
           btn.setAttribute("aria-label", "Vote");
@@ -995,10 +953,36 @@
         if (!voteContract || !signerAddress) return;
 
         try {
+          // claim() is our "vote" function in the combined contract
           const tx = await voteContract.claim();
           await tx.wait();
 
-          await refreshVotingState();
+          const [
+            maxClaimsPerDayBN,
+            claimsLeftBN,
+            userTotalVotesBN,
+            totalGlobalBN
+          ] = await Promise.all([
+            voteContract.maxClaimsPerDay(),
+            voteContract.dailyClaimsLeft(signerAddress),
+            voteContract.totalVotesOf(signerAddress),
+            voteContract.totalVotesGlobal()
+          ]);
+
+          const maxPerDay = Number(maxClaimsPerDayBN);
+          const claimsLeft = Number(claimsLeftBN);
+          const userTotalVotes = Number(userTotalVotesBN);
+          const totalGlobal = Number(totalGlobalBN);
+          const votesTodayUsed =
+            maxPerDay > claimsLeft ? maxPerDay - claimsLeft : 0;
+
+          showVotingStation({
+            totalVotesGlobal: totalGlobal,
+            userTotalVotes,
+            votesTodayUsed,
+            maxVotesPerDay: maxPerDay
+          });
+
           await loadLeaderboard();
         } catch (err) {
           console.error("Claim/vote tx error:", err);
@@ -1044,6 +1028,7 @@
           console.error("Leaderboard event fetch failed:", err);
         }
 
+        // Make sure connected wallet is present with direct on-chain total
         if (signerAddress && voteContract.totalVotesOf) {
           try {
             const directTotalBN = await voteContract.totalVotesOf(
@@ -1072,7 +1057,7 @@
         }
 
         entries.sort((a, b) => b.totalVotes - a.totalVotes);
-        entries = entries.slice(0, 20);
+        entries = entries.slice(0, 50); // top 50 in table (titles for top 20)
 
         if (!entries.length) {
           const tr = document.createElement("tr");
