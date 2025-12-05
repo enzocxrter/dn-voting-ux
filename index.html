@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <link rel="icon" href="fabicon.png" />
+    <link rel="icon" href="/favicon.ico" />
 
     <style>
       @font-face {
@@ -76,7 +76,7 @@
         line-height: 1.1;
         text-transform: uppercase;
         text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-        color: #000000;
+        color: #000000; /* black title */
       }
 
       /* CONNECT SECTION */
@@ -99,7 +99,6 @@
         background-position: center;
         background-repeat: no-repeat;
         background-size: contain;
-        transform: scale(1); /* base to avoid first-hover jump */
         transition:
           transform 0.15s ease-out,
           background-image 0.15s ease-out;
@@ -114,6 +113,7 @@
         transform: scale(0.98);
       }
 
+      /* Hover text under connect */
       .connect-hover-text {
         margin-top: 16px;
         width: 100%;
@@ -143,6 +143,7 @@
         color: #ffffff;
       }
 
+      /* Layout: thermometer on left, vote stats on right */
       .voting-layout {
         display: flex;
         gap: 16px;
@@ -162,7 +163,7 @@
         text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
       }
 
-      /* PoH + Rank line */
+      /* PoH status line + rank */
       .poh-status {
         margin-bottom: 20px;
         font-size: 1.6rem;
@@ -179,7 +180,7 @@
       }
 
       .poh-status-yes {
-        color: #00ffe8;
+        color: #00ffe8; /* cyan */
         text-shadow:
           0 0 3px #000,
           0 0 6px #000,
@@ -229,7 +230,7 @@
         font-size: 1.6rem;
       }
 
-      /* VOTE button (now: claim + vote) */
+      /* Image-based VOTE (claim) button */
       .vote-btn {
         border: none;
         padding: 0;
@@ -242,7 +243,6 @@
         background-position: center;
         background-repeat: no-repeat;
         background-size: contain;
-        transform: scale(1);
         transition:
           transform 0.15s ease-out,
           background-image 0.15s ease-out;
@@ -262,7 +262,7 @@
         opacity: 0.9;
       }
 
-      /* Not PoH verified panel */
+      /* Not PoH verified panel (for future, if you re-enable strict PoH) */
       .not-verified {
         margin-top: 24px;
         text-align: center;
@@ -282,7 +282,7 @@
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
       }
 
-      /* LEFT SIDE: THERMOMETER */
+      /* LEFT SIDE: VOTE THERMOMETER */
       .thermo-wrapper {
         width: 200px;
         padding: 16px 12px 20px;
@@ -422,7 +422,7 @@
         opacity: 0.7;
       }
 
-      /* LEADERBOARD (unchanged layout) */
+      /* LEADERBOARD */
       .leaderboard {
         margin-top: 40px;
         width: 100%;
@@ -466,7 +466,7 @@
       }
 
       .leaderboard-table td.title-col {
-        width: 160px;
+        width: 200px;
       }
 
       .leaderboard-table td.votes-col {
@@ -549,7 +549,7 @@
 
       <h1>DN Voting Platform</h1>
 
-      <!-- STATE 1: CONNECT -->
+      <!-- STATE 1: CONNECT (shown initially) -->
       <div class="connect-wrapper" id="connectSection">
         <button
           class="connect-btn"
@@ -562,11 +562,11 @@
         </div>
       </div>
 
-      <!-- STATE 2: NOT PoH VERIFIED -->
+      <!-- STATE 2: NOT POH VERIFIED (kept for future; currently unused) -->
       <div class="not-verified hidden" id="notVerifiedSection">
         <p>This wallet is not PoH verified yet.</p>
         <a
-          href="#"
+          href="https://linea.build/hub/apps/sumsub-reusable-identity"
           target="_blank"
           rel="noopener noreferrer"
           class="verify-button"
@@ -576,10 +576,10 @@
         </a>
       </div>
 
-      <!-- STATE 3: VOTING STATION (vote == claim) -->
+      <!-- STATE 3: VOTING STATION -->
       <div class="voting-station hidden" id="votingSection">
         <div class="voting-layout">
-          <!-- LEFT: Thermometer -->
+          <!-- LEFT: Vote Thermometer -->
           <div class="thermo-wrapper">
             <div class="thermo-title">Vote Heat</div>
 
@@ -607,7 +607,7 @@
             </div>
           </div>
 
-          <!-- RIGHT: Vote stats + action -->
+          <!-- RIGHT: Vote content -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
 
@@ -660,10 +660,11 @@
       </div>
     </div>
 
-    <!-- ethers.js v6 UMD -->
+    <!-- Ethers v6 UMD -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 
     <script>
+      // DOM refs
       const connectSection = document.getElementById("connectSection");
       const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
@@ -685,31 +686,31 @@
 
       const userRankLabel = document.getElementById("userRankLabel");
 
-      const TARGET_VOTES = 5000;
-      const LINEA_SEPOLIA_CHAIN_ID = 59141n;
+      // Chain + contract
+      const LINEA_MAINNET_CHAIN_ID = 59144n;
+      const VOTE_CONTRACT_ADDRESS =
+        "0xbe817fd849fbf8dbd07840f2f3a89f2d649994a3"; // lower-case to avoid checksum issues
 
-      // Single combined station contract (claim == vote)
-      const STATION_ADDRESS =
-        "0x1AB2BD2Be6cB8c4EcF1c0F37aA4b015ee193a260";
-
-      const STATION_ABI = [
-        // vote-style views
+      // ABI must match your mainnet contract
+      const VOTE_ABI = [
         "function maxVotesPerDay() view returns (uint8)",
-        "function votesLeftToday(address user) view returns (uint8)",
-        "function totalVotesOf(address user) view returns (uint256)",
         "function totalVotesGlobal() view returns (uint256)",
-        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint8 votesLeft)",
-        // combined action: claim (counts as vote)
-        "function claim(bytes pohSignature)",
-        // we use this for leaderboard (same shape as your old claim contract)
-        "event ClaimedEth(address indexed user, uint64 indexed dayIndex, uint8 claimsToday, uint256 totalVotes, uint256 votesClaimed, uint256 ethAmount)"
+        "function totalVotesOf(address user) view returns (uint256)",
+        "function targetVotes() view returns (uint256)",
+        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint8 votesLeftToday)",
+        "function claim()", // 1 claim = 1 vote + TATERZ
+        "event Voted(address indexed voter, uint64 indexed dayIndex, uint8 votesToday, uint256 totalVotes, uint256 totalVotesGlobal)"
       ];
 
       let provider;
       let signer;
       let signerAddress;
-      let stationContract;
+      let voteContract;
+      let TARGET_VOTES = 5000; // will be overwritten from contract.targetVotes()
+
       let userRank = null;
+
+      // --- helpers ---
 
       function shortenAddress(addr) {
         if (!addr) return "";
@@ -717,52 +718,51 @@
       }
 
       function getRankTitle(rank) {
-  switch (rank) {
-    case 1:
-      return "Follicle Liquidatooor";
-    case 2:
-      return "Hairline Rugpuller";
-    case 3:
-      return "The Buzzcut Butcher";
-    case 4:
-      return "Scalp Sniper";
-    case 5:
-      return "Chrome Dome Degen";
-    case 6:
-      return "The Clippersmith";
-    case 7:
-      return "The Bald Bringer";
-    case 8:
-      return "Harbinger of Hair Loss";
-    case 9:
-      return "The Hairline Eradicator";
-    case 10:
-      return "Supreme Scalp Sacrificer";
-    case 11:
-      return "The No-Hair Enabler";
-    case 12:
-      return "Clipper Kingpin";
-    case 13:
-      return "Follicle Doom Dealer";
-    case 14:
-      return "Clean Cut Kingmaker";
-    case 15:
-      return "Final Strand Supervisor";
-    case 16:
-      return "Commander of Clippers";
-    case 17:
-      return "Buzzcut Broker";
-    case 18:
-      return "Final Shave Boss";
-    case 19:
-      return "DN Bladesmith";
-    case 20:
-      return "Clean Shave Sgt";
-    default:
-      // rank 21 and beyond
-      return "Bald Enforcer";
-  }
-}
+        switch (rank) {
+          case 1:
+            return "Follicle Liquidatooor";
+          case 2:
+            return "Hairline Rugpuller";
+          case 3:
+            return "The Buzzcut Butcher";
+          case 4:
+            return "Scalp Sniper";
+          case 5:
+            return "Chrome Dome Degen";
+          case 6:
+            return "The Clippersmith";
+          case 7:
+            return "The Bald Bringer";
+          case 8:
+            return "Harbinger of Hair Loss";
+          case 9:
+            return "The Hairline Eradicator";
+          case 10:
+            return "Supreme Scalp Sacrificer";
+          case 11:
+            return "The No-Hair Enabler";
+          case 12:
+            return "Clipper Kingpin";
+          case 13:
+            return "Follicle Doom Dealer";
+          case 14:
+            return "Clean Cut Kingmaker";
+          case 15:
+            return "Final Strand Supervisor";
+          case 16:
+            return "Commander of Clippers";
+          case 17:
+            return "Buzzcut Broker";
+          case 18:
+            return "Final Shave Boss";
+          case 19:
+            return "DN Bladesmith";
+          case 20:
+            return "Clean Shave Sgt";
+          default:
+            return "Bald Enforcer";
+        }
+      }
 
       function updateRankLabel() {
         if (!userRankLabel) return;
@@ -799,34 +799,42 @@
         signerAddress = await signer.getAddress();
 
         const network = await provider.getNetwork();
-        if (network.chainId !== LINEA_SEPOLIA_CHAIN_ID) {
-          alert("Please switch your wallet to Linea Sepolia testnet.");
+        if (network.chainId !== LINEA_MAINNET_CHAIN_ID) {
+          alert("Please switch your wallet to Linea mainnet.");
           throw new Error("Wrong chain");
         }
 
-        stationContract = new window.ethers.Contract(
-          STATION_ADDRESS,
-          STATION_ABI,
+        voteContract = new window.ethers.Contract(
+          VOTE_CONTRACT_ADDRESS,
+          VOTE_ABI,
           signer
         );
 
-        // For now we assume PoH off-chain check; on-chain PoH still enforced in claim()
-        const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
-          stationContract.getUserInfo(signerAddress),
-          stationContract.totalVotesGlobal(),
-          stationContract.maxVotesPerDay()
-        ]);
+        // Pull core stats
+        const [userInfo, totalGlobalBN, maxPerDayBN, targetVotesBN] =
+          await Promise.all([
+            voteContract.getUserInfo(signerAddress),
+            voteContract.totalVotesGlobal(),
+            voteContract.maxVotesPerDay(),
+            voteContract.targetVotes()
+          ]);
 
         const votesTodayUsed = Number(userInfo[1]);
         const userTotalVotes = Number(userInfo[2]);
         const votesLeft = Number(userInfo[3]);
         const maxPerDay = Number(maxPerDayBN);
 
+        // Some contracts store "votesLeftToday" separately; we keep the safer calculation:
         const computedUsed =
           maxPerDay > votesLeft ? maxPerDay - votesLeft : votesTodayUsed;
 
+        TARGET_VOTES = Number(targetVotesBN);
+        if (!Number.isFinite(TARGET_VOTES) || TARGET_VOTES <= 0) {
+          TARGET_VOTES = 5000; // fallback
+        }
+
         showVotingStation({
-          totalVotesGlobal: Number(totalGlobal),
+          totalVotesGlobal: Number(totalGlobalBN),
           userTotalVotes,
           votesTodayUsed: computedUsed,
           maxVotesPerDay: maxPerDay
@@ -860,11 +868,12 @@
         notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
 
+        // basic stats
         totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
         userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
         votesTodayEl.textContent = `${maxVotesPerDay - votesTodayUsed}/${maxVotesPerDay}`;
 
-        // Thermometer
+        // thermometer
         const pctRaw =
           TARGET_VOTES > 0 ? (totalVotesGlobal / TARGET_VOTES) * 100 : 0;
         const pct = Math.max(0, Math.min(pctRaw, 100));
@@ -898,13 +907,13 @@
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
-        // Vote (claim) button
+        // Vote button vs cooldown message
         voteAction.innerHTML = "";
 
         if (votesTodayUsed < maxVotesPerDay) {
           const btn = document.createElement("button");
           btn.className = "vote-btn";
-          btn.setAttribute("aria-label", "Vote");
+          btn.setAttribute("aria-label", "Vote (claim TATERZ)");
           btn.addEventListener("click", onVoteClick);
           voteAction.appendChild(btn);
         } else {
@@ -916,21 +925,20 @@
       }
 
       async function onVoteClick() {
-        if (!stationContract || !signerAddress) return;
+        if (!voteContract || !signerAddress) return;
 
         try {
-          // TEMP for Sepolia: empty PoH signature
-          // On mainnet you must pass a real PoH proof bytes.
-          const dummyProof = "0x";
-
-          const tx = await stationContract.claim(dummyProof);
+          // 1 claim = 1 vote + TATERZ payout
+          const tx = await voteContract.claim();
           await tx.wait();
 
-          const [userInfo, totalGlobal, maxPerDayBN] = await Promise.all([
-            stationContract.getUserInfo(signerAddress),
-            stationContract.totalVotesGlobal(),
-            stationContract.maxVotesPerDay()
-          ]);
+          const [userInfo, totalGlobalBN, maxPerDayBN, targetVotesBN] =
+            await Promise.all([
+              voteContract.getUserInfo(signerAddress),
+              voteContract.totalVotesGlobal(),
+              voteContract.maxVotesPerDay(),
+              voteContract.targetVotes()
+            ]);
 
           const votesTodayUsed = Number(userInfo[1]);
           const userTotalVotes = Number(userInfo[2]);
@@ -940,8 +948,10 @@
           const computedUsed =
             maxPerDay > votesLeft ? maxPerDay - votesLeft : votesTodayUsed;
 
+          TARGET_VOTES = Number(targetVotesBN) || TARGET_VOTES;
+
           showVotingStation({
-            totalVotesGlobal: Number(totalGlobal),
+            totalVotesGlobal: Number(totalGlobalBN),
             userTotalVotes,
             votesTodayUsed: computedUsed,
             maxVotesPerDay: maxPerDay
@@ -950,12 +960,12 @@
           await loadLeaderboard();
         } catch (err) {
           console.error("Claim/vote tx error:", err);
-          alert("Claim/Vote transaction failed or was rejected.");
+          alert("Claim/vote transaction failed or was rejected.");
         }
       }
 
       async function loadLeaderboard() {
-        if (!stationContract || !provider) return;
+        if (!voteContract || !provider) return;
         if (!leaderboardBody) return;
 
         leaderboardBody.innerHTML = "";
@@ -966,8 +976,8 @@
           const currentBlock = await provider.getBlockNumber();
           const fromBlock = currentBlock > 200_000 ? currentBlock - 200_000 : 0;
 
-          const filter = stationContract.filters.ClaimedEth();
-          const events = await stationContract.queryFilter(
+          const filter = voteContract.filters.Voted();
+          const events = await voteContract.queryFilter(
             filter,
             fromBlock,
             currentBlock
@@ -976,11 +986,11 @@
           const map = new Map();
 
           for (const ev of events) {
-            const user = ev.args.user.toLowerCase();
+            const voter = ev.args.voter.toLowerCase();
             const userTotalVotes = Number(ev.args.totalVotes);
-            const prev = map.get(user);
+            const prev = map.get(voter);
             if (!prev || userTotalVotes > prev) {
-              map.set(user, userTotalVotes);
+              map.set(voter, userTotalVotes);
             }
           }
 
@@ -991,6 +1001,36 @@
         } catch (err) {
           console.error("Leaderboard event fetch failed:", err);
         }
+
+        if (signerAddress && voteContract.totalVotesOf) {
+          try {
+            const directTotalBN = await voteContract.totalVotesOf(
+              signerAddress
+            );
+            const directTotal = Number(directTotalBN);
+            const lower = signerAddress.toLowerCase();
+            const existing = entries.find((e) => e.address === lower);
+
+            if (directTotal > 0) {
+              if (existing) {
+                existing.totalVotes = Math.max(
+                  existing.totalVotes,
+                  directTotal
+                );
+              } else {
+                entries.push({ address: lower, totalVotes: directTotal });
+              }
+            }
+          } catch (err) {
+            console.error(
+              "Direct totalVotesOf for leaderboard failed:",
+              err
+            );
+          }
+        }
+
+        entries.sort((a, b) => b.totalVotes - a.totalVotes);
+        entries = entries.slice(0, 50); // show up to 50, titles special for top 20
 
         if (!entries.length) {
           const tr = document.createElement("tr");
@@ -1003,9 +1043,6 @@
           updateRankLabel();
           return;
         }
-
-        entries.sort((a, b) => b.totalVotes - a.totalVotes);
-        entries = entries.slice(0, 10);
 
         let userRankLocal = null;
 
