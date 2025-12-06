@@ -1,1255 +1,1180 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Dn Brotato Taterz Farm</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Dn Brotato Taterz Farm" />
+<head>
+  <meta charset="UTF-8" />
+  <title>TATERZ PoH Voting</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #020617;
+      --bg2: #0b1220;
+      --accent: #6366f1;
+      --accent2: #ec4899;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --error: #fecaca;
+      --ok: #bbf7d0;
+      --border: rgba(148, 163, 184, 0.6);
+      --danger: #f97373;
+    }
 
-    <link rel="icon" href="fabicon.png" />
+    * { box-sizing: border-box; }
 
-    <style>
-      @font-face {
-        font-family: "OverstreetBibleBold";
-        src: url("assets/fonts/overstreetbiblebold.ttf") format("truetype");
-        font-weight: normal;
-        font-style: normal;
-        font-display: swap;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Barlow", sans-serif;
+      color: var(--text);
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .app {
+      position: relative;
+      max-width: 720px;
+      width: 100%;
+      z-index: 2;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #0f172a 0, #020617 60%);
+      border-radius: 24px;
+      padding: 22px 20px 24px;
+      border: 1px solid var(--border);
+      box-shadow:
+        0 0 60px rgba(129, 140, 248, 0.35),
+        0 0 120px rgba(236, 72, 153, 0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .title-wrap p {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      color: #cbd5f5;
+    }
+
+    .status-chips {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      font-size: 0.78rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+      white-space: nowrap;
+    }
+
+    .pill.ok {
+      background: rgba(34, 197, 94, 0.12);
+      border-color: rgba(34, 197, 94, 0.8);
+      color: var(--ok);
+    }
+
+    .pill.bad {
+      background: rgba(248, 113, 113, 0.1);
+      border-color: rgba(248, 113, 113, 0.8);
+      color: var(--error);
+    }
+
+    .pill.warn {
+      background: rgba(234, 179, 8, 0.15);
+      border-color: rgba(234, 179, 8, 0.9);
+      color: #fef9c3;
+    }
+
+    .wallet-line {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .top-row {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+
+    .poh-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .poh-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+    }
+
+    .main-button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(129, 140, 248, 0.6);
+      white-space: nowrap;
+    }
+
+    .main-button:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .main-button.secondary {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .stats-grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-box {
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: radial-gradient(circle at top left,
+        rgba(79, 70, 229, 0.25),
+        rgba(15, 23, 42, 0.85)
+      );
+      font-size: 0.85rem;
+    }
+
+    .stat-box:nth-child(2) {
+      background: radial-gradient(circle at top,
+        rgba(236, 72, 153, 0.25),
+        rgba(15, 23, 42, 0.9)
+      );
+    }
+
+    .stat-box:nth-child(3) {
+      background: radial-gradient(circle at top right,
+        rgba(56, 189, 248, 0.25),
+        rgba(15, 23, 42, 0.9)
+      );
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .stat-sub {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.7rem;
+      color: #cbd5f5;
+    }
+
+    .thermo {
+      margin-top: 18px;
+      border-radius: 14px;
+      padding: 10px 12px 12px;
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      background: radial-gradient(circle at top left,
+        rgba(15, 23, 42, 0.95),
+        rgba(15, 23, 42, 0.7)
+      );
+      font-size: 0.8rem;
+    }
+
+    .thermo-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .thermo-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .thermo-progress-wrap {
+      margin-top: 6px;
+      width: 100%;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .thermo-progress {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.25s ease-out;
+    }
+
+    .vote-row {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.85rem;
+    }
+
+    .vote-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .vote-info-line {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .vote-warning {
+      font-size: 0.75rem;
+      color: var(--danger);
+    }
+
+    .msg-box {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+    }
+
+    .msg-error {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.8);
+      color: var(--error);
+    }
+
+    .msg-success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.8);
+      color: var(--ok);
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .leaderboard {
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.6);
+      font-size: 0.8rem;
+    }
+
+    .lb-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .lb-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .lb-you {
+      font-size: 0.75rem;
+      color: #cbd5f5;
+    }
+
+    .lb-table-wrap {
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+
+    thead tr {
+      position: sticky;
+      top: 0;
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(30, 64, 175, 0.4);
+    }
+
+    th {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    tbody tr:nth-child(even) td {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    tbody tr:nth-child(odd) td {
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    tr.self td {
+      background: radial-gradient(circle at top left,
+        rgba(129, 140, 248, 0.6),
+        rgba(15, 23, 42, 0.95)
+      );
+      border-bottom-color: rgba(129, 140, 248, 0.9);
+      box-shadow: 0 0 18px rgba(129, 140, 248, 0.7);
+    }
+
+    .rank-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 0.7rem;
+      background: radial-gradient(circle at top left,
+        rgba(79, 70, 229, 0.3),
+        rgba(15, 23, 42, 0.95)
+      );
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 18px 14px 20px;
       }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: "OverstreetBibleBold", system-ui, -apple-system,
-          BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #ffffff;
-        background: url("assets/images/background2.png") center center / cover
-          no-repeat fixed;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .page {
-        width: 100%;
-        max-width: 1200px;
-        padding: 20px 16px 60px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      /* HEADER / LOGO BAR */
       .header {
-        width: 100%;
-        height: 100px;
-        background: transparent;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 0;
-      }
-
-      .header-link {
-        display: inline-block;
-      }
-
-      .header-logo {
-        height: 80px;
-        width: auto;
-        transition: transform 0.3s ease;
-      }
-
-      .header-logo:hover {
-        transform: scale(1.05);
-      }
-
-      /* TITLE */
-      h1 {
-        margin: 60px 0 40px;
-        text-align: center;
-        font-size: clamp(2.5rem, 5vw, 4.5rem);
-        line-height: 1.1;
-        text-transform: uppercase;
-        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-        color: #000000;
-      }
-
-      /* CONNECT SECTION */
-      .connect-wrapper {
-        display: flex;
         flex-direction: column;
-        align-items: center;
-        width: 100%;
-      }
-
-      .connect-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-        display: block;
-        width: 260px;
-        height: 80px;
-        background-image: url("assets/images/connect.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
-
-      .connect-btn:hover {
-        background-image: url("assets/images/connecthover.png");
-        transform: scale(1.15);
-      }
-
-      .connect-btn:active {
-        transform: scale(0.98);
-      }
-
-      .connect-hover-text {
-        margin-top: 16px;
-        width: 100%;
-        max-width: 600px;
-        text-align: center;
-        color: #f5f5f5;
-        font-size: 2rem;
-        opacity: 0;
-        transform: translateY(8px);
-        transition:
-          opacity 0.2s ease-out,
-          transform 0.2s ease-out;
-        pointer-events: none;
-      }
-
-      .connect-wrapper:hover .connect-hover-text {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      /* NOT VERIFIED STATE */
-      .not-verified {
-        margin-top: 24px;
-        text-align: center;
-        font-size: 1.4rem;
-      }
-
-      .verify-button {
-        margin-top: 12px;
-        display: inline-block;
-        padding: 10px 24px;
-        border-radius: 999px;
-        background: #000000;
-        color: #ffffff;
-        text-decoration: none;
-        text-transform: uppercase;
-        font-size: 1.2rem;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
-      }
-
-      /* VOTING STATION */
-      .voting-station {
-        margin-top: 20px;
-        width: 100%;
-        max-width: 600px;
-        text-align: center;
-        color: #ffffff;
-      }
-
-      .voting-layout {
-        display: flex;
-        gap: 16px;
         align-items: flex-start;
-        justify-content: center;
       }
-
-      .voting-content {
-        flex: 1;
-        min-width: 0;
+      .status-chips {
+        align-items: flex-start;
       }
-
-      .voting-title {
-        font-size: clamp(2rem, 4vw, 3rem);
-        text-transform: uppercase;
-        margin-bottom: 16px;
-        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      .stats-grid {
+        grid-template-columns: 1fr;
       }
-
-      /* PoH status + rank pill */
-      .poh-status {
-        margin-bottom: 20px;
-        font-size: 1.6rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        justify-content: center;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-      }
-
-      .poh-status-label {
-        color: #ffffff;
-      }
-
-      .poh-status-yes {
-        color: #00ffe8;
-        text-shadow:
-          0 0 3px #000,
-          0 0 6px #000,
-          0 0 10px #000;
-      }
-
-      .poh-rank {
-        font-size: 1.6rem;
-        padding: 4px 12px;
-        border-radius: 999px;
-        background: rgba(18, 206, 236, 0.2);
-        border: 1px solid rgba(0, 255, 232, 0.7);
-        color: #00ffe8;
-        text-shadow:
-          0 0 3px #000,
-          0 0 8px #000,
-          0 0 12px #000;
-      }
-
-      .vote-stats {
-        display: flex;
+      .vote-main {
         flex-direction: column;
-        gap: 12px;
-        font-size: 1.4rem;
-        margin-bottom: 24px;
+        align-items: flex-start;
       }
-
-      .vote-stat-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.45);
-        padding: 10px 16px;
-        border-radius: 10px;
-      }
-
-      .vote-stat-label {
-        text-align: left;
-      }
-
-      .vote-stat-value {
-        text-align: right;
-      }
-
-      .vote-action {
-        margin-top: 10px;
-        font-size: 1.6rem;
-      }
-
-      .vote-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-        display: inline-block;
-        width: 220px;
-        height: 70px;
-        background-image: url("assets/images/vote.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
-
-      .vote-btn:hover {
-        background-image: url("assets/images/votehover.png");
-        transform: scale(1.15);
-      }
-
-      .vote-btn:active {
-        transform: scale(0.98);
-      }
-
-      .no-votes-text {
-        font-size: 1.6rem;
-        opacity: 0.9;
-      }
-
-      /* LEFT SIDE: VOTE THERMOMETER */
-      .thermo-wrapper {
-        width: 200px;
-        padding: 16px 12px 20px;
-        background: rgba(0, 0, 0, 0.6);
-        border-radius: 20px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
-        text-align: center;
-      }
-
-      .thermo-title {
-        font-size: 1.4rem;
-        text-transform: uppercase;
-        margin-bottom: 12px;
-      }
-
-      .thermo-body {
-        position: relative;
-        width: 90px;
-        height: 460px;
-        margin: 0 auto 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .thermo-column {
-        position: relative;
-        width: 36px;
-        height: 340px;
-        margin-top: 6px;
-        border-radius: 999px;
-        border: 4px solid rgba(255, 255, 255, 0.9);
-        overflow: hidden;
-        background: linear-gradient(
-          to top,
-          rgba(255, 255, 255, 0.12),
-          rgba(255, 255, 255, 0.25)
-        );
-      }
-
-      .thermo-mercury {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 0%;
-        background: linear-gradient(
-          to top,
-          #12ceec,
-          #00ffe8
-        );
-        box-shadow: 0 0 12px rgba(0, 255, 232, 0.8);
-        transition: height 0.6s ease-out;
-      }
-
-      .thermo-bulb {
-        width: 56px;
-        height: 56px;
-        border-radius: 999px;
-        border: 4px solid rgba(255, 255, 255, 0.95);
-        background: radial-gradient(
-          circle at 30% 30%,
-          #00ffe8,
-          #12ceec
-        );
-        box-shadow: 0 0 18px rgba(0, 255, 232, 0.7);
-        margin-top: -6px;
-      }
-
-      .thermo-face {
-        position: absolute;
-        left: 50%;
-        width: 78px;
-        height: 78px;
-        border-radius: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: none;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
-        bottom: 20px;
-        transition: bottom 0.6s ease-out;
-        z-index: 2;
-      }
-
-      .thermo-face img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: contain;
-      }
-
-      .thermo-face-goal {
-        position: absolute;
-        left: 50%;
-        width: 78px;
-        height: 78px;
-        border-radius: 50%;
-        transform: translateX(-50%);
-        top: -6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: none;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
-        z-index: 2;
-      }
-
-      .thermo-face-goal img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: contain;
-      }
-
-      .thermo-labels {
-        font-size: 1.05rem;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      #thermoCount {
-        font-size: 1.3rem;
-      }
-
-      #thermoPercent {
-        font-size: 1rem;
-        opacity: 0.9;
-      }
-
-      .thermo-target {
-        font-size: 0.9rem;
-        opacity: 0.7;
-      }
-
-      /* LEADERBOARD */
-      .leaderboard {
-        margin-top: 40px;
-        width: 100%;
-        max-width: 600px;
-        background: rgba(0, 0, 0, 0.6);
-        border-radius: 16px;
-        padding: 16px 20px 24px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
-      }
-
-      .leaderboard-title {
-        font-size: 1.8rem;
-        text-transform: uppercase;
-        margin-bottom: 12px;
-        text-align: center;
-      }
-
-      .leaderboard-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 1.2rem;
-      }
-
-      .leaderboard-table th,
-      .leaderboard-table td {
-        padding: 8px 10px;
-        text-align: left;
-      }
-
-      .leaderboard-table th {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-        opacity: 0.9;
-      }
-
-      .leaderboard-table tr:nth-child(even) td {
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .leaderboard-table td.rank-col {
-        width: 40px;
-      }
-
-      .leaderboard-table td.title-col {
-        width: 200px;
-      }
-
-      .leaderboard-table td.votes-col {
-        text-align: right;
-        width: 120px;
-      }
-
-      .leaderboard-row-me td {
-        background: rgba(18, 206, 236, 0.18) !important;
-        font-weight: 600;
-      }
-
-      @media (max-width: 600px) {
-        .header {
-          height: 80px;
-        }
-
-        .header-logo {
-          height: 60px;
-        }
-
-        .connect-btn {
-          width: 220px;
-          height: 70px;
-        }
-
-        h1 {
-          margin-top: 40px;
-        }
-
-        .connect-hover-text {
-          font-size: 1.6rem;
-        }
-
-        .vote-stats {
-          font-size: 1.2rem;
-        }
-
-        .vote-btn,
-        .no-votes-text {
-          font-size: 1.4rem;
-        }
-
-        .poh-status {
-          font-size: 1.4rem;
-        }
-
-        .voting-layout {
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .thermo-wrapper {
-          width: 220px;
-        }
-      }
-
-      .hidden {
-        display: none !important;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="page">
-      <header class="header">
-        <a
-          href="https://www.davydonothing.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="header-link"
-        >
-          <img
-            src="assets/images/dnlogo2.png"
-            alt="DN Brotato logo"
-            class="header-logo"
-          />
-        </a>
-      </header>
-
-      <h1>DN Voting Platform</h1>
-
-      <!-- STATE 1: CONNECT (shown initially) -->
-      <div class="connect-wrapper" id="connectSection">
-        <button
-          class="connect-btn"
-          id="connectWalletButton"
-          aria-label="Connect Wallet"
-        ></button>
-
-        <div class="connect-hover-text">
-          <p>Connect your wallet to vote on SERIOUS topics</p>
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <div class="header">
+        <div class="title-wrap">
+          <h1>Bald TATERZ Votes</h1>
+          <p>Each PoH-verified vote claims TATERZ & pushes the bald agenda.</p>
+        </div>
+        <div class="status-chips">
+          <div id="network-pill" class="pill bad">Not Connected</div>
+          <div id="wallet-line" class="wallet-line">Wallet: —</div>
+          <button id="connect-btn" class="main-button">Connect Wallet</button>
         </div>
       </div>
 
-      <!-- STATE 2: NOT POH VERIFIED -->
-      <div class="not-verified hidden" id="notVerifiedSection">
-        <p>This wallet is not PoH verified yet.</p>
-        <a
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="verify-button"
-          id="verifyLink"
-        >
-          Verify Here
-        </a>
+      <div class="top-row">
+        <div class="poh-row">
+          <span class="poh-label">Proof of Humanity</span>
+          <span id="poh-pill" class="pill warn">Unknown</span>
+        </div>
+        <button id="disconnect-btn" class="main-button secondary" style="display:none;">
+          Disconnect
+        </button>
       </div>
 
-      <!-- STATE 3: VOTING STATION -->
-      <div class="voting-station hidden" id="votingSection">
-        <div class="voting-layout">
-          <!-- LEFT: Vote Thermometer -->
-          <div class="thermo-wrapper">
-            <div class="thermo-title">Vote Heat</div>
+      <div id="gate-message" class="hint">
+        Connect a wallet that passed Linea Proof of Humanity to access voting.
+      </div>
 
-            <div class="thermo-body">
-              <div class="thermo-column">
-                <div class="thermo-mercury" id="thermoMercury"></div>
-              </div>
-              <div class="thermo-bulb"></div>
-
-              <div class="thermo-face-goal">
-                <img src="assets/images/DevlanBald.png" alt="Devlan bald" />
-              </div>
-
-              <div class="thermo-face" id="thermoFace">
-                <img src="assets/images/Devlan.png" alt="Devlan face" />
-              </div>
-            </div>
-
-            <div class="thermo-labels">
-              <div id="thermoCount">0</div>
-              <div id="thermoPercent">0% to target</div>
-              <div class="thermo-target" id="thermoTarget">
-                Target: 5,000 votes
-              </div>
-            </div>
+      <div id="app-main" style="display:none;">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">Votes Left Today</span>
+            <span id="votes-left" class="stat-value">?</span>
+            <span class="stat-sub">Limit per 24h (per wallet)</span>
           </div>
-
-          <!-- RIGHT: Vote content -->
-          <div class="voting-content">
-            <div class="voting-title">Voting station</div>
-
-            <div class="poh-status">
-              <span class="poh-status-label">Proof of Humanity verified:</span>
-              <span class="poh-status-yes" id="pohStatusYes">Yes</span>
-              <span class="poh-rank hidden" id="userRankLabel"></span>
-            </div>
-
-            <div class="vote-stats">
-              <div class="vote-stat-row">
-                <div class="vote-stat-label">Total votes (global)</div>
-                <div class="vote-stat-value" id="totalVotes">0</div>
-              </div>
-
-              <div class="vote-stat-row">
-                <div class="vote-stat-label">Your total votes</div>
-                <div class="vote-stat-value" id="userTotalVotes">0</div>
-              </div>
-
-              <div class="vote-stat-row">
-                <div class="vote-stat-label">Votes today</div>
-                <div class="vote-stat-value" id="votesToday">0/10</div>
-              </div>
-            </div>
-
-            <div class="vote-action" id="voteAction"></div>
+          <div class="stat-box">
+            <span class="stat-label">Total Votes (Global)</span>
+            <span id="total-votes" class="stat-value">0</span>
+            <span class="stat-sub">Every vote is a TATERZ claim</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">TATERZ Per Vote</span>
+            <span id="taterz-per-vote" class="stat-value">0</span>
+            <span class="stat-sub">Paid instantly to your wallet</span>
           </div>
         </div>
-      </div>
 
-      <!-- LEADERBOARD -->
-      <div class="leaderboard" id="leaderboardSection">
-        <div class="leaderboard-title">Top Voters</div>
-        <table class="leaderboard-table">
-          <thead>
-            <tr>
-              <th class="rank-col">#</th>
-              <th class="title-col">Title</th>
-              <th>Wallet</th>
-              <th class="votes-col">Total Votes</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboardBody">
-            <tr>
-              <td colspan="4">No votes yet. Be the first to vote.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="thermo">
+          <div class="thermo-top">
+            <div>
+              <div class="thermo-label">Global Baldness Progress</div>
+              <div id="thermo-text">0 / 0 votes</div>
+            </div>
+            <div id="thermo-percent">0%</div>
+          </div>
+          <div class="thermo-progress-wrap">
+            <div id="thermo-bar" class="thermo-progress"></div>
+          </div>
+        </div>
+
+        <div class="vote-row">
+          <div class="vote-main">
+            <div>
+              <div class="vote-info-line" id="user-vote-summary">You have cast 0 total votes.</div>
+              <div class="vote-info-line" id="user-tokens-summary">You have claimed 0 TATERZ via votes.</div>
+            </div>
+            <button id="vote-btn" class="main-button">
+              Vote & Claim TATERZ
+            </button>
+          </div>
+          <div id="vote-warning" class="vote-warning" style="display:none;">
+            You’ve used all votes for now. Come back in the next 24 hours.
+          </div>
+        </div>
+
+        <div id="error-box" class="msg-box msg-error" style="display:none;"></div>
+        <div id="success-box" class="msg-box msg-success" style="display:none;"></div>
+
+        <div class="hint">
+          Each vote:
+          <br />· verifies your wallet with Linea Proof of Humanity (on-chain),
+          <br />· sends you TATERZ immediately,
+          <br />· counts toward your bald leaderboard rank.
+        </div>
+
+        <div class="leaderboard">
+          <div class="lb-header">
+            <span class="lb-title">Leaderboard</span>
+            <span id="your-rank-label" class="lb-you">Your Rank: —</span>
+          </div>
+          <div id="leaderboard-error" class="msg-box msg-error" style="display:none;"></div>
+          <div class="lb-table-wrap">
+            <table>
+              <thead>
+              <tr>
+                <th>#</th>
+                <th>Wallet</th>
+                <th>Votes</th>
+                <th>Rank</th>
+              </tr>
+              </thead>
+              <tbody id="leaderboard-body">
+              <tr><td colspan="4" style="text-align:center;padding:6px 0;">Loading leaderboard…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
 
-   <!-- Ethers v6 UMD -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <script>
+    (function() {
+      const CONTRACT_ADDRESS = "0xBE817fd849FbF8DBd07840F2F3a89F2D649994A3";
 
-<script>
-  // ==========================
-  //  CONFIG / CONSTANTS
-  // ==========================
+      // Minimal ABI based on verified source
+      const CONTRACT_ABI = [
+        "function maxVotesPerDay() view returns (uint8)",
+        "function taterzPerVote() view returns (uint256)",
+        "function targetVotes() view returns (uint256)",
+        "function totalVotesGlobal() view returns (uint256)",
+        "function votesLeftToday(address user) view returns (uint8)",
+        "function getUserInfo(address user) view view returns (uint64,uint8,uint256,uint256,uint8)",
+        "function vote(bytes signature)"
+      ];
 
-  // Mainnet voting / TATERZ contract
-  const CONTRACT_ADDRESS = "0xBE817fd849FbF8DBd07840F2F3a89F2D649994A3";
+      // Linea PoH
+      const POH_API_BASE = "https://poh-api.linea.build/poh/v2";
+      const POH_SIGNER_API_BASE = "https://poh-signer-api.linea.build/poh/v2";
+      const POH_PORTAL_URL = "https://linea.build/hub/apps/sumsub-reusable-identity";
 
-  // Minimal ABI for the DN voting + TATERZ contract.
-  // Some view functions may not exist on-chain yet; all calls are wrapped in try/catch.
-  const CONTRACT_ABI = [
-    // Core action: each vote is a TATERZ claim + a vote
-    "function vote(bytes signature)",
+      // Optional leaderboard API – adjust if you already have one
+      // Expected JSON: { rows: [ { wallet: string, votes: number }, ... ] }
+      const LEADERBOARD_API_URL = "/api/leaderboard"; // change if needed
 
-    // Config / global
-    "function maxVotesPerDay() view returns (uint8)",
-    "function taterzPerVote() view returns (uint256)",
-    "function totalVotesGlobal() view returns (uint256)",
+      // Rank names (1–20), everyone else is Bald Enforcer
+      const RANK_NAMES = [
+        "Follicle Liquidatooor",
+        "Hairline Rugpuller",
+        "The Buzzcut Butcher",
+        "Scalp Sniper",
+        "Chrome Dome Degen",
+        "The Clippersmith",
+        "The Bald Bringer",
+        "Harbinger of Hair Loss",
+        "The Hairline Eradicator",
+        "Supreme Scalp Sacrificer",
+        "The No-Hair Enabler",
+        "Clipper Kingpin",
+        "Follicle Doom Dealer",
+        "Clean Cut Kingmaker",
+        "Final Strand Supervisor",
+        "Commander of Clippers",
+        "Buzzcut Broker",
+        "Final Shave Boss",
+        "DN Bladesmith",
+        "Clean Shave Sgt"
+      ];
+      const DEFAULT_RANK_NAME = "Bald Enforcer";
 
-    // User info (newer version)
-    "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint256 tokensClaimed, uint8 votesLeft)",
+      // DOM elements
+      const connectBtn = document.getElementById("connect-btn");
+      const disconnectBtn = document.getElementById("disconnect-btn");
+      const networkPill = document.getElementById("network-pill");
+      const walletLine = document.getElementById("wallet-line");
+      const pohPill = document.getElementById("poh-pill");
+      const gateMessage = document.getElementById("gate-message");
+      const appMain = document.getElementById("app-main");
 
-    // Fallback / older helpers (if present)
-    "function votesLeftToday(address user) view returns (uint8)",
-    "function totalVotesOf(address user) view returns (uint256)",
+      const votesLeftEl = document.getElementById("votes-left");
+      const totalVotesEl = document.getElementById("total-votes");
+      const taterzPerVoteEl = document.getElementById("taterz-per-vote");
+      const thermoText = document.getElementById("thermo-text");
+      const thermoPercent = document.getElementById("thermo-percent");
+      const thermoBar = document.getElementById("thermo-bar");
 
-    // Optional target votes (if contract has it)
-    "function targetVotes() view returns (uint256)"
-  ];
+      const userVoteSummary = document.getElementById("user-vote-summary");
+      const userTokensSummary = document.getElementById("user-tokens-summary");
+      const voteBtn = document.getElementById("vote-btn");
+      const voteWarning = document.getElementById("vote-warning");
 
-  // Linea Proof-of-Humanity HTTP gate (UX level)
-  const POH_API_BASE = "https://poh-api.linea.build/poh/v2";
+      const errorBox = document.getElementById("error-box");
+      const successBox = document.getElementById("success-box");
 
-  // Linea PoH signer API for on-chain verification
-  const POH_SIGNER_API_BASE = "https://poh-signer-api.linea.build/poh/v2";
+      const leaderboardBody = document.getElementById("leaderboard-body");
+      const leaderboardError = document.getElementById("leaderboard-error");
+      const yourRankLabel = document.getElementById("your-rank-label");
 
-  // Where to send non-PoH users to complete verification
-  const POH_PORTAL_URL = "https://linea.build/hub/apps/sumsub-reusable-identity";
+      let provider = null;
+      let signer = null;
+      let contract = null;
+      let walletAddress = null;
+      let chainId = null;
+      let isPohVerified = null;
+      let autoConnect = true;
 
-  // Linea mainnet chain ID
-  const LINEA_CHAIN_ID = 59144n;
-  const LINEA_CHAIN_ID_HEX = "0xe708";
-
-  // Fallback target vote goal if on-chain value is missing
-  const DEFAULT_TARGET_VOTES = 5000;
-
-  // ==========================
-  //  GLOBAL STATE
-  // ==========================
-
-  let provider = null;
-  let signer = null;
-  let contract = null;
-  let currentAccount = null;
-  let isPohVerified = null;
-
-  // connectButton modes:
-  // "connect"  -> normal connect
-  // "verify"   -> opens PoH portal
-  // "connected"-> wallet + PoH OK, app open
-  let connectButtonMode = "connect";
-
-  // ==========================
-  //  DOM HELPERS
-  // ==========================
-
-  function setError(message) {
-    const el = document.getElementById("errorBox");
-    if (el) {
-      el.textContent = message || "";
-      el.style.display = message ? "block" : "none";
-    } else if (message) {
-      console.error("Error:", message);
-    }
-  }
-
-  function setSuccess(message) {
-    const el = document.getElementById("successBox");
-    if (el) {
-      el.textContent = message || "";
-      el.style.display = message ? "block" : "none";
-    } else if (message) {
-      console.log("Success:", message);
-    }
-  }
-
-  function setConnectingState(isConnecting) {
-    const btn = document.getElementById("connectButton");
-    if (!btn) return;
-    if (isConnecting) {
-      btn.disabled = true;
-      btn.textContent = "Connecting…";
-    } else {
-      btn.disabled = false;
-      if (connectButtonMode === "connect") btn.textContent = "Connect Wallet";
-      if (connectButtonMode === "verify") btn.textContent = "Verify PoH";
-      if (connectButtonMode === "connected") btn.textContent = "Connected";
-    }
-  }
-
-  function setVoteButtonBusy(isBusy) {
-    const btn = document.getElementById("voteButton");
-    if (!btn) return;
-    btn.disabled = isBusy;
-    btn.textContent = isBusy ? "Voting…" : "Vote";
-  }
-
-  function showAppMain() {
-    const gate = document.getElementById("gateSection");
-    const main = document.getElementById("appMain");
-    if (gate) gate.style.display = "none";
-    if (main) main.style.display = "block";
-  }
-
-  function showGateOnly() {
-    const gate = document.getElementById("gateSection");
-    const main = document.getElementById("appMain");
-    if (gate) gate.style.display = "block";
-    if (main) main.style.display = "none";
-  }
-
-  function updateAddressDisplay(addr) {
-    const el = document.getElementById("walletAddressDisplay");
-    if (!el) return;
-    if (!addr) {
-      el.textContent = "Not connected";
-    } else {
-      el.textContent = `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-    }
-  }
-
-  // ==========================
-  //  ETH / PROVIDER HELPERS
-  // ==========================
-
-  async function ensureProviderAndContract() {
-    if (!window.ethereum) {
-      throw new Error("MetaMask not found");
-    }
-    if (!provider) {
-      provider = new ethers.BrowserProvider(window.ethereum);
-    }
-    if (!signer) {
-      signer = await provider.getSigner();
-    }
-    if (!contract) {
-      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-    }
-    return { provider, signer, contract };
-  }
-
-  async function ensureLineaNetwork() {
-    if (!window.ethereum) return false;
-    const netProvider = new ethers.BrowserProvider(window.ethereum);
-    const net = await netProvider.getNetwork();
-    return net.chainId === LINEA_CHAIN_ID;
-  }
-
-  // ==========================
-  //  PROOF OF HUMANITY (HTTP)
-  // ==========================
-
-  async function checkPohOffchain(address) {
-    try {
-      console.log("Checking PoH via HTTP for", address);
-      const res = await fetch(`${POH_API_BASE}/${address}`);
-      if (!res.ok) {
-        throw new Error(`PoH HTTP ${res.status}`);
-      }
-      const text = (await res.text()).trim(); // "true" or "false"
-      const isHuman = text === "true";
-      console.log("PoH API result:", isHuman);
-      return isHuman;
-    } catch (err) {
-      console.error("PoH API error:", err);
-      return null; // "couldn't check"
-    }
-  }
-
-  // ==========================
-  //  STATE REFRESH
-  // ==========================
-
-  async function refreshUserAndGlobalState() {
-    if (!currentAccount) return;
-
-    try {
-      const { provider, signer, contract } = await ensureProviderAndContract();
-
-      // ----- GLOBAL -----
-      let maxVotesPerDay = 10;
-      let totalVotesGlobal = 0;
-      let targetVotes = DEFAULT_TARGET_VOTES;
-
-      try {
-        const maxVotesBn = await contract.maxVotesPerDay();
-        maxVotesPerDay = Number(maxVotesBn);
-      } catch (e) {
-        console.warn("maxVotesPerDay read failed, using default 10", e);
+      function shorten(addr) {
+        if (!addr) return "";
+        return addr.slice(0, 6) + "..." + addr.slice(-4);
       }
 
-      try {
-        const totalGlobalBn = await contract.totalVotesGlobal();
-        totalVotesGlobal = Number(totalGlobalBn);
-      } catch (e) {
-        console.warn("totalVotesGlobal read failed", e);
-      }
-
-      try {
-        const targetBn = await contract.targetVotes();
-        targetVotes = Number(targetBn);
-      } catch (e) {
-        // If contract has no targetVotes, just keep default
-        console.warn("targetVotes read failed, using fallback", e);
-      }
-
-      const totalVotesEl = document.getElementById("totalVotesValue");
-      if (totalVotesEl) {
-        totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
-      }
-
-      // If you have a progress bar, update it here
-      const progressBar = document.getElementById("votesProgressBarFill");
-      const progressText = document.getElementById("votesProgressText");
-      if (progressBar) {
-        const pct =
-          targetVotes > 0
-            ? Math.min(100, (totalVotesGlobal * 100) / targetVotes)
-            : 0;
-        progressBar.style.width = `${pct.toFixed(1)}%`;
-      }
-      if (progressText) {
-        progressText.textContent = `${totalVotesGlobal.toLocaleString()} / ${targetVotes.toLocaleString()} votes`;
-      }
-
-      // ----- PER-USER -----
-      let votesLeft = null;
-      let votesToday = null;
-      let totalVotesUser = null;
-
-      // Preferred: single getUserInfo()
-      try {
-        const info = await contract.getUserInfo(currentAccount);
-        // info = [dayIndex, votesToday, totalVotes, tokensClaimed, votesLeft]
-        votesToday = Number(info[1]);
-        totalVotesUser = Number(info[2]);
-        votesLeft = Number(info[4]);
-      } catch (e) {
-        console.warn("getUserInfo read failed, falling back", e);
-        // Fallback: separate calls
-        try {
-          const left = await contract.votesLeftToday(currentAccount);
-          votesLeft = Number(left);
-        } catch (e2) {
-          console.warn("votesLeftToday read failed", e2);
+      function setError(msg) {
+        if (!msg) {
+          errorBox.style.display = "none";
+          errorBox.textContent = "";
+          return;
         }
-        try {
-          const total = await contract.totalVotesOf(currentAccount);
-          totalVotesUser = Number(total);
-        } catch (e3) {
-          console.warn("totalVotesOf read failed", e3);
+        errorBox.style.display = "block";
+        errorBox.textContent = msg;
+      }
+
+      function setSuccess(msg) {
+        if (!msg) {
+          successBox.style.display = "none";
+          successBox.textContent = "";
+          return;
         }
+        successBox.style.display = "block";
+        successBox.textContent = msg;
       }
 
-      // Update "Claimable votes" (we treat this as total votes user has so far)
-      const claimableEl = document.getElementById("claimableVotesValue");
-      if (claimableEl && totalVotesUser != null) {
-        claimableEl.textContent = totalVotesUser.toString();
-      }
-
-      // Update "Claims left today" (now "Votes left today")
-      const leftEl = document.getElementById("claimsLeftTodayValue");
-      if (leftEl && votesLeft != null) {
-        leftEl.textContent = `${votesLeft} / ${maxVotesPerDay}`;
-      }
-
-      // Show/hide vote button based on votesLeft
-      const voteBtn = document.getElementById("voteButton");
-      const usedAllMsg = document.getElementById("usedAllVotesMessage");
-      if (voteBtn && usedAllMsg) {
-        if (votesLeft === null) {
-          // Unknown, keep button but warn
-          voteBtn.style.display = "inline-flex";
-          usedAllMsg.style.display = "none";
-        } else if (votesLeft > 0) {
-          voteBtn.style.display = "inline-flex";
-          usedAllMsg.style.display = "none";
+      function setNetworkStatus() {
+        if (!chainId) {
+          networkPill.textContent = "Not Connected";
+          networkPill.className = "pill bad";
+          return;
+        }
+        let nChain = 0;
+        if (typeof chainId === "string") {
+          if (chainId.startsWith("0x") || chainId.startsWith("0X")) {
+            nChain = parseInt(chainId, 16);
+          } else {
+            nChain = parseInt(chainId, 10);
+          }
         } else {
-          voteBtn.style.display = "none";
-          usedAllMsg.style.display = "block";
-          usedAllMsg.textContent =
-            "You’ve used all votes for now. Come back later.";
+          nChain = Number(chainId);
+        }
+        if (nChain === 59144) {
+          networkPill.textContent = "Linea";
+          networkPill.className = "pill ok";
+        } else {
+          networkPill.textContent = "Wrong Network";
+          networkPill.className = "pill bad";
         }
       }
-    } catch (err) {
-      console.error("Error reading user/global state:", err);
-      // Soft-fail UX
-      const voteBtn = document.getElementById("voteButton");
-      const usedAllMsg = document.getElementById("usedAllVotesMessage");
-      if (voteBtn && usedAllMsg) {
-        voteBtn.style.display = "none";
-        usedAllMsg.style.display = "block";
-        usedAllMsg.textContent =
-          "Could not load claim/vote data. Check console or try again.";
-      }
-    }
-  }
 
-  // ==========================
-  //  CONNECT FLOW (HTTP POH GATE)
-  // ==========================
-
-  async function handleConnectClick() {
-    setError("");
-    setSuccess("");
-
-    if (connectButtonMode === "verify") {
-      // User already failed PoH, connect button becomes a "Verify" button
-      window.open(POH_PORTAL_URL, "_blank");
-      return;
-    }
-
-    if (!window.ethereum) {
-      setError("MetaMask not found. Please install it to continue.");
-      return;
-    }
-
-    setConnectingState(true);
-
-    try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      if (!accounts || !accounts.length) {
-        setError("No wallet selected.");
-        return;
-      }
-
-      currentAccount = accounts[0];
-      window.currentAccount = currentAccount; // for debugging in console
-      updateAddressDisplay(currentAccount);
-
-      // Check PoH via HTTP
-      const pohResult = await checkPohOffchain(currentAccount);
-      if (pohResult === true) {
-        isPohVerified = true;
-        connectButtonMode = "connected";
-        setConnectingState(false);
-        showAppMain();
-
-        // Initialize provider/contract + state
-        await ensureProviderAndContract();
-        await refreshUserAndGlobalState();
-      } else if (pohResult === false) {
-        isPohVerified = false;
-        connectButtonMode = "verify";
-        setConnectingState(false);
-        showGateOnly();
-        setError(
-          "This wallet is not Proof-of-Humanity verified. Click 'Verify PoH' to complete verification."
-        );
-      } else {
-        // pohResult === null (API failure)
-        isPohVerified = null;
-        connectButtonMode = "connect";
-        setConnectingState(false);
-        showGateOnly();
-        setError("Could not check Proof of Humanity. Please try again.");
-      }
-    } catch (err) {
-      console.error("Connect/init error:", err);
-      setError("Failed to connect wallet. Check console for details.");
-      setConnectingState(false);
-    }
-  }
-
-  // ==========================
-  //  VOTE (ON-CHAIN POH)
-  // ==========================
-
-  async function onVoteClick() {
-    setError("");
-    setSuccess("");
-
-    try {
-      if (!window.ethereum) {
-        setError("MetaMask not found.");
-        return;
-      }
-      if (!currentAccount) {
-        setError("Connect your wallet first.");
-        return;
-      }
-
-      const { provider, signer, contract } = await ensureProviderAndContract();
-
-      // Ensure user is actually on Linea mainnet
-      const net = await provider.getNetwork();
-      if (net.chainId !== LINEA_CHAIN_ID) {
-        setError("Please switch your wallet network to Linea.");
-        return;
-      }
-
-      // Optional UX guard: require HTTP PoH to be true
-      if (isPohVerified === false) {
-        setError("This wallet is not PoH verified via Linea. Complete PoH first.");
-        return;
-      }
-
-      setVoteButtonBusy(true);
-
-      // Get PoH signature for on-chain verification
-      const sigRes = await fetch(`${POH_SIGNER_API_BASE}/${currentAccount}`);
-      if (!sigRes.ok) {
-        throw new Error(`PoH signer HTTP ${sigRes.status}`);
-      }
-      const rawSig = (await sigRes.text()).trim();
-      if (!rawSig || !rawSig.startsWith("0x")) {
-        throw new Error("Invalid PoH signature format");
-      }
-      const pohSignature = rawSig;
-
-      // Send vote transaction (vote + TATERZ claim)
-      const tx = await contract.vote(pohSignature);
-      await tx.wait();
-
-      setSuccess("Vote successful! Your TATERZ claim has been recorded.");
-      await refreshUserAndGlobalState();
-    } catch (err) {
-      console.error("Vote tx error:", err);
-      const rawMsg =
-        err?.error?.message ||
-        err?.data?.message ||
-        err?.reason ||
-        err?.message ||
-        String(err ?? "");
-      const lower = rawMsg.toLowerCase();
-
-      if (err?.code === "ACTION_REJECTED" || lower.includes("user rejected")) {
-        setError("Transaction rejected in wallet.");
-      } else if (lower.includes("notpohverified") || lower.includes("not poh verified")) {
-        setError(
-          "This wallet is not PoH-verified according to Linea's on-chain verifier. Complete PoH with this wallet."
-        );
-      } else if (lower.includes("daily") && lower.includes("limit")) {
-        setError("You’ve used all votes for now. Come back later.");
-      } else if (lower.includes("not enough taterz") || lower.includes("insufficient taterz")) {
-        setError(
-          "Voting contract does not have enough TATERZ to pay rewards. Please contact the team."
-        );
-      } else if (
-        lower.includes("ecdsa: invalid signature length") ||
-        lower.includes("invalid signature")
-      ) {
-        setError(
-          "PoH signature from Linea was invalid. Please refresh the page and try again."
-        );
-      } else if (lower.includes("signer http")) {
-        setError(
-          "Could not fetch PoH signature from Linea signer API. Please try again in a moment."
-        );
-      } else {
-        setError("Vote transaction failed. Check console for details.");
-      }
-    } finally {
-      setVoteButtonBusy(false);
-    }
-  }
-
-  // ==========================
-  //  AUTO-WIRING & EVENTS
-  // ==========================
-
-  function wireDomEvents() {
-    const connectBtn = document.getElementById("connectButton");
-    if (connectBtn) {
-      connectBtn.addEventListener("click", handleConnectClick);
-    }
-
-    const voteBtn = document.getElementById("voteButton");
-    if (voteBtn) {
-      voteBtn.addEventListener("click", onVoteClick);
-    }
-  }
-
-  function setupWalletEventListeners() {
-    if (!window.ethereum) return;
-
-    window.ethereum.on("accountsChanged", async (accounts) => {
-      setError("");
-      setSuccess("");
-
-      if (!accounts || !accounts.length) {
-        // Wallet disconnected
-        currentAccount = null;
-        contract = null;
-        signer = null;
-        provider = null;
-        connectButtonMode = "connect";
-        setConnectingState(false);
-        showGateOnly();
-        updateAddressDisplay(null);
-
-        const voteBtn = document.getElementById("voteButton");
-        const usedAllMsg = document.getElementById("usedAllVotesMessage");
-        if (voteBtn && usedAllMsg) {
-          voteBtn.style.display = "none";
-          usedAllMsg.style.display = "none";
+      function setPohPillState() {
+        if (!walletAddress) {
+          pohPill.textContent = "Unknown";
+          pohPill.className = "pill warn";
+          return;
         }
-        return;
+        if (isPohVerified === null) {
+          pohPill.textContent = "Checking…";
+          pohPill.className = "pill warn";
+        } else if (isPohVerified === true) {
+          pohPill.textContent = "Verified (Linea PoH)";
+          pohPill.className = "pill ok";
+        } else {
+          pohPill.textContent = "Not verified – required to vote";
+          pohPill.className = "pill bad";
+        }
       }
 
-      // New account -> re-run PoH gate
-      currentAccount = accounts[0];
-      window.currentAccount = currentAccount;
-      updateAddressDisplay(currentAccount);
-      connectButtonMode = "connect";
-      setConnectingState(false);
-      showGateOnly();
-    });
-
-    window.ethereum.on("chainChanged", async (_chainId) => {
-      // Just re-check state after network changes if already connected
-      if (currentAccount) {
+      async function checkPohStatus(address) {
         try {
-          await ensureProviderAndContract();
-          await refreshUserAndGlobalState();
-        } catch (e) {
-          console.warn("Could not refresh after chain change", e);
+          isPohVerified = null;
+          setPohPillState();
+          const res = await fetch(`${POH_API_BASE}/${address}`);
+          if (!res.ok) {
+            throw new Error(`PoH HTTP ${res.status}`);
+          }
+          const txt = (await res.text()).trim();
+          isPohVerified = (txt === "true");
+        } catch (err) {
+          console.error("PoH check failed:", err);
+          isPohVerified = null;
+          setError("Could not check Proof of Humanity.");
+        } finally {
+          setPohPillState();
         }
       }
-    });
-  }
 
-  async function autoConnectIfPossible() {
-    if (!window.ethereum) return;
-
-    try {
-      const accounts = await window.ethereum.request({
-        method: "eth_accounts",
-      });
-
-      if (!accounts || !accounts.length) {
-        // No existing connection
-        showGateOnly();
-        updateAddressDisplay(null);
-        return;
+      function showGateOrApp() {
+        if (!walletAddress) {
+          appMain.style.display = "none";
+          gateMessage.style.display = "block";
+          gateMessage.textContent = "Connect a wallet that passed Linea Proof of Humanity to access voting.";
+          connectBtn.textContent = "Connect Wallet";
+          connectBtn.disabled = false;
+          return;
+        }
+        if (isPohVerified === false) {
+          appMain.style.display = "none";
+          gateMessage.style.display = "block";
+          gateMessage.textContent =
+            "This wallet is not PoH-verified. Click the button above to complete Linea Proof of Humanity.";
+          connectBtn.textContent = "Verify PoH";
+          connectBtn.disabled = false;
+          return;
+        }
+        if (isPohVerified === null) {
+          appMain.style.display = "none";
+          gateMessage.style.display = "block";
+          gateMessage.textContent = "Checking your PoH status…";
+          connectBtn.textContent = "Checking PoH…";
+          connectBtn.disabled = true;
+          return;
+        }
+        // Verified
+        gateMessage.style.display = "none";
+        appMain.style.display = "block";
+        connectBtn.textContent = "Connected";
+        connectBtn.disabled = true;
       }
 
-      currentAccount = accounts[0];
-      window.currentAccount = currentAccount;
-      updateAddressDisplay(currentAccount);
+      async function initProviderAndContract() {
+        if (!window.ethereum) {
+          throw new Error("MetaMask not found");
+        }
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      }
 
-      // Auto-run PoH gate quietly
-      const pohResult = await checkPohOffchain(currentAccount);
-      if (pohResult === true) {
-        isPohVerified = true;
-        connectButtonMode = "connected";
-        setConnectingState(false);
-        showAppMain();
-        await ensureProviderAndContract();
-        await refreshUserAndGlobalState();
-      } else if (pohResult === false) {
-        isPohVerified = false;
-        connectButtonMode = "verify";
-        setConnectingState(false);
-        showGateOnly();
-      } else {
+      async function loadUserAndGlobalState() {
+        if (!walletAddress || !contract) return;
+
+        try {
+          setError("");
+          setSuccess("");
+
+          const [
+            maxVotesPerDay,
+            taterzPerVote,
+            targetVotes,
+            totalVotesGlobal,
+            votesLeftToday,
+            userInfo
+          ] = await Promise.all([
+            contract.maxVotesPerDay(),
+            contract.taterzPerVote(),
+            contract.targetVotes(),
+            contract.totalVotesGlobal(),
+            contract.votesLeftToday(walletAddress),
+            contract.getUserInfo(walletAddress)
+          ]);
+
+          const maxPerDay = Number(maxVotesPerDay);
+          const taterzRaw = taterzPerVote;
+          const target = Number(targetVotes);
+          const totalVotes = Number(totalVotesGlobal);
+          const votesLeft = Number(votesLeftToday);
+
+          const dayIndex = Number(userInfo[0]);
+          const votesToday = Number(userInfo[1]);
+          const userTotalVotes = Number(userInfo[2]);
+          const tokensClaimed = userInfo[3]; // BigNumber
+          const votesLeftFromUserInfo = Number(userInfo[4]); // should match votesLeft
+
+          const decimals = 18;
+          const divisor = ethers.BigNumber.from(10).pow(decimals);
+          const taterzPerVoteHuman = Number(taterzRaw / divisor);
+          const tokensClaimedHuman = Number(tokensClaimed / divisor);
+
+          // Stats
+          votesLeftEl.textContent = `${votesLeft} / ${maxPerDay}`;
+          totalVotesEl.textContent = totalVotes.toLocaleString();
+          taterzPerVoteEl.textContent = `${taterzPerVoteHuman.toLocaleString()} TATERZ`;
+
+          // Thermometer
+          const usedTarget = target || 1;
+          const pct = Math.min(100, (totalVotes * 100) / usedTarget);
+          thermoText.textContent = `${totalVotes.toLocaleString()} / ${usedTarget.toLocaleString()} votes`;
+          thermoPercent.textContent = `${pct.toFixed(1)}%`;
+          thermoBar.style.width = `${pct}%`;
+
+          // User summary
+          userVoteSummary.textContent = `You have cast ${userTotalVotes} total votes.`;
+          userTokensSummary.textContent = `You have claimed ~${tokensClaimedHuman.toLocaleString()} TATERZ via votes.`;
+
+          if (votesLeft <= 0) {
+            voteWarning.style.display = "block";
+            voteBtn.disabled = true;
+          } else {
+            voteWarning.style.display = "none";
+            voteBtn.disabled = false;
+          }
+        } catch (err) {
+          console.error("Error reading user/global state:", err);
+          setError("Could not load claim/vote data. Check console.");
+        }
+      }
+
+      async function refreshEverything() {
+        setNetworkStatus();
+        setPohPillState();
+        showGateOrApp();
+        if (walletAddress && isPohVerified === true) {
+          try {
+            await initProviderAndContract();
+            await loadUserAndGlobalState();
+            await loadLeaderboard();
+          } catch (err) {
+            console.error("Init error:", err);
+            setError("Error initialising contract connection. Check console.");
+          }
+        }
+      }
+
+      async function connectWallet() {
+        try {
+          setError("");
+          setSuccess("");
+
+          if (!window.ethereum) {
+            setError("MetaMask not found. Please install it to continue.");
+            return;
+          }
+
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts"
+          });
+          if (!accounts || !accounts.length) {
+            setError("No account returned from wallet.");
+            return;
+          }
+
+          walletAddress = accounts[0];
+          walletLine.textContent = `Wallet: ${shorten(walletAddress)}`;
+          disconnectBtn.style.display = "inline-flex";
+
+          chainId = await window.ethereum.request({ method: "eth_chainId" });
+          setNetworkStatus();
+
+          autoConnect = true;
+
+          // Check PoH via HTTP first
+          await checkPohStatus(walletAddress);
+          await refreshEverything();
+        } catch (err) {
+          console.error("Connect/init error:", err);
+          setError("Failed to connect wallet.");
+        }
+      }
+
+      function disconnectWallet() {
+        walletAddress = null;
+        chainId = null;
         isPohVerified = null;
-        connectButtonMode = "connect";
-        showGateOnly();
+        provider = null;
+        signer = null;
+        contract = null;
+        walletLine.textContent = "Wallet: —";
+        disconnectBtn.style.display = "none";
+        autoConnect = false;
+        setNetworkStatus();
+        setPohPillState();
+        appMain.style.display = "none";
+        gateMessage.style.display = "block";
+        gateMessage.textContent = "Connect a wallet that passed Linea Proof of Humanity to access voting.";
+        connectBtn.textContent = "Connect Wallet";
+        connectBtn.disabled = false;
+        setError("");
+        setSuccess("");
       }
-    } catch (err) {
-      console.error("Auto-connect error:", err);
-      showGateOnly();
-      updateAddressDisplay(null);
-    }
-  }
 
-  // ==========================
-  //  BOOTSTRAP
-  // ==========================
+      async function switchToLinea() {
+        if (!window.ethereum) {
+          setError("MetaMask not found.");
+          return;
+        }
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0xe708" }] // 59144 in hex
+          });
+          chainId = await window.ethereum.request({ method: "eth_chainId" });
+          setNetworkStatus();
+          if (walletAddress) {
+            await refreshEverything();
+          }
+          setSuccess("Switched to Linea.");
+        } catch (switchError) {
+          console.error("Error switching network:", switchError);
+          setError("Failed to switch network in wallet.");
+        }
+      }
 
-  window.addEventListener("load", () => {
-    showGateOnly();
-    wireDomEvents();
-    setupWalletEventListeners();
-    autoConnectIfPossible();
-  });
-</script>
-  </body>
+      async function onPrimaryConnectClick() {
+        if (!walletAddress) {
+          await connectWallet();
+          return;
+        }
+        // Already have wallet
+        let nChain = 0;
+        if (chainId) {
+          if (typeof chainId === "string" && chainId.startsWith("0x")) {
+            nChain = parseInt(chainId, 16);
+          } else {
+            nChain = Number(chainId);
+          }
+        }
+        if (nChain !== 59144) {
+          await switchToLinea();
+          return;
+        }
+        if (isPohVerified === false) {
+          // send to PoH portal
+          window.open(POH_PORTAL_URL, "_blank");
+          return;
+        }
+        // else: nothing, they’re connected & verified; button stays as status only
+      }
+
+      async function onVoteClick() {
+        setError("");
+        setSuccess("");
+
+        if (!walletAddress) {
+          setError("Connect your wallet first.");
+          return;
+        }
+
+        // Ensure network
+        let nChain = 0;
+        if (chainId) {
+          if (typeof chainId === "string" && chainId.startsWith("0x")) {
+            nChain = parseInt(chainId, 16);
+          } else {
+            nChain = Number(chainId);
+          }
+        }
+        if (nChain !== 59144) {
+          setError("Please switch to Linea network.");
+          return;
+        }
+
+        if (isPohVerified === false) {
+          setError("This wallet is not PoH-verified. Complete PoH first.");
+          return;
+        }
+        if (isPohVerified === null) {
+          setError("Still checking PoH status. Please wait a moment.");
+          return;
+        }
+
+        if (!window.ethereum) {
+          setError("MetaMask not found.");
+          return;
+        }
+
+        try {
+          voteBtn.disabled = true;
+          voteBtn.textContent = "Voting…";
+          // Make sure we have provider/contract
+          if (!contract) {
+            await initProviderAndContract();
+          }
+
+          // Fetch PoH signature from Linea signer API
+          const sigRes = await fetch(`${POH_SIGNER_API_BASE}/${walletAddress}`);
+          if (!sigRes.ok) {
+            throw new Error(`PoH signer HTTP ${sigRes.status}`);
+          }
+          const rawSig = (await sigRes.text()).trim();
+          if (!rawSig || !rawSig.startsWith("0x")) {
+            throw new Error("Invalid PoH signature format");
+          }
+
+          const tx = await contract.vote(rawSig);
+          await tx.wait();
+
+          setSuccess("Vote successful! TATERZ claimed & vote recorded.");
+          await loadUserAndGlobalState();
+          await loadLeaderboard();
+        } catch (err) {
+          console.error("Vote tx error:", err);
+          // Parse error message
+          const rawMsg =
+            (err && (err.error && err.error.message)) ||
+            (err && err.data && err.data.message) ||
+            err.reason ||
+            err.message ||
+            String(err || "");
+
+          const lower = rawMsg.toLowerCase();
+
+          if (err && err.code === "ACTION_REJECTED") {
+            setError("Transaction rejected in wallet.");
+          } else if (lower.includes("not poh verified")) {
+            setError("On-chain PoH verification failed for this wallet.");
+          } else if (lower.includes("daily vote limit reached")) {
+            setError("You’ve used all votes for now. Come back later.");
+          } else if (lower.includes("not enough taterz")) {
+            setError("Contract does not have enough TATERZ to pay this vote.");
+          } else if (lower.includes("invalid signature length")) {
+            setError("PoH signature format was invalid. Please try again.");
+          } else if (lower.includes("poh signer http")) {
+            setError("Could not fetch PoH signature from Linea. Try again soon.");
+          } else {
+            setError("Vote transaction failed. Check console for details.");
+          }
+        } finally {
+          voteBtn.disabled = false;
+          voteBtn.textContent = "Vote & Claim TATERZ";
+        }
+      }
+
+      async function loadLeaderboard() {
+        // If you don't have an API yet, you can disable this function content.
+        if (!LEADERBOARD_API_URL) return;
+        try {
+          leaderboardError.style.display = "none";
+          leaderboardError.textContent = "";
+          leaderboardBody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center;padding:6px 0;">Loading leaderboard…</td></tr>';
+
+          const res = await fetch(LEADERBOARD_API_URL);
+          if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || `HTTP ${res.status}`);
+          }
+
+          const data = await res.json();
+          const rows = Array.isArray(data.rows) ? data.rows : [];
+
+          if (!rows.length) {
+            leaderboardBody.innerHTML =
+              '<tr><td colspan="4" style="text-align:center;padding:6px 0;">No votes yet.</td></tr>';
+            yourRankLabel.textContent = "Your Rank: —";
+            return;
+          }
+
+          leaderboardBody.innerHTML = "";
+          let yourRank = null;
+
+          rows.forEach((row, index) => {
+            const tr = document.createElement("tr");
+            const rankNumber = index + 1;
+
+            if (
+              walletAddress &&
+              row.wallet &&
+              row.wallet.toLowerCase() === walletAddress.toLowerCase()
+            ) {
+              tr.className = "self";
+              yourRank = rankNumber;
+            }
+
+            const rankName =
+              rankNumber <= RANK_NAMES.length
+                ? RANK_NAMES[rankNumber - 1]
+                : DEFAULT_RANK_NAME;
+
+            const tdRank = document.createElement("td");
+            tdRank.textContent = "#" + rankNumber;
+
+            const tdWallet = document.createElement("td");
+            tdWallet.textContent = row.wallet ? shorten(row.wallet) : "";
+
+            const tdVotes = document.createElement("td");
+            tdVotes.textContent = row.votes != null ? row.votes : row.totalVotes || 0;
+
+            const tdName = document.createElement("td");
+            const span = document.createElement("span");
+            span.className = "rank-badge";
+            span.textContent = rankName;
+            tdName.appendChild(span);
+
+            tr.appendChild(tdRank);
+            tr.appendChild(tdWallet);
+            tr.appendChild(tdVotes);
+            tr.appendChild(tdName);
+
+            leaderboardBody.appendChild(tr);
+          });
+
+          if (yourRank != null) {
+            yourRankLabel.textContent = `Your Rank: #${yourRank}`;
+          } else {
+            yourRankLabel.textContent = "Your Rank: —";
+          }
+        } catch (err) {
+          console.error("Leaderboard error:", err);
+          leaderboardError.style.display = "block";
+          leaderboardError.textContent = "Could not load leaderboard.";
+          leaderboardBody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center;padding:6px 0;">No data.</td></tr>';
+        }
+      }
+
+      // Auto-connect & listeners
+      function setupAutoConnect() {
+        if (!window.ethereum) return;
+
+        window.ethereum
+          .request({ method: "eth_chainId" })
+          .then((cid) => {
+            chainId = cid;
+            setNetworkStatus();
+          })
+          .catch(console.error);
+
+        if (autoConnect) {
+          window.ethereum
+            .request({ method: "eth_accounts" })
+            .then(async (accounts) => {
+              if (accounts && accounts.length > 0) {
+                walletAddress = accounts[0];
+                walletLine.textContent = `Wallet: ${shorten(walletAddress)}`;
+                disconnectBtn.style.display = "inline-flex";
+                chainId = await window.ethereum.request({ method: "eth_chainId" });
+                setNetworkStatus();
+                await checkPohStatus(walletAddress);
+                await refreshEverything();
+              }
+            })
+            .catch(console.error);
+        }
+
+        window.ethereum.on("accountsChanged", async (accounts) => {
+          if (!accounts || accounts.length === 0) {
+            disconnectWallet();
+            return;
+          }
+          walletAddress = accounts[0];
+          walletLine.textContent = `Wallet: ${shorten(walletAddress)}`;
+          disconnectBtn.style.display = "inline-flex";
+          await checkPohStatus(walletAddress);
+          await refreshEverything();
+        });
+
+        window.ethereum.on("chainChanged", async (cid) => {
+          chainId = cid;
+          setNetworkStatus();
+          if (walletAddress) {
+            await refreshEverything();
+          }
+        });
+      }
+
+      // Event bindings
+      connectBtn.addEventListener("click", onPrimaryConnectClick);
+      disconnectBtn.addEventListener("click", disconnectWallet);
+      voteBtn.addEventListener("click", onVoteClick);
+
+      // Init
+      setupAutoConnect();
+    })();
+  </script>
+</body>
 </html>
