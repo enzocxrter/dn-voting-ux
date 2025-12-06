@@ -140,31 +140,32 @@
         font-size: 1.4rem;
       }
 
-     .verify-btn {
-  margin-top: 12px;
-  display: inline-block;
-  width: 260px;          /* match connect button width if you like */
-  height: 80px;          /* match connect button height if you like */
-  background-image: url("assets/images/verifyhere.png");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  transition:
-    transform 0.15s ease-out,
-    background-image 0.15s ease-out;
-}
+      .verify-btn {
+        margin-top: 12px;
+        display: inline-block;
+        width: 260px;
+        height: 80px;
+        background-image: url("assets/images/verifyhere.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          transform 0.15s ease-out,
+          background-image 0.15s ease-out;
+      }
 
-.verify-btn:hover {
-  background-image: url("assets/images/verifyherehover.png");
-  transform: scale(1.15);
-}
+      .verify-btn:hover {
+        background-image: url("assets/images/verifyherehover.png");
+        transform: scale(1.15);
+      }
 
-.verify-btn:active {
-  transform: scale(0.98);
-}
+      .verify-btn:active {
+        transform: scale(0.98);
+      }
+
       /* VOTING STATION */
       .voting-station {
         margin-top: 20px;
@@ -580,16 +581,16 @@
 
       <!-- STATE 2: NOT POH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
-  <p>This wallet is not PoH verified yet.</p>
-  <a
-    href="#"
-    target="_blank"
-    rel="noopener noreferrer"
-    class="verify-btn"
-    id="verifyLink"
-    aria-label="Verify PoH"
-  ></a>
-</div>
+        <p>This wallet is not PoH verified yet.</p>
+        <a
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="verify-btn"
+          id="verifyLink"
+          aria-label="Verify PoH"
+        ></a>
+      </div>
 
       <!-- STATE 3: VOTING STATION -->
       <div class="voting-station hidden" id="votingSection">
@@ -696,7 +697,6 @@
       // Only the functions we actually call.
       const CONTRACT_ABI = [
         "function vote(bytes signature)",
-
         "function totalVotesGlobal() view returns (uint256)",
 
         // Optional helpers (we wrap in try/catch)
@@ -719,6 +719,11 @@
 
       const LINEA_CHAIN_ID = 59144n;
       const DEFAULT_TARGET_VOTES = 5000;
+
+      // LEADERBOARD settings
+      const LEADERBOARD_MAX_ENTRIES = 20;
+      // If you know the deploy block for the contract, set it here instead of 0n for speed.
+      const LEADERBOARD_FROM_BLOCK = 0n;
 
       // ==========================
       //  GLOBAL STATE
@@ -835,7 +840,6 @@
           mercuryEl.style.height = `${pct.toFixed(1)}%`;
         }
         if (faceEl) {
-          // Move the Devlan face up inside the tube as % increases
           const baseBottom = 20; // px
           const maxExtra = 240; // px
           const extra = (pct / 100) * maxExtra;
@@ -894,6 +898,105 @@
         } catch (err) {
           console.error("PoH API error:", err);
           return null;
+        }
+      }
+
+      // ==========================
+      //  LEADERBOARD (LOGS)
+      // ==========================
+
+      function getTitleForRank(rank) {
+        switch (rank) {
+          case 1:
+            return "Supreme Tater Lord";
+          case 2:
+            return "Mega Spud General";
+          case 3:
+            return "Couch Commander";
+          default:
+            return "Certified Tater";
+        }
+      }
+
+      async function loadLeaderboard() {
+        try {
+          const { provider } = await ensureProviderAndContract();
+
+          const logs = await provider.getLogs({
+            address: CONTRACT_ADDRESS,
+            fromBlock: LEADERBOARD_FROM_BLOCK,
+            toBlock: "latest"
+          });
+
+          const counts = new Map();
+
+          for (const log of logs) {
+            if (!log.topics || log.topics.length < 2) continue;
+
+            try {
+              const topic = log.topics[1];
+              if (!topic || topic.length !== 66) continue;
+              const addr = ethers.getAddress("0x" + topic.slice(26));
+              const prev = counts.get(addr) || 0;
+              counts.set(addr, prev + 1);
+            } catch (e) {
+              // ignore logs that don't decode cleanly to an address
+            }
+          }
+
+          const rows = Array.from(counts.entries())
+            .map(([wallet, votes]) => ({ wallet, votes }))
+            .sort((a, b) => b.votes - a.votes)
+            .slice(0, LEADERBOARD_MAX_ENTRIES);
+
+          const tbody = $("leaderboardBody");
+          if (!tbody) return;
+
+          tbody.innerHTML = "";
+
+          if (rows.length === 0) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 4;
+            td.textContent = "No votes yet. Be the first to vote.";
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+          }
+
+          const me = currentAccount ? currentAccount.toLowerCase() : null;
+
+          rows.forEach((row, index) => {
+            const tr = document.createElement("tr");
+            if (me && row.wallet.toLowerCase() === me) {
+              tr.classList.add("leaderboard-row-me");
+            }
+
+            const rankTd = document.createElement("td");
+            rankTd.className = "rank-col";
+            rankTd.textContent = (index + 1).toString();
+
+            const titleTd = document.createElement("td");
+            titleTd.className = "title-col";
+            titleTd.textContent = getTitleForRank(index + 1);
+
+            const walletTd = document.createElement("td");
+            walletTd.textContent =
+              row.wallet.slice(0, 6) + "..." + row.wallet.slice(-4);
+
+            const votesTd = document.createElement("td");
+            votesTd.className = "votes-col";
+            votesTd.textContent = row.votes.toLocaleString();
+
+            tr.appendChild(rankTd);
+            tr.appendChild(titleTd);
+            tr.appendChild(walletTd);
+            tr.appendChild(votesTd);
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Error loading leaderboard:", err);
+          // If it fails, we just leave the existing table contents.
         }
       }
 
@@ -1008,6 +1111,9 @@
               usedMsg.classList.add("hidden");
             }
           }
+
+          // Update leaderboard from logs
+          await loadLeaderboard();
         } catch (err) {
           console.error("Error reading user/global state:", err);
           // Soft fail: keep vote button visible so user can still try
