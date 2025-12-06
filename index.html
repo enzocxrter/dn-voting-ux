@@ -140,19 +140,31 @@
         font-size: 1.4rem;
       }
 
-      .verify-button {
-        margin-top: 12px;
-        display: inline-block;
-        padding: 10px 24px;
-        border-radius: 999px;
-        background: #000000;
-        color: #ffffff;
-        text-decoration: none;
-        text-transform: uppercase;
-        font-size: 1.2rem;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
-      }
+     .verify-btn {
+  margin-top: 12px;
+  display: inline-block;
+  width: 260px;          /* match connect button width if you like */
+  height: 80px;          /* match connect button height if you like */
+  background-image: url("assets/images/verifyhere.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease-out,
+    background-image 0.15s ease-out;
+}
 
+.verify-btn:hover {
+  background-image: url("assets/images/verifyherehover.png");
+  transform: scale(1.15);
+}
+
+.verify-btn:active {
+  transform: scale(0.98);
+}
       /* VOTING STATION */
       .voting-station {
         margin-top: 20px;
@@ -568,17 +580,16 @@
 
       <!-- STATE 2: NOT POH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
-        <p>This wallet is not PoH verified yet.</p>
-        <a
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="verify-button"
-          id="verifyLink"
-        >
-          Verify Here
-        </a>
-      </div>
+  <p>This wallet is not PoH verified yet.</p>
+  <a
+    href="#"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="verify-btn"
+    id="verifyLink"
+    aria-label="Verify PoH"
+  ></a>
+</div>
 
       <!-- STATE 3: VOTING STATION -->
       <div class="voting-station hidden" id="votingSection">
