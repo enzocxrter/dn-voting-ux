@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Dn Brotato Taterz Farm" />
 
-    <link rel="icon" href="fabicon.png" />
+    <!-- Optional: change this to a real favicon file on Vercel -->
+    <link rel="icon" href="/favicon.ico" />
 
     <style>
       @font-face {
@@ -113,7 +114,6 @@
         transform: scale(0.98);
       }
 
-      /* Hover text under connect */
       .connect-hover-text {
         margin-top: 16px;
         width: 100%;
@@ -143,7 +143,6 @@
         color: #ffffff;
       }
 
-      /* Layout: thermometer on left, stats on right (vote) */
       .voting-layout {
         display: flex;
         gap: 16px;
@@ -163,7 +162,7 @@
         text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
       }
 
-      /* PoH status line + rank */
+      /* PoH status + rank pill */
       .poh-status {
         margin-bottom: 20px;
         font-size: 1.6rem;
@@ -230,7 +229,7 @@
         font-size: 1.6rem;
       }
 
-      /* Image-based VOTE button */
+      /* VOTE button (each click = claim+vote) */
       .vote-btn {
         border: none;
         padding: 0;
@@ -262,27 +261,7 @@
         opacity: 0.9;
       }
 
-      /* Not PoH verified panel (fallback UI, though gating is off-chain) */
-      .not-verified {
-        margin-top: 24px;
-        text-align: center;
-        font-size: 1.4rem;
-      }
-
-      .verify-button {
-        margin-top: 12px;
-        display: inline-block;
-        padding: 10px 24px;
-        border-radius: 999px;
-        background: #000000;
-        color: #ffffff;
-        text-decoration: none;
-        text-transform: uppercase;
-        font-size: 1.2rem;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
-      }
-
-      /* LEFT SIDE: VOTE THERMOMETER */
+      /* LEFT SIDE: THERMOMETER */
       .thermo-wrapper {
         width: 200px;
         padding: 16px 12px 20px;
@@ -549,7 +528,7 @@
 
       <h1>DN Voting Platform</h1>
 
-      <!-- STATE 1: CONNECT (shown initially) -->
+      <!-- CONNECT -->
       <div class="connect-wrapper" id="connectSection">
         <button
           class="connect-btn"
@@ -562,24 +541,10 @@
         </div>
       </div>
 
-      <!-- STATE 2: NOT POH VERIFIED (fallback) -->
-      <div class="not-verified hidden" id="notVerifiedSection">
-        <p>This wallet is not PoH verified yet.</p>
-        <a
-          href="https://linea.build/hub/apps/sumsub-reusable-identity"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="verify-button"
-          id="verifyLink"
-        >
-          Verify Here
-        </a>
-      </div>
-
-      <!-- STATE 3: VOTING STATION -->
+      <!-- VOTING STATION -->
       <div class="voting-station hidden" id="votingSection">
         <div class="voting-layout">
-          <!-- LEFT: Vote Thermometer -->
+          <!-- LEFT: Thermometer -->
           <div class="thermo-wrapper">
             <div class="thermo-title">Vote Heat</div>
 
@@ -617,7 +582,6 @@
               <span class="poh-rank hidden" id="userRankLabel"></span>
             </div>
 
-            <!-- VOTE STATS -->
             <div class="vote-stats">
               <div class="vote-stat-row">
                 <div class="vote-stat-label">Total votes (global)</div>
@@ -665,13 +629,16 @@
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 
     <script>
-      // ----- DOM ELEMENTS -----
+      // ----- DOM -----
       const connectSection = document.getElementById("connectSection");
-      const notVerifiedSection = document.getElementById("notVerifiedSection");
       const votingSection = document.getElementById("votingSection");
       const voteAction = document.getElementById("voteAction");
       const leaderboardBody = document.getElementById("leaderboardBody");
+
+      const connectWalletButton =
+        document.getElementById("connectWalletButton");
       const connectHoverText = document.getElementById("connectHoverText");
+      const userRankLabel = document.getElementById("userRankLabel");
 
       const totalVotesEl = document.getElementById("totalVotes");
       const userTotalVotesEl = document.getElementById("userTotalVotes");
@@ -683,11 +650,6 @@
       const thermoPercent = document.getElementById("thermoPercent");
       const thermoTarget = document.getElementById("thermoTarget");
 
-      const connectWalletButton =
-        document.getElementById("connectWalletButton");
-
-      const userRankLabel = document.getElementById("userRankLabel");
-
       // ----- CONSTANTS -----
       const LINEA_MAINNET_CHAIN_ID = 59144n;
       const CONTRACT_ADDRESS = "0xBE817fd849FbF8DBd07840F2F3a89F2D649994A3";
@@ -695,21 +657,27 @@
       const DEFAULT_MAX_PER_DAY = 10;
       const DEFAULT_TARGET_VOTES = 5000;
 
-      // mutable UI target votes, possibly overridden by contract.targetVotes()
+      // PoH HTTP API (same pattern as your working UX)
+      const POH_API_BASE = "https://poh-api.linea.build/poh/v2";
+      const POH_PORTAL_URL =
+        "https://linea.build/hub/apps/sumsub-reusable-identity";
+
       let targetVotesUi = DEFAULT_TARGET_VOTES;
 
-      // ABI for the combined Vote+Claim contract (each claim = 1 vote)
       const VOTE_ABI = [
-        "function maxClaimsPerDay() view returns (uint8)",
+        // Owner-settable target (may revert; we wrap in try/catch)
         "function targetVotes() view returns (uint256)",
+        // Combined vote/claim information
         "function totalVotesGlobal() view returns (uint256)",
         "function totalVotesOf(address user) view returns (uint256)",
         "function getUserClaimInfo(address user) view returns (uint64 dayIndex, uint8 claimsToday, uint256 votesClaimed, uint256 totalVotes, uint256 votesAvailable, uint8 claimsLeftToday)",
+        // Each call = 1 claim + 1 vote
         "function claim()",
+        // For leaderboard
         "event Voted(address indexed voter, uint64 indexed dayIndex, uint8 votesToday, uint256 totalVotes, uint256 totalVotesGlobal)"
       ];
 
-      // ----- RANK TITLES -----
+      // ----- RANK NAMES -----
       function getRankTitle(rank) {
         switch (rank) {
           case 1:
@@ -764,40 +732,16 @@
       let voteContract;
       let userRank = null;
 
+      // PoH state for UX gating
+      let isPohVerified = null; // true / false / null
+      let isCheckingPoh = false;
+
+      // Connect button mode: "connect" or "verify"
+      let connectMode = "connect";
+
       function shortenAddress(addr) {
         if (!addr) return "";
         return addr.slice(0, 6) + "..." + addr.slice(-4);
-      }
-
-      // ----- PoH HTTP GATING -----
-      // Uses Linea PoH HTTP API to check if address is a verified human.
-      // NOTE: Endpoint/JSON shape may need tweaking based on the latest docs.
-      async function checkPohOffchain(address) {
-        try {
-          // Example endpoint from Linea docs. Adjust if needed.
-          const url = `https://poh.linea.build/api/registry/${address}`;
-          const res = await fetch(url, {
-            method: "GET"
-          });
-
-          if (!res.ok) {
-            console.warn("PoH API non-200:", res.status);
-            return false;
-          }
-
-          const data = await res.json();
-          // You may need to adapt these fields based on actual response
-          const isHuman =
-            data?.status === "approved" ||
-            data?.isHuman === true ||
-            data?.verified === true;
-
-          console.log("PoH API result:", isHuman);
-          return !!isHuman;
-        } catch (err) {
-          console.error("PoH API error:", err);
-          return false;
-        }
       }
 
       function updateRankLabel() {
@@ -827,16 +771,44 @@
         return provider;
       }
 
+      // ----- PoH HTTP check (same idea as your TS UX) -----
+      async function checkPohStatus(address) {
+        try {
+          isCheckingPoh = true;
+          isPohVerified = null;
+          console.log("Checking PoH via HTTP for", address);
+
+          const res = await fetch(`${POH_API_BASE}/${address}`);
+          if (!res.ok) {
+            throw new Error(`PoH HTTP ${res.status}`);
+          }
+
+          const text = (await res.text()).trim(); // "true" or "false"
+          const isHuman = text === "true";
+          console.log("PoH API result:", text);
+
+          isPohVerified = isHuman;
+          return isHuman;
+        } catch (err) {
+          console.error("PoH check failed:", err);
+          isPohVerified = null;
+          alert("Could not check Proof of Humanity. Please try again later.");
+          return false;
+        } finally {
+          isCheckingPoh = false;
+        }
+      }
+
+      // ----- Core: refresh user & global state from contract -----
       async function refreshUserAndGlobalState() {
         if (!voteContract || !signerAddress) return;
 
-        // Default assumptions
-        let maxPerDay = DEFAULT_MAX_PER_DAY;
         let totalVotesGlobal = 0;
         let userTotalVotes = 0;
-        let votesTodayUsed = 0;
+        let claimsToday = 0;
+        let claimsLeftToday = 0;
 
-        // 1) Attempt to read targetVotes from contract
+        // targetVotes() may revert; we treat it as optional
         try {
           const tv = await voteContract.targetVotes();
           targetVotesUi = Number(tv);
@@ -848,7 +820,6 @@
           targetVotesUi = DEFAULT_TARGET_VOTES;
         }
 
-        // 2) Attempt to read user info + global total
         let info = null;
         try {
           [info, totalVotesGlobal] = await Promise.all([
@@ -859,38 +830,31 @@
           console.error("Error reading user/global state:", err);
         }
 
-        // 3) Try to read maxClaimsPerDay (may be owner-only or revert)
-        try {
-          const mp = await voteContract.maxClaimsPerDay();
-          maxPerDay = Number(mp);
-        } catch (err) {
-          console.warn(
-            "maxClaimsPerDay() reverted; using default 10 in UI:",
-            err
-          );
-          maxPerDay = DEFAULT_MAX_PER_DAY;
+        if (info) {
+          // (dayIndex, claimsToday, votesClaimed, totalVotes, votesAvailable, claimsLeftToday)
+          claimsToday = Number(info[1]);
+          userTotalVotes = Number(info[3]);
+          claimsLeftToday = Number(info[5]);
         }
 
-        // Parse user info if we got it
-        if (info) {
-          // info = (dayIndex, claimsToday, votesClaimed, totalVotes, votesAvailable, claimsLeftToday)
-          const claimsLeftToday = Number(info[5]);
-          userTotalVotes = Number(info[3]);
-          votesTodayUsed =
-            maxPerDay > claimsLeftToday ? maxPerDay - claimsLeftToday : 0;
+        // Derive max votes per day from today's usage + remaining
+        let maxVotesPerDay = claimsToday + claimsLeftToday;
+        if (maxVotesPerDay <= 0) {
+          maxVotesPerDay = DEFAULT_MAX_PER_DAY;
         }
 
         showVotingStation({
           totalVotesGlobal: Number(totalVotesGlobal),
           userTotalVotes,
-          votesTodayUsed,
-          maxVotesPerDay: maxPerDay
+          votesTodayUsed: claimsToday,
+          maxVotesPerDay
         });
       }
 
-      async function connectAndInit() {
+      async function connectAndInitAfterPoh() {
         await ensureProvider();
 
+        // ensure correct network
         const network = await provider.getNetwork();
         if (network.chainId !== LINEA_MAINNET_CHAIN_ID) {
           alert("Please switch your wallet to Linea mainnet.");
@@ -910,18 +874,25 @@
         await loadLeaderboard();
       }
 
+      // ----- CONNECT BUTTON HANDLER -----
       connectWalletButton.addEventListener("click", async () => {
-        if (!window.ethereum) {
-          alert(
-            "No injected wallet found. Please install MetaMask or a compatible wallet."
-          );
-          return;
-        }
-
         try {
+          // If we’re in “verify PoH” mode, just send them to the PoH portal
+          if (connectMode === "verify") {
+            window.open(POH_PORTAL_URL, "_blank");
+            return;
+          }
+
+          if (!window.ethereum) {
+            alert(
+              "No injected wallet found. Please install MetaMask or a compatible wallet."
+            );
+            return;
+          }
+
           connectWalletButton.disabled = true;
 
-          // Request account from wallet
+          // Request accounts
           const accounts = await window.ethereum.request({
             method: "eth_requestAccounts"
           });
@@ -929,39 +900,43 @@
             alert("No wallet account found.");
             return;
           }
+          signerAddress = accounts[0];
 
-          const addr = accounts[0];
+          // Optional: check chain via ethereum.request for early feedback
+          const chainIdHex = await window.ethereum.request({
+            method: "eth_chainId"
+          });
+          const numericChainId = parseInt(chainIdHex, 16);
+          if (numericChainId !== 59144) {
+            alert("Please switch your wallet to Linea mainnet (chainId 59144).");
+            return;
+          }
 
-          // Off-chain PoH check BEFORE showing the main UX
-          const isHuman = await checkPohOffchain(addr);
-          if (!isHuman) {
-            // Show PoH fail UI and link
+          // PoH HTTP gate
+          const human = await checkPohStatus(signerAddress);
+          if (!human) {
+            // Not PoH verified: UX switches into "verify" mode
+            connectMode = "verify";
             connectHoverText.innerHTML =
-              "<p>This wallet is not PoH verified yet. Click below to verify.</p>";
-            connectSection.classList.remove("hidden");
-            notVerifiedSection.classList.remove("hidden");
-            votingSection.classList.add("hidden");
+              "<p>Wallet is not PoH verified. Click the button to verify on Linea.</p>";
             alert(
-              "This wallet is not PoH-verified. You will be redirected to complete verification."
-            );
-            window.open(
-              "https://linea.build/hub/apps/sumsub-reusable-identity",
-              "_blank"
+              "You are not PoH verified yet. Click the button again to open the verification portal."
             );
             return;
           }
 
-          // Save signer address and proceed to contract-based init
-          signerAddress = addr;
-          await connectAndInit();
+          // PoH OK → proceed with contract init + show voting UX
+          connectMode = "connect";
+          await connectAndInitAfterPoh();
         } catch (err) {
           console.error("Connect/init error:", err);
-          alert("Could not connect wallet. Check console for details.");
+          alert("Could not connect or initialize. Check console for details.");
         } finally {
           connectWalletButton.disabled = false;
         }
       });
 
+      // ----- SHOW VOTING STATION -----
       function showVotingStation({
         totalVotesGlobal,
         userTotalVotes,
@@ -969,16 +944,16 @@
         maxVotesPerDay
       }) {
         connectSection.classList.add("hidden");
-        notVerifiedSection.classList.add("hidden");
         votingSection.classList.remove("hidden");
 
         totalVotesEl.textContent = totalVotesGlobal.toLocaleString();
         userTotalVotesEl.textContent = userTotalVotes.toLocaleString();
-        votesTodayEl.textContent = `${Math.max(
-          maxVotesPerDay - votesTodayUsed,
-          0
-        )}/${maxVotesPerDay}`;
 
+        const used = Math.min(votesTodayUsed, maxVotesPerDay);
+        const left = Math.max(maxVotesPerDay - used, 0);
+        votesTodayEl.textContent = `${left}/${maxVotesPerDay}`;
+
+        // Thermometer
         const pctRaw =
           targetVotesUi > 0
             ? (totalVotesGlobal / targetVotesUi) * 100
@@ -1004,19 +979,17 @@
         if (thermoFace) {
           const MIN_BOTTOM = 20;
           const MAX_BOTTOM = 340;
-
           const t = pct / 100;
           const eased = Math.pow(t, 0.6);
-
           const faceBottom =
             MIN_BOTTOM + (MAX_BOTTOM - MIN_BOTTOM) * eased;
-
           thermoFace.style.bottom = `${faceBottom}px`;
         }
 
+        // Vote action
         voteAction.innerHTML = "";
 
-        if (votesTodayUsed < maxVotesPerDay) {
+        if (left > 0) {
           const btn = document.createElement("button");
           btn.className = "vote-btn";
           btn.setAttribute("aria-label", "Vote");
@@ -1030,26 +1003,44 @@
         }
       }
 
+      // ----- VOTE (CLAIM) CLICK -----
       async function onVoteClick() {
         if (!voteContract || !signerAddress) return;
 
         try {
-          const tx = await voteContract.claim(); // claim = vote+TATERZ
+          const tx = await voteContract.claim();
           await tx.wait();
 
           await refreshUserAndGlobalState();
           await loadLeaderboard();
         } catch (err) {
           console.error("Claim/vote tx error:", err);
+
+          const msg = (err && err.message ? err.message : "").toLowerCase();
+          const reason = (err && err.reason ? err.reason : "").toLowerCase();
+
+          if (
+            msg.includes("poh") ||
+            reason.includes("poh") ||
+            msg.includes("human") ||
+            reason.includes("human")
+          ) {
+            alert(
+              "Your wallet is not PoH verified on-chain. Please complete verification on Linea."
+            );
+            window.open(POH_PORTAL_URL, "_blank");
+            return;
+          }
+
           alert("Claim/vote transaction failed or was rejected.");
         }
       }
 
+      // ----- LEADERBOARD -----
       async function loadLeaderboard() {
         if (!voteContract || !provider || !leaderboardBody) return;
 
         leaderboardBody.innerHTML = "";
-
         let entries = [];
 
         try {
@@ -1116,7 +1107,7 @@
         }
 
         entries.sort((a, b) => b.totalVotes - a.totalVotes);
-        entries = entries.slice(0, 20); // top 20
+        entries = entries.slice(0, 20);
 
         if (!entries.length) {
           const tr = document.createElement("tr");
