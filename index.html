@@ -905,18 +905,53 @@
       //  LEADERBOARD (LOGS)
       // ==========================
 
-      function getTitleForRank(rank) {
-        switch (rank) {
-          case 1:
-            return "Supreme Tater Lord";
-          case 2:
-            return "Mega Spud General";
-          case 3:
-            return "Couch Commander";
-          default:
-            return "Certified Tater";
-        }
-      }
+      // ----- RANK TITLES -----
+function getRankTitle(rank) {
+  switch (rank) {
+    case 1:
+      return "Follicle Liquidatooor";
+    case 2:
+      return "Hairline Rugpuller";
+    case 3:
+      return "The Buzzcut Butcher";
+    case 4:
+      return "Scalp Sniper";
+    case 5:
+      return "Chrome Dome Degen";
+    case 6:
+      return "The Clippersmith";
+    case 7:
+      return "The Bald Bringer";
+    case 8:
+      return "Harbinger of Hair Loss";
+    case 9:
+      return "The Hairline Eradicator";
+    case 10:
+      return "Supreme Scalp Sacrificer";
+    case 11:
+      return "The No-Hair Enabler";
+    case 12:
+      return "Clipper Kingpin";
+    case 13:
+      return "Follicle Doom Dealer";
+    case 14:
+      return "Clean Cut Kingmaker";
+    case 15:
+      return "Final Strand Supervisor";
+    case 16:
+      return "Commander of Clippers";
+    case 17:
+      return "Buzzcut Broker";
+    case 18:
+      return "Final Shave Boss";
+    case 19:
+      return "DN Bladesmith";
+    case 20:
+      return "Clean Shave Sgt";
+    default:
+      return "Bald Enforcer";
+  }
+}
 
       async function loadLeaderboard() {
         try {
