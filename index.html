@@ -424,16 +424,19 @@
         opacity: 0.7;
       }
 
-      /* LEADERBOARD */
       .leaderboard {
-        margin-top: 40px;
-        width: 100%;
-        max-width: 600px;
-        background: rgba(0, 0, 0, 0.6);
-        border-radius: 16px;
-        padding: 16px 20px 24px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
-      }
+  margin-top: 40px;
+  width: 100%;
+  max-width: 600px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  padding: 16px 20px 24px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
+
+  max-height: 500px;     /* add this */
+  overflow-y: auto;      /* and this */
+}
+
 
       .leaderboard-title {
         font-size: 1.8rem;
@@ -721,7 +724,7 @@
       const DEFAULT_TARGET_VOTES = 5000;
 
       // LEADERBOARD settings
-      const LEADERBOARD_MAX_ENTRIES = 20;
+      const LEADERBOARD_MAX_ENTRIES = 100;
       // If you know the deploy block for the contract, set it here instead of 0n for speed.
       const LEADERBOARD_FROM_BLOCK = 0n;
 
