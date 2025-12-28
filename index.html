@@ -608,13 +608,16 @@
               </div>
               <div class="thermo-bulb"></div>
 
+              <!-- TOP: GOAL FACE (Joe with hair) -->
               <div class="thermo-face-goal">
-  <img src="assets/images/joe.png" alt="Joe bald" />
-</div>
+                <img src="assets/images/joehair.png" alt="Joe hair" />
+              </div>
 
-<div class="thermo-face" id="thermoFace">
-  <img src="assets/images/joehair.png" alt="Joe face" />
-</div>
+              <!-- BOTTOM: MOVING FACE (bald Joe) -->
+              <div class="thermo-face" id="thermoFace">
+                <img src="assets/images/joe.png" alt="Joe" />
+              </div>
+            </div>
 
             <div class="thermo-labels">
               <div id="thermoCount">0</div>
@@ -637,7 +640,7 @@
 
             <div class="vote-stats">
               <div class="vote-stat-row">
-                <div class="vote-stat-label">Total votes (this round)</div>
+                <div class="vote-stat-label">Votes this round</div>
                 <div class="vote-stat-value" id="totalVotes">0</div>
               </div>
 
@@ -722,11 +725,9 @@
       const LINEA_CHAIN_ID = 59144n;
       const DEFAULT_TARGET_VOTES = 5000;
 
-      // ---- ROUND SYSTEM (FRONT-END ONLY) ----
-      // Round 1 finished at 7,578 totalVotesGlobal
-      const ROUND1_FINAL_TOTAL_VOTES = 7578;
-      // New target for Round 2
-      const ROUND2_TARGET_VOTES = 5000;
+      // Vote 1 finished at 7,578 total votes
+      // Vote 2 = totalVotesGlobal - VOTE1_FINAL_TOTAL (clamped at 0)
+      const VOTE1_FINAL_TOTAL = 7578;
 
       // LEADERBOARD settings
       const LEADERBOARD_MAX_ENTRIES = 100;
@@ -832,8 +833,7 @@
             ? targetVotes
             : DEFAULT_TARGET_VOTES;
 
-        const pct =
-          target > 0 ? Math.min(100, (total * 100) / target) : 0;
+        const pct = target > 0 ? Math.min(100, (total * 100) / target) : 0;
 
         if (countEl) {
           countEl.textContent = total.toLocaleString();
@@ -848,6 +848,7 @@
           mercuryEl.style.height = `${pct.toFixed(1)}%`;
         }
         if (faceEl) {
+          // Tune these to align Joe with the mercury visually
           const baseBottom = 90; // px
           const maxExtra = 260; // px
           const extra = (pct / 100) * maxExtra;
@@ -1105,22 +1106,16 @@
             }
           }
 
-          // ---- ROUND 2 CALCULATION (FRONT-END ONLY) ----
-          const roundVotes = Math.max(
+          // ===== Vote 2 logic =====
+          const totalVotesRound = Math.max(
             0,
-            totalVotesGlobal - ROUND1_FINAL_TOTAL_VOTES
+            totalVotesGlobal != null ? totalVotesGlobal - VOTE1_FINAL_TOTAL : 0
           );
 
-          const roundTarget =
-            typeof ROUND2_TARGET_VOTES === "number" &&
-            ROUND2_TARGET_VOTES > 0
-              ? ROUND2_TARGET_VOTES
-              : targetVotes;
-
-          // Update stats UI (this round)
+          // Update stats UI
           const totalVotesEl = $("totalVotes");
           if (totalVotesEl) {
-            totalVotesEl.textContent = roundVotes.toLocaleString();
+            totalVotesEl.textContent = totalVotesRound.toLocaleString();
           }
 
           const userTotalVotesEl = $("userTotalVotes");
@@ -1146,8 +1141,8 @@
             }
           }
 
-          // Thermometer uses round values
-          updateThermometer(roundVotes, roundTarget);
+          // Thermometer uses Vote 2 total
+          updateThermometer(totalVotesRound, targetVotes);
 
           // Show/hide vote button *only* if we know they have 0 left.
           const voteBtn = $("voteButton");
@@ -1164,7 +1159,7 @@
             }
           }
 
-          // Update leaderboard from logs (lifetime)
+          // Update leaderboard from logs (all-time)
           await loadLeaderboard();
         } catch (err) {
           console.error("Error reading user/global state:", err);
@@ -1456,7 +1451,8 @@
           const usedMsg = document.createElement("div");
           usedMsg.id = "usedAllVotesMessage";
           usedMsg.className = "no-votes-text hidden";
-          usedMsg.textContent = "You’ve used all votes for now. Come back later.";
+          usedMsg.textContent =
+            "You’ve used all votes for now. Come back later.";
           voteAction.appendChild(usedMsg);
         }
 
