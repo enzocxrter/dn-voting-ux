@@ -424,19 +424,19 @@
         opacity: 0.7;
       }
 
+      /* LEADERBOARD */
       .leaderboard {
-  margin-top: 40px;
-  width: 100%;
-  max-width: 600px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 16px;
-  padding: 16px 20px 24px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
+        margin-top: 40px;
+        width: 100%;
+        max-width: 600px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 16px;
+        padding: 16px 20px 24px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
 
-  max-height: 500px;     /* add this */
-  overflow-y: auto;      /* and this */
-}
-
+        max-height: 500px;
+        overflow-y: auto;
+      }
 
       .leaderboard-title {
         font-size: 1.8rem;
@@ -638,7 +638,7 @@
 
             <div class="vote-stats">
               <div class="vote-stat-row">
-                <div class="vote-stat-label">Total votes (global)</div>
+                <div class="vote-stat-label">Total votes (this round)</div>
                 <div class="vote-stat-value" id="totalVotes">0</div>
               </div>
 
@@ -722,6 +722,12 @@
 
       const LINEA_CHAIN_ID = 59144n;
       const DEFAULT_TARGET_VOTES = 5000;
+
+      // ---- ROUND SYSTEM (FRONT-END ONLY) ----
+      // Round 1 finished at 7,578 totalVotesGlobal
+      const ROUND1_FINAL_TOTAL_VOTES = 7578;
+      // New target for Round 2
+      const ROUND2_TARGET_VOTES = 5000;
 
       // LEADERBOARD settings
       const LEADERBOARD_MAX_ENTRIES = 100;
@@ -909,52 +915,52 @@
       // ==========================
 
       // ----- RANK TITLES -----
-function getRankTitle(rank) {
-  switch (rank) {
-    case 1:
-      return "Follicle Liquidatooor";
-    case 2:
-      return "Hairline Rugpuller";
-    case 3:
-      return "The Buzzcut Butcher";
-    case 4:
-      return "Scalp Sniper";
-    case 5:
-      return "Chrome Dome Degen";
-    case 6:
-      return "The Clippersmith";
-    case 7:
-      return "The Bald Bringer";
-    case 8:
-      return "Harbinger of Hair Loss";
-    case 9:
-      return "The Hairline Eradicator";
-    case 10:
-      return "Supreme Scalp Sacrificer";
-    case 11:
-      return "The No-Hair Enabler";
-    case 12:
-      return "Clipper Kingpin";
-    case 13:
-      return "Follicle Doom Dealer";
-    case 14:
-      return "Clean Cut Kingmaker";
-    case 15:
-      return "Final Strand Supervisor";
-    case 16:
-      return "Commander of Clippers";
-    case 17:
-      return "Buzzcut Broker";
-    case 18:
-      return "Final Shave Boss";
-    case 19:
-      return "DN Bladesmith";
-    case 20:
-      return "Clean Shave Sgt";
-    default:
-      return "Bald Enforcer";
-  }
-}
+      function getRankTitle(rank) {
+        switch (rank) {
+          case 1:
+            return "Follicle Liquidatooor";
+          case 2:
+            return "Hairline Rugpuller";
+          case 3:
+            return "The Buzzcut Butcher";
+          case 4:
+            return "Scalp Sniper";
+          case 5:
+            return "Chrome Dome Degen";
+          case 6:
+            return "The Clippersmith";
+          case 7:
+            return "The Bald Bringer";
+          case 8:
+            return "Harbinger of Hair Loss";
+          case 9:
+            return "The Hairline Eradicator";
+          case 10:
+            return "Supreme Scalp Sacrificer";
+          case 11:
+            return "The No-Hair Enabler";
+          case 12:
+            return "Clipper Kingpin";
+          case 13:
+            return "Follicle Doom Dealer";
+          case 14:
+            return "Clean Cut Kingmaker";
+          case 15:
+            return "Final Strand Supervisor";
+          case 16:
+            return "Commander of Clippers";
+          case 17:
+            return "Buzzcut Broker";
+          case 18:
+            return "Final Shave Boss";
+          case 19:
+            return "DN Bladesmith";
+          case 20:
+            return "Clean Shave Sgt";
+          default:
+            return "Bald Enforcer";
+        }
+      }
 
       async function loadLeaderboard() {
         try {
@@ -1100,13 +1106,22 @@ function getRankTitle(rank) {
             }
           }
 
-          // Update stats UI
+          // ---- ROUND 2 CALCULATION (FRONT-END ONLY) ----
+          const roundVotes = Math.max(
+            0,
+            totalVotesGlobal - ROUND1_FINAL_TOTAL_VOTES
+          );
+
+          const roundTarget =
+            typeof ROUND2_TARGET_VOTES === "number" &&
+            ROUND2_TARGET_VOTES > 0
+              ? ROUND2_TARGET_VOTES
+              : targetVotes;
+
+          // Update stats UI (this round)
           const totalVotesEl = $("totalVotes");
           if (totalVotesEl) {
-            totalVotesEl.textContent =
-              totalVotesGlobal != null
-                ? totalVotesGlobal.toLocaleString()
-                : "0";
+            totalVotesEl.textContent = roundVotes.toLocaleString();
           }
 
           const userTotalVotesEl = $("userTotalVotes");
@@ -1132,8 +1147,8 @@ function getRankTitle(rank) {
             }
           }
 
-          // Thermometer
-          updateThermometer(totalVotesGlobal, targetVotes);
+          // Thermometer uses round values
+          updateThermometer(roundVotes, roundTarget);
 
           // Show/hide vote button *only* if we know they have 0 left.
           const voteBtn = $("voteButton");
@@ -1150,7 +1165,7 @@ function getRankTitle(rank) {
             }
           }
 
-          // Update leaderboard from logs
+          // Update leaderboard from logs (lifetime)
           await loadLeaderboard();
         } catch (err) {
           console.error("Error reading user/global state:", err);
