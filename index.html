@@ -623,7 +623,7 @@
               <div id="thermoCount">0</div>
               <div id="thermoPercent">0% to target</div>
               <div class="thermo-target" id="thermoTarget">
-                Target: 5,000 votes
+                Target: 20,000 votes
               </div>
             </div>
           </div>
@@ -723,7 +723,7 @@
         "https://linea.build/hub/apps/sumsub-reusable-identity";
 
       const LINEA_CHAIN_ID = 59144n;
-      const DEFAULT_TARGET_VOTES = 5000;
+      const DEFAULT_TARGET_VOTES = 20000;
 
       // Vote 1 finished at 7,578 total votes
       // Vote 2 = totalVotesGlobal - VOTE1_FINAL_TOTAL (clamped at 0)
@@ -1069,12 +1069,8 @@
             console.warn("totalVotesGlobal read failed", e);
           }
 
-          try {
-            const targetBn = await contract.targetVotes();
-            targetVotes = Number(targetBn);
-          } catch (e) {
-            console.warn("targetVotes read failed, using default", e);
-          }
+          // For this round, always use our front-end target
+          targetVotes = DEFAULT_TARGET_VOTES;
 
           try {
             const maxBn = await contract.maxVotesPerDay();
