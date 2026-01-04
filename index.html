@@ -708,8 +708,9 @@
         "function maxVotesPerDay() view returns (uint8)",
         "function votesLeftToday(address user) view returns (uint256)",
         "function totalVotesOf(address user) view returns (uint256)",
-        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint256 tokensClaimed, uint8 votesLeft)",
-        "function targetVotes() view returns (uint256)"
+        "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint256 tokensClaimed, uint8 votesLeft)"
+        // NOTE: we no longer rely on targetVotes() for the UI
+        // "function targetVotes() view returns (uint256)"
       ];
 
       // Linea PoH HTTP API (UX gate)
@@ -723,11 +724,14 @@
         "https://linea.build/hub/apps/sumsub-reusable-identity";
 
       const LINEA_CHAIN_ID = 59144n;
-      const DEFAULT_TARGET_VOTES = 20000;
 
       // Vote 1 finished at 7,578 total votes
       // Vote 2 = totalVotesGlobal - VOTE1_FINAL_TOTAL (clamped at 0)
       const VOTE1_FINAL_TOTAL = 7578;
+
+      // Vote 2 target: 20,000 votes
+      const VOTE2_TARGET_VOTES = 20000;
+      const DEFAULT_TARGET_VOTES = VOTE2_TARGET_VOTES;
 
       // LEADERBOARD settings
       const LEADERBOARD_MAX_ENTRIES = 100;
@@ -914,6 +918,50 @@
       //  LEADERBOARD (LOGS)
       // ==========================
 
+      // Helper: fetch logs in chunks to avoid RPC "more than 10000 results" error
+      async function fetchAllLogs(provider, address, fromBlock, toBlock) {
+        const allLogs = [];
+
+        async function fetchRange(start, end) {
+          if (end < start) return;
+          try {
+            const partial = await provider.getLogs({
+              address,
+              fromBlock: start,
+              toBlock: end
+            });
+            allLogs.push(...partial);
+          } catch (err) {
+            const msg = (err?.message || "").toLowerCase();
+            if (msg.includes("more than 10000 results")) {
+              const span = end - start;
+              if (span <= 0n) {
+                console.error(
+                  "Cannot split block range further but still too many results:",
+                  start.toString(),
+                  end.toString()
+                );
+                return;
+              }
+              const mid = start + (span >> 1n);
+              // Split into two smaller ranges
+              await fetchRange(start, mid);
+              await fetchRange(mid + 1n, end);
+            } else {
+              console.error(
+                "Error fetching logs for range",
+                start.toString(),
+                end.toString(),
+                err
+              );
+            }
+          }
+        }
+
+        await fetchRange(fromBlock, toBlock);
+        return allLogs;
+      }
+
       // ----- RANK TITLES -----
       function getRankTitle(rank) {
         switch (rank) {
@@ -966,11 +1014,14 @@
         try {
           const { provider } = await ensureProviderAndContract();
 
-          const logs = await provider.getLogs({
-            address: CONTRACT_ADDRESS,
-            fromBlock: LEADERBOARD_FROM_BLOCK,
-            toBlock: "latest"
-          });
+          const latestBlock = await provider.getBlockNumber();
+
+          const logs = await fetchAllLogs(
+            provider,
+            CONTRACT_ADDRESS,
+            LEADERBOARD_FROM_BLOCK,
+            latestBlock
+          );
 
           const counts = new Map();
 
@@ -1055,7 +1106,6 @@
           const { contract } = await ensureProviderAndContract();
 
           let totalVotesGlobal = 0;
-          let targetVotes = DEFAULT_TARGET_VOTES;
           let maxVotesPerDay = 10;
           let votesLeft = null;
           let userTotalVotes = null;
@@ -1068,9 +1118,6 @@
           } catch (e) {
             console.warn("totalVotesGlobal read failed", e);
           }
-
-          // For this round, always use our front-end target
-          targetVotes = DEFAULT_TARGET_VOTES;
 
           try {
             const maxBn = await contract.maxVotesPerDay();
@@ -1137,8 +1184,8 @@
             }
           }
 
-          // Thermometer uses Vote 2 total
-          updateThermometer(totalVotesRound, targetVotes);
+          // Thermometer uses Vote 2 total & Vote 2 target (20,000)
+          updateThermometer(totalVotesRound, VOTE2_TARGET_VOTES);
 
           // Show/hide vote button *only* if we know they have 0 left.
           const voteBtn = $("voteButton");
