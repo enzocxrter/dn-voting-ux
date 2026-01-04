@@ -699,18 +699,13 @@
       const CONTRACT_ADDRESS = "0xBE817fd849FbF8DBd07840F2F3a89F2D649994A3";
 
       // Minimal ABI for the DN voting + TATERZ contract.
-      // Only the functions we actually call.
       const CONTRACT_ABI = [
         "function vote(bytes signature)",
         "function totalVotesGlobal() view returns (uint256)",
-
-        // Optional helpers (we wrap in try/catch)
         "function maxVotesPerDay() view returns (uint8)",
         "function votesLeftToday(address user) view returns (uint256)",
         "function totalVotesOf(address user) view returns (uint256)",
         "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint256 tokensClaimed, uint8 votesLeft)"
-        // NOTE: we no longer rely on targetVotes() for the UI
-        // "function targetVotes() view returns (uint256)"
       ];
 
       // Linea PoH HTTP API (UX gate)
@@ -735,7 +730,6 @@
 
       // LEADERBOARD settings
       const LEADERBOARD_MAX_ENTRIES = 100;
-      // If you know the deploy block for the contract, set it here instead of 0n for speed.
       const LEADERBOARD_FROM_BLOCK = 0n;
 
       // ==========================
@@ -852,7 +846,6 @@
           mercuryEl.style.height = `${pct.toFixed(1)}%`;
         }
         if (faceEl) {
-          // Tune these to align Joe with the mercury visually
           const baseBottom = 90; // px
           const maxExtra = 260; // px
           const extra = (pct / 100) * maxExtra;
@@ -920,6 +913,11 @@
 
       // Helper: fetch logs in chunks to avoid RPC "more than 10000 results" error
       async function fetchAllLogs(provider, address, fromBlock, toBlock) {
+        let startBlock =
+          typeof fromBlock === "bigint" ? fromBlock : BigInt(fromBlock);
+        let endBlock =
+          typeof toBlock === "bigint" ? toBlock : BigInt(toBlock);
+
         const allLogs = [];
 
         async function fetchRange(start, end) {
@@ -944,7 +942,6 @@
                 return;
               }
               const mid = start + (span >> 1n);
-              // Split into two smaller ranges
               await fetchRange(start, mid);
               await fetchRange(mid + 1n, end);
             } else {
@@ -958,7 +955,7 @@
           }
         }
 
-        await fetchRange(fromBlock, toBlock);
+        await fetchRange(startBlock, endBlock);
         return allLogs;
       }
 
@@ -1014,7 +1011,10 @@
         try {
           const { provider } = await ensureProviderAndContract();
 
-          const latestBlock = await provider.getBlockNumber();
+          let latestBlock = await provider.getBlockNumber();
+          if (typeof latestBlock === "number") {
+            latestBlock = BigInt(latestBlock);
+          }
 
           const logs = await fetchAllLogs(
             provider,
@@ -1206,7 +1206,6 @@
           await loadLeaderboard();
         } catch (err) {
           console.error("Error reading user/global state:", err);
-          // Soft fail: keep vote button visible so user can still try
           const voteBtn = $("voteButton");
           const usedMsg = $("usedAllVotesMessage");
           if (voteBtn && usedMsg) {
