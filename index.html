@@ -277,9 +277,9 @@
       }
 
       .yn-card {
-        width: 220px;
-        border-radius: 12px;
-        padding: 14px 16px;
+        width: 240px;
+        border-radius: 14px;
+        padding: 18px 16px;
         text-align: center;
         border: 1px solid rgba(255, 255, 255, 0.18);
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
@@ -287,29 +287,32 @@
 
       /* YES matches PoH "Yes" color vibe (transparent + teal) */
       .yn-card-yes {
-        background: rgba(0, 255, 232, 0.16);
+        background: rgba(0, 255, 232, 0.22);
       }
 
-      /* NO is red (transparent) */
+      /* NO stronger red (transparent) */
       .yn-card-no {
-        background: rgba(255, 64, 64, 0.16);
+        background: rgba(255, 0, 64, 0.22);
       }
 
       .yn-label {
-        font-size: 1.4rem;
+        font-size: 1.8rem;
         text-transform: uppercase;
-        opacity: 0.95;
+        opacity: 0.98;
+        letter-spacing: 0.5px;
       }
 
       .yn-value {
-        margin-top: 6px;
-        font-size: 2.4rem;
-        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
+        margin-top: 8px;
+        font-size: 3.4rem;
+        text-shadow:
+          0 3px 6px rgba(0, 0, 0, 0.6),
+          0 0 14px rgba(0, 0, 0, 0.35);
       }
 
       .yn-actions {
         display: flex;
-        gap: 12px;
+        gap: 14px;
         justify-content: center;
         flex-wrap: wrap;
         margin-top: 10px;
@@ -318,11 +321,11 @@
       .yn-btn {
         border: 1px solid rgba(255, 255, 255, 0.18);
         cursor: pointer;
-        padding: 14px 18px;
-        min-width: 180px;
-        border-radius: 12px;
+        padding: 16px 20px;
+        min-width: 200px;
+        border-radius: 14px;
         font-family: inherit;
-        font-size: 1.4rem;
+        font-size: 1.8rem;
         text-transform: uppercase;
         color: #ffffff;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
@@ -338,11 +341,11 @@
       }
 
       .yn-btn-yes {
-        background: rgba(0, 255, 232, 0.16);
+        background: rgba(0, 255, 232, 0.22);
       }
 
       .yn-btn-no {
-        background: rgba(255, 64, 64, 0.16);
+        background: rgba(255, 0, 64, 0.22);
       }
 
       /* LEADERBOARD */
@@ -441,7 +444,20 @@
         }
 
         .yn-card {
-          width: 200px;
+          width: 220px;
+        }
+
+        .yn-label {
+          font-size: 1.6rem;
+        }
+
+        .yn-value {
+          font-size: 3rem;
+        }
+
+        .yn-btn {
+          font-size: 1.6rem;
+          min-width: 190px;
         }
       }
 
@@ -849,7 +865,6 @@
       //  LEADERBOARD (LOGS)
       // ==========================
 
-      // Helper: fetch logs in chunks to avoid RPC "more than 10000 results" error
       async function fetchAllLogs(provider, address, fromBlock, toBlock) {
         let startBlock =
           typeof fromBlock === "bigint" ? fromBlock : BigInt(fromBlock);
@@ -897,7 +912,6 @@
         return allLogs;
       }
 
-      // ----- RANK TITLES -----
       function getRankTitle(rank) {
         switch (rank) {
           case 1:
@@ -972,9 +986,7 @@
               const addr = ethers.getAddress("0x" + topic.slice(26));
               const prev = counts.get(addr) || 0;
               counts.set(addr, prev + 1);
-            } catch (e) {
-              // ignore logs that don't decode cleanly to an address
-            }
+            } catch (e) {}
           }
 
           const rows = Array.from(counts.entries())
@@ -1029,7 +1041,6 @@
           });
         } catch (err) {
           console.error("Error loading leaderboard:", err);
-          // If it fails, we just leave the existing table contents.
         }
       }
 
@@ -1048,7 +1059,6 @@
           let userTotalVotes = null;
           let votesToday = null;
 
-          // Max votes/day
           try {
             const maxBn = await contract.maxVotesPerDay();
             maxVotesPerDay = Number(maxBn);
@@ -1056,10 +1066,8 @@
             console.warn("maxVotesPerDay read failed, using default 10", e);
           }
 
-          // Per-user
           try {
             const info = await contract.getUserInfo(currentAccount);
-            // [dayIndex, votesToday, totalVotes, tokensClaimed, votesLeft]
             votesToday = Number(info[1]);
             userTotalVotes = Number(info[2]);
             votesLeft = Number(info[4]);
@@ -1079,7 +1087,6 @@
             }
           }
 
-          // "Votes this round" is UX-only and starts at 0 from now
           renderRoundVotes();
 
           const userTotalVotesEl = $("userTotalVotes");
@@ -1102,7 +1109,6 @@
             }
           }
 
-          // Show/hide vote buttons *only* if we know they have 0 left.
           const yesBtn = $("voteYesButton");
           const noBtn = $("voteNoButton");
           const usedMsg = $("usedAllVotesMessage");
@@ -1121,7 +1127,6 @@
             }
           }
 
-          // Update leaderboard from logs (all-time)
           await loadLeaderboard();
         } catch (err) {
           console.error("Error reading user/global state:", err);
@@ -1158,17 +1163,14 @@
           }
 
           currentAccount = accounts[0];
-          window.currentAccount = currentAccount; // for debugging
+          window.currentAccount = currentAccount;
 
-          // HTTP PoH gate first
           const pohResult = await checkPohOffchain(currentAccount);
 
           if (pohResult === true) {
             isPohVerified = true;
             showVotingSection();
             $("pohStatusYes").textContent = "Yes";
-
-            // Init contract + state
             await ensureProviderAndContract();
             await refreshUserAndGlobalState();
           } else if (pohResult === false) {
@@ -1220,7 +1222,6 @@
             return;
           }
 
-          // Soft UX guard: if HTTP PoH said "false", block.
           if (isPohVerified === false) {
             setError(
               "This wallet is not PoH verified via Linea. Complete PoH first."
@@ -1230,7 +1231,6 @@
 
           setVoteButtonBusy(true);
 
-          // Get PoH signature from Linea signer API
           const sigRes = await fetch(
             `${POH_SIGNER_API_BASE}/${currentAccount}`
           );
@@ -1248,11 +1248,9 @@
           }
           const pohSignature = rawSig;
 
-          // Send vote transaction (same backend call for Yes/No)
           const tx = await contract.vote(pohSignature);
           await tx.wait();
 
-          // UX-only increments
           if (choice === "yes" || choice === "no") {
             incrementYesNo(choice);
           }
@@ -1340,7 +1338,6 @@
 
           currentAccount = accounts[0];
           window.currentAccount = currentAccount;
-          // Re-run gate for the new account
           showConnectSection();
         });
 
@@ -1374,7 +1371,6 @@
           currentAccount = accounts[0];
           window.currentAccount = currentAccount;
 
-          // Auto-run PoH gate quietly
           const pohResult = await checkPohOffchain(currentAccount);
           if (pohResult === true) {
             isPohVerified = true;
@@ -1404,7 +1400,6 @@
       // ==========================
 
       window.addEventListener("load", () => {
-        // Insert Vote Yes/No buttons + "used all" text
         const voteAction = $("voteAction");
         if (voteAction) {
           const actions = document.createElement("div");
@@ -1438,7 +1433,6 @@
           voteAction.appendChild(usedMsg);
         }
 
-        // Render UX-only counters on load
         renderYesNoCounts();
         renderRoundVotes();
 
