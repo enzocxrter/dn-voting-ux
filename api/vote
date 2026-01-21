@@ -1,14 +1,16 @@
-// pages/api/vote.js
-import { createClient } from "redis";
+const { createClient } = require("redis");
 
 let client;
+
 async function getRedis() {
   if (client && client.isOpen) return client;
-  if (!process.env.REDIS_URL) {
-    throw new Error("Missing REDIS_URL env var");
-  }
-  client = createClient({ url: process.env.REDIS_URL });
+
+  const url = process.env.REDIS_URL;
+  if (!url) throw new Error("Missing REDIS_URL env var");
+
+  client = createClient({ url });
   client.on("error", (err) => console.error("Redis Client Error", err));
+
   if (!client.isOpen) await client.connect();
   return client;
 }
@@ -16,7 +18,7 @@ async function getRedis() {
 const KEY_YES = "dn:yes";
 const KEY_NO = "dn:no";
 const KEY_ROUND = "dn:round";
-const KEY_TX_SET = "dn:txs"; // set for dedupe
+const KEY_TX_SET = "dn:txs"; // dedupe by tx hash
 
 function isHexTxHash(v) {
   return typeof v === "string" && /^0x[a-fA-F0-9]{64}$/.test(v);
@@ -25,7 +27,7 @@ function isAddress(v) {
   return typeof v === "string" && /^0x[a-fA-F0-9]{40}$/.test(v);
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
@@ -40,7 +42,7 @@ export default async function handler(req, res) {
 
     const redis = await getRedis();
 
-    // Dedup by txHash (SADD returns 1 if added, 0 if already existed)
+    // SADD returns 1 if added, 0 if already exists
     const added = await redis.sAdd(KEY_TX_SET, txHash);
 
     if (added === 0) {
@@ -54,7 +56,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Increment counters
     const multi = redis.multi();
     multi.incr(KEY_ROUND);
     if (choice === "yes") multi.incr(KEY_YES);
@@ -72,6 +73,6 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.error("POST /api/vote error:", e);
-    return res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: e?.message || "Server error" });
   }
-}
+};
