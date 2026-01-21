@@ -21,15 +21,24 @@ const KEY_ROUND = "dn:round";
 
 module.exports = async function handler(req, res) {
   try {
+    // ✅ Disable caching (Vercel/CDN/browser)
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+
     if (req.method !== "GET") {
       res.setHeader("Allow", "GET");
       return res.status(405).json({ error: "Method not allowed" });
     }
 
     const redis = await getRedis();
-    const yes = await redis.get(KEY_YES);
-    const no = await redis.get(KEY_NO);
-    const round = await redis.get(KEY_ROUND);
+
+    // Read all three values together
+    const [yes, no, round] = await redis.mGet([KEY_YES, KEY_NO, KEY_ROUND]);
 
     return res.status(200).json({
       yes: Number(yes || 0),
@@ -38,6 +47,16 @@ module.exports = async function handler(req, res) {
     });
   } catch (e) {
     console.error("GET /api/votes error:", e);
+
+    // Also prevent caching error responses
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+
     return res.status(500).json({ error: e?.message || "Server error" });
   }
 };
