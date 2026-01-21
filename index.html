@@ -726,16 +726,20 @@
       }
 
       // ========= GLOBAL TOTALS (API) =========
-      async function fetchGlobalTotals() {
-        const res = await fetch(API_VOTES, { method: "GET" });
-        if (!res.ok) throw new Error(`votes api ${res.status}`);
-        const data = await res.json();
-        return {
-          yes: Number(data?.yes || 0),
-          no: Number(data?.no || 0),
-          round: Number(data?.round || 0)
-        };
-      }
+     async function fetchGlobalTotals() {
+  const res = await fetch(`${API_VOTES}?t=${Date.now()}`, {
+    method: "GET",
+    cache: "no-store"
+  });
+  if (!res.ok) throw new Error(`votes api ${res.status}`);
+  const data = await res.json();
+  return {
+    yes: Number(data?.yes || 0),
+    no: Number(data?.no || 0),
+    round: Number(data?.round || 0)
+  };
+}
+
 
       async function renderGlobalTotals() {
         try {
