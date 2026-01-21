@@ -1,0 +1,8 @@
+{
+  "name": "dn-vote",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "redis": "^4.7.0"
+  }
+}
