@@ -261,167 +261,69 @@
         font-size: 1.6rem;
       }
 
-      .vote-btn {
-        border: none;
-        padding: 0;
-        background: transparent;
-        cursor: pointer;
-        display: inline-block;
-        width: 220px;
-        height: 70px;
-        background-image: url("assets/images/vote.png");
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
-        transition:
-          transform 0.15s ease-out,
-          background-image 0.15s ease-out;
-      }
-
-      .vote-btn:hover {
-        background-image: url("assets/images/votehover.png");
-        transform: scale(1.15);
-      }
-
-      .vote-btn:active {
-        transform: scale(0.98);
-      }
-
       .no-votes-text {
         font-size: 1.6rem;
         opacity: 0.9;
       }
 
-      /* LEFT SIDE: VOTE THERMOMETER */
-      .thermo-wrapper {
-        width: 200px;
-        padding: 16px 12px 20px;
-        background: rgba(0, 0, 0, 0.6);
-        border-radius: 20px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+      /* YES / NO basic poll UI */
+      .yn-panel {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      .yn-card {
+        width: 220px;
+        background: rgba(0, 0, 0, 0.45);
+        border-radius: 12px;
+        padding: 14px 16px;
         text-align: center;
       }
 
-      .thermo-title {
+      .yn-label {
         font-size: 1.4rem;
         text-transform: uppercase;
-        margin-bottom: 12px;
+        opacity: 0.95;
       }
 
-      .thermo-body {
-        position: relative;
-        width: 90px;
-        height: 460px;
-        margin: 0 auto 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .thermo-column {
-        position: relative;
-        width: 36px;
-        height: 340px;
+      .yn-value {
         margin-top: 6px;
-        border-radius: 999px;
-        border: 4px solid rgba(255, 255, 255, 0.9);
-        overflow: hidden;
-        background: linear-gradient(
-          to top,
-          rgba(255, 255, 255, 0.12),
-          rgba(255, 255, 255, 0.25)
-        );
+        font-size: 2.4rem;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
       }
 
-      .thermo-mercury {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 0%;
-        background: linear-gradient(to top, #12ceec, #00ffe8);
-        box-shadow: 0 0 12px rgba(0, 255, 232, 0.8);
-        transition: height 0.6s ease-out;
-      }
-
-      .thermo-bulb {
-        width: 56px;
-        height: 56px;
-        border-radius: 999px;
-        border: 4px solid rgba(255, 255, 255, 0.95);
-        background: radial-gradient(circle at 30% 30%, #00ffe8, #12ceec);
-        box-shadow: 0 0 18px rgba(0, 255, 232, 0.7);
-        margin-top: -6px;
-      }
-
-      .thermo-face {
-        position: absolute;
-        left: 50%;
-        width: 78px;
-        height: 78px;
-        border-radius: 50%;
-        transform: translateX(-50%);
+      .yn-actions {
         display: flex;
-        align-items: center;
+        gap: 12px;
         justify-content: center;
-        background: transparent;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .yn-btn {
         border: none;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
-        bottom: 20px;
-        transition: bottom 0.6s ease-out;
-        z-index: 2;
+        cursor: pointer;
+        padding: 14px 18px;
+        min-width: 180px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 1.4rem;
+        text-transform: uppercase;
+        background: rgba(0, 0, 0, 0.55);
+        color: #ffffff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+        transition: transform 0.15s ease-out, opacity 0.15s ease-out;
       }
 
-      .thermo-face img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: contain;
+      .yn-btn:hover {
+        transform: scale(1.06);
       }
 
-      .thermo-face-goal {
-        position: absolute;
-        left: 50%;
-        width: 78px;
-        height: 78px;
-        border-radius: 50%;
-        transform: translateX(-50%);
-        top: -6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: none;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
-        z-index: 2;
-      }
-
-      .thermo-face-goal img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: contain;
-      }
-
-      .thermo-labels {
-        font-size: 1.05rem;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      #thermoCount {
-        font-size: 1.3rem;
-      }
-
-      #thermoPercent {
-        font-size: 1rem;
-        opacity: 0.9;
-      }
-
-      .thermo-target {
-        font-size: 0.9rem;
-        opacity: 0.7;
+      .yn-btn:active {
+        transform: scale(0.98);
       }
 
       /* LEADERBOARD */
@@ -510,11 +412,6 @@
           font-size: 1.2rem;
         }
 
-        .vote-btn,
-        .no-votes-text {
-          font-size: 1.4rem;
-        }
-
         .poh-status {
           font-size: 1.4rem;
         }
@@ -522,10 +419,6 @@
         .voting-layout {
           flex-direction: column;
           align-items: center;
-        }
-
-        .thermo-wrapper {
-          width: 220px;
         }
       }
 
@@ -598,36 +491,6 @@
       <!-- STATE 3: VOTING STATION -->
       <div class="voting-station hidden" id="votingSection">
         <div class="voting-layout">
-          <!-- LEFT: Vote Thermometer -->
-          <div class="thermo-wrapper">
-            <div class="thermo-title">Vote Heat</div>
-
-            <div class="thermo-body">
-              <div class="thermo-column">
-                <div class="thermo-mercury" id="thermoMercury"></div>
-              </div>
-              <div class="thermo-bulb"></div>
-
-              <!-- TOP: GOAL FACE (Joe with hair) -->
-              <div class="thermo-face-goal">
-                <img src="assets/images/joehair.png" alt="Joe hair" />
-              </div>
-
-              <!-- BOTTOM: MOVING FACE (bald Joe) -->
-              <div class="thermo-face" id="thermoFace">
-                <img src="assets/images/joe.png" alt="Joe" />
-              </div>
-            </div>
-
-            <div class="thermo-labels">
-              <div id="thermoCount">0</div>
-              <div id="thermoPercent">0% to target</div>
-              <div class="thermo-target" id="thermoTarget">
-                Target: 20,000 votes
-              </div>
-            </div>
-          </div>
-
           <!-- RIGHT: Vote content -->
           <div class="voting-content">
             <div class="voting-title">Voting station</div>
@@ -636,6 +499,19 @@
               <span class="poh-status-label">Proof of Humanity verified:</span>
               <span class="poh-status-yes" id="pohStatusYes">Yes</span>
               <span class="poh-rank hidden" id="userRankLabel"></span>
+            </div>
+
+            <!-- YES/NO COUNTERS (UX-only) -->
+            <div class="yn-panel" id="ynPanel">
+              <div class="yn-card">
+                <div class="yn-label">Yes</div>
+                <div class="yn-value" id="yesVotes">0</div>
+              </div>
+
+              <div class="yn-card">
+                <div class="yn-label">No</div>
+                <div class="yn-value" id="noVotes">0</div>
+              </div>
             </div>
 
             <div class="vote-stats">
@@ -656,7 +532,7 @@
             </div>
 
             <div class="vote-action" id="voteAction">
-              <!-- Vote button + "no votes" message inserted by JS -->
+              <!-- Vote Yes/No buttons + "no votes" message inserted by JS -->
             </div>
 
             <!-- Simple feedback boxes -->
@@ -724,13 +600,50 @@
       // Vote 2 = totalVotesGlobal - VOTE1_FINAL_TOTAL (clamped at 0)
       const VOTE1_FINAL_TOTAL = 7578;
 
-      // Vote 2 target: 20,000 votes
-      const VOTE2_TARGET_VOTES = 20000;
-      const DEFAULT_TARGET_VOTES = VOTE2_TARGET_VOTES;
-
       // LEADERBOARD settings
       const LEADERBOARD_MAX_ENTRIES = 100;
       const LEADERBOARD_FROM_BLOCK = 0n;
+
+      // YES/NO vote counters (UX-only, stored locally per browser)
+      const YESNO_STORAGE_KEY = "dn_vote_yesno_v1";
+
+      function readYesNoCounts() {
+        try {
+          const raw = localStorage.getItem(YESNO_STORAGE_KEY);
+          if (!raw) return { yes: 0, no: 0 };
+          const parsed = JSON.parse(raw);
+          return {
+            yes: Number(parsed?.yes) || 0,
+            no: Number(parsed?.no) || 0
+          };
+        } catch {
+          return { yes: 0, no: 0 };
+        }
+      }
+
+      function writeYesNoCounts(counts) {
+        try {
+          localStorage.setItem(YESNO_STORAGE_KEY, JSON.stringify(counts));
+        } catch {
+          // ignore storage errors
+        }
+      }
+
+      function renderYesNoCounts() {
+        const counts = readYesNoCounts();
+        const yesEl = $("yesVotes");
+        const noEl = $("noVotes");
+        if (yesEl) yesEl.textContent = counts.yes.toLocaleString();
+        if (noEl) noEl.textContent = counts.no.toLocaleString();
+      }
+
+      function incrementYesNo(choice) {
+        const counts = readYesNoCounts();
+        if (choice === "yes") counts.yes += 1;
+        if (choice === "no") counts.no += 1;
+        writeYesNoCounts(counts);
+        renderYesNoCounts();
+      }
 
       // ==========================
       //  GLOBAL STATE
@@ -812,45 +725,13 @@
       }
 
       function setVoteButtonBusy(isBusy) {
-        const btn = $("voteButton");
-        if (!btn) return;
-        btn.disabled = isBusy;
-        btn.style.opacity = isBusy ? "0.6" : "1";
-      }
-
-      function updateThermometer(totalVotes, targetVotes) {
-        const countEl = $("thermoCount");
-        const percentEl = $("thermoPercent");
-        const targetEl = $("thermoTarget");
-        const mercuryEl = $("thermoMercury");
-        const faceEl = $("thermoFace");
-
-        const total = typeof totalVotes === "number" ? totalVotes : 0;
-        const target =
-          typeof targetVotes === "number" && targetVotes > 0
-            ? targetVotes
-            : DEFAULT_TARGET_VOTES;
-
-        const pct = target > 0 ? Math.min(100, (total * 100) / target) : 0;
-
-        if (countEl) {
-          countEl.textContent = total.toLocaleString();
-        }
-        if (percentEl) {
-          percentEl.textContent = `${pct.toFixed(1)}% to target`;
-        }
-        if (targetEl) {
-          targetEl.textContent = `Target: ${target.toLocaleString()} votes`;
-        }
-        if (mercuryEl) {
-          mercuryEl.style.height = `${pct.toFixed(1)}%`;
-        }
-        if (faceEl) {
-          const baseBottom = 90; // px
-          const maxExtra = 260; // px
-          const extra = (pct / 100) * maxExtra;
-          faceEl.style.bottom = `${baseBottom + extra}px`;
-        }
+        const yesBtn = $("voteYesButton");
+        const noBtn = $("voteNoButton");
+        [yesBtn, noBtn].forEach((btn) => {
+          if (!btn) return;
+          btn.disabled = isBusy;
+          btn.style.opacity = isBusy ? "0.6" : "1";
+        });
       }
 
       // ==========================
@@ -1149,7 +1030,7 @@
             }
           }
 
-          // ===== Vote 2 logic =====
+          // ===== Vote 2 logic (kept for existing "Votes this round" display) =====
           const totalVotesRound = Math.max(
             0,
             totalVotesGlobal != null ? totalVotesGlobal - VOTE1_FINAL_TOTAL : 0
@@ -1172,10 +1053,7 @@
           const votesTodayEl = $("votesToday");
           if (votesTodayEl) {
             if (votesLeft != null && maxVotesPerDay != null) {
-              const used = Math.max(
-                0,
-                maxVotesPerDay - Number(votesLeft)
-              );
+              const used = Math.max(0, maxVotesPerDay - Number(votesLeft));
               votesTodayEl.textContent = `${used}/${maxVotesPerDay}`;
             } else if (votesToday != null && maxVotesPerDay != null) {
               votesTodayEl.textContent = `${votesToday}/${maxVotesPerDay}`;
@@ -1184,20 +1062,21 @@
             }
           }
 
-          // Thermometer uses Vote 2 total & Vote 2 target (20,000)
-          updateThermometer(totalVotesRound, VOTE2_TARGET_VOTES);
-
-          // Show/hide vote button *only* if we know they have 0 left.
-          const voteBtn = $("voteButton");
+          // Show/hide vote buttons *only* if we know they have 0 left.
+          const yesBtn = $("voteYesButton");
+          const noBtn = $("voteNoButton");
           const usedMsg = $("usedAllVotesMessage");
-          if (voteBtn && usedMsg) {
+
+          if (usedMsg) {
             if (votesLeft === 0) {
-              voteBtn.classList.add("hidden");
+              if (yesBtn) yesBtn.classList.add("hidden");
+              if (noBtn) noBtn.classList.add("hidden");
               usedMsg.classList.remove("hidden");
               usedMsg.textContent =
                 "You’ve used all votes for now. Come back later.";
             } else {
-              voteBtn.classList.remove("hidden");
+              if (yesBtn) yesBtn.classList.remove("hidden");
+              if (noBtn) noBtn.classList.remove("hidden");
               usedMsg.classList.add("hidden");
             }
           }
@@ -1206,12 +1085,12 @@
           await loadLeaderboard();
         } catch (err) {
           console.error("Error reading user/global state:", err);
-          const voteBtn = $("voteButton");
+          const yesBtn = $("voteYesButton");
+          const noBtn = $("voteNoButton");
           const usedMsg = $("usedAllVotesMessage");
-          if (voteBtn && usedMsg) {
-            voteBtn.classList.remove("hidden");
-            usedMsg.classList.add("hidden");
-          }
+          if (yesBtn) yesBtn.classList.remove("hidden");
+          if (noBtn) noBtn.classList.remove("hidden");
+          if (usedMsg) usedMsg.classList.add("hidden");
         }
       }
 
@@ -1279,7 +1158,7 @@
       //  VOTE (ON-CHAIN POH)
       // ==========================
 
-      async function onVoteClick() {
+      async function onVoteClick(choice) {
         setError("");
         setSuccess("");
 
@@ -1329,9 +1208,14 @@
           }
           const pohSignature = rawSig;
 
-          // Send vote transaction
+          // Send vote transaction (same backend call for Yes/No)
           const tx = await contract.vote(pohSignature);
           await tx.wait();
+
+          // UX-only yes/no counter increment (local)
+          if (choice === "yes" || choice === "no") {
+            incrementYesNo(choice);
+          }
 
           setSuccess(
             "Vote successful! Your TATERZ claim + vote has been recorded."
@@ -1479,16 +1363,31 @@
       // ==========================
 
       window.addEventListener("load", () => {
-        // Insert Vote button + "used all" text
+        // Insert Vote Yes/No buttons + "used all" text
         const voteAction = $("voteAction");
         if (voteAction) {
-          const btn = document.createElement("button");
-          btn.id = "voteButton";
-          btn.className = "vote-btn";
-          btn.type = "button";
-          btn.setAttribute("aria-label", "Vote");
-          btn.addEventListener("click", onVoteClick);
-          voteAction.appendChild(btn);
+          const actions = document.createElement("div");
+          actions.className = "yn-actions";
+
+          const yesBtn = document.createElement("button");
+          yesBtn.id = "voteYesButton";
+          yesBtn.className = "yn-btn";
+          yesBtn.type = "button";
+          yesBtn.textContent = "Vote Yes";
+          yesBtn.setAttribute("aria-label", "Vote Yes");
+          yesBtn.addEventListener("click", () => onVoteClick("yes"));
+
+          const noBtn = document.createElement("button");
+          noBtn.id = "voteNoButton";
+          noBtn.className = "yn-btn";
+          noBtn.type = "button";
+          noBtn.textContent = "Vote No";
+          noBtn.setAttribute("aria-label", "Vote No");
+          noBtn.addEventListener("click", () => onVoteClick("no"));
+
+          actions.appendChild(yesBtn);
+          actions.appendChild(noBtn);
+          voteAction.appendChild(actions);
 
           const usedMsg = document.createElement("div");
           usedMsg.id = "usedAllVotesMessage";
@@ -1497,6 +1396,9 @@
             "You’ve used all votes for now. Come back later.";
           voteAction.appendChild(usedMsg);
         }
+
+        // Render local yes/no counters on load
+        renderYesNoCounts();
 
         const connectBtn = $("connectWalletButton");
         if (connectBtn) {
