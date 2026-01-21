@@ -285,12 +285,10 @@
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
       }
 
-      /* YES matches PoH "Yes" color vibe (transparent + teal) */
       .yn-card-yes {
         background: rgba(0, 255, 232, 0.22);
       }
 
-      /* NO stronger red (transparent) */
       .yn-card-no {
         background: rgba(255, 0, 64, 0.22);
       }
@@ -465,7 +463,6 @@
         display: none !important;
       }
 
-      /* simple feedback boxes under the vote action */
       #errorBox {
         margin-top: 12px;
         color: #ffb3b3;
@@ -501,7 +498,6 @@
 
       <h1>DN Voting Platform</h1>
 
-      <!-- STATE 1: CONNECT (shown initially) -->
       <div class="connect-wrapper" id="connectSection">
         <button
           class="connect-btn"
@@ -514,7 +510,6 @@
         </div>
       </div>
 
-      <!-- STATE 2: NOT POH VERIFIED -->
       <div class="not-verified hidden" id="notVerifiedSection">
         <p>This wallet is not PoH verified yet.</p>
         <a
@@ -527,7 +522,6 @@
         ></a>
       </div>
 
-      <!-- STATE 3: VOTING STATION -->
       <div class="voting-station hidden" id="votingSection">
         <div class="voting-layout">
           <div class="voting-content">
@@ -541,7 +535,6 @@
               <span class="poh-rank hidden" id="userRankLabel"></span>
             </div>
 
-            <!-- YES/NO COUNTERS (UX-only) -->
             <div class="yn-panel" id="ynPanel">
               <div class="yn-card yn-card-yes">
                 <div class="yn-label">Yes</div>
@@ -571,18 +564,14 @@
               </div>
             </div>
 
-            <div class="vote-action" id="voteAction">
-              <!-- Vote Yes/No buttons + "no votes" message inserted by JS -->
-            </div>
+            <div class="vote-action" id="voteAction"></div>
 
-            <!-- Simple feedback boxes -->
             <div id="errorBox" class="no-votes-text"></div>
             <div id="successBox" class="no-votes-text"></div>
           </div>
         </div>
       </div>
 
-      <!-- LEADERBOARD -->
       <div class="leaderboard" id="leaderboardSection">
         <div class="leaderboard-title">Top Voters</div>
         <table class="leaderboard-table">
@@ -603,92 +592,63 @@
       </div>
     </div>
 
-    <!-- Ethers v6 UMD -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 
     <script>
-      // ==========================
-      //  CONFIG / CONSTANTS
-      // ==========================
-
-      // Mainnet voting / TATERZ contract
+      // ========= CONFIG =========
       const CONTRACT_ADDRESS = "0xBE817fd849FbF8DBd07840F2F3a89F2D649994A3";
 
-      // Minimal ABI for the DN voting + TATERZ contract.
       const CONTRACT_ABI = [
         "function vote(bytes signature)",
-        "function totalVotesGlobal() view returns (uint256)",
         "function maxVotesPerDay() view returns (uint8)",
         "function votesLeftToday(address user) view returns (uint256)",
         "function totalVotesOf(address user) view returns (uint256)",
         "function getUserInfo(address user) view returns (uint64 dayIndex, uint8 votesToday, uint256 totalVotes, uint256 tokensClaimed, uint8 votesLeft)"
       ];
 
-      // Linea PoH HTTP API (UX gate)
       const POH_API_BASE = "https://poh-api.linea.build/poh/v2";
-
-      // Linea PoH signer API (on-chain verifier)
       const POH_SIGNER_API_BASE = "https://poh-signer-api.linea.build/poh/v2";
-
-      // Where to send non-PoH users
       const POH_PORTAL_URL =
         "https://linea.build/hub/apps/sumsub-reusable-identity";
 
       const LINEA_CHAIN_ID = 59144n;
 
-      // LEADERBOARD settings
+      // Vercel functions
+      const API_VOTES = "/api/votes";
+      const API_VOTE = "/api/vote";
+
+      // Leaderboard settings (unchanged)
       const LEADERBOARD_MAX_ENTRIES = 100;
       const LEADERBOARD_FROM_BLOCK = 0n;
 
-      // YES/NO vote counters (UX-only, stored locally per browser)
-      const YESNO_STORAGE_KEY = "dn_vote_yesno_v1";
-
-      // "Votes this round" (UX-only, starts at 0 from now)
-      const ROUND_STORAGE_KEY = "dn_vote_round_v1";
-
-      // ==========================
-      //  GLOBAL STATE
-      // ==========================
-
+      // ========= GLOBAL STATE =========
       let provider = null;
       let signer = null;
       let contract = null;
       let currentAccount = null;
       let isPohVerified = null;
 
-      // ==========================
-      //  DOM HELPERS
-      // ==========================
-
       function $(id) {
         return document.getElementById(id);
       }
 
+      // ========= UI HELPERS =========
       function showConnectSection() {
-        const connectSection = $("connectSection");
-        const notVerifiedSection = $("notVerifiedSection");
-        const votingSection = $("votingSection");
-        if (connectSection) connectSection.classList.remove("hidden");
-        if (notVerifiedSection) notVerifiedSection.classList.add("hidden");
-        if (votingSection) votingSection.classList.add("hidden");
+        $("connectSection")?.classList.remove("hidden");
+        $("notVerifiedSection")?.classList.add("hidden");
+        $("votingSection")?.classList.add("hidden");
       }
 
       function showNotVerifiedSection() {
-        const connectSection = $("connectSection");
-        const notVerifiedSection = $("notVerifiedSection");
-        const votingSection = $("votingSection");
-        if (connectSection) connectSection.classList.add("hidden");
-        if (notVerifiedSection) notVerifiedSection.classList.remove("hidden");
-        if (votingSection) votingSection.classList.add("hidden");
+        $("connectSection")?.classList.add("hidden");
+        $("notVerifiedSection")?.classList.remove("hidden");
+        $("votingSection")?.classList.add("hidden");
       }
 
       function showVotingSection() {
-        const connectSection = $("connectSection");
-        const notVerifiedSection = $("notVerifiedSection");
-        const votingSection = $("votingSection");
-        if (connectSection) connectSection.classList.add("hidden");
-        if (notVerifiedSection) notVerifiedSection.classList.add("hidden");
-        if (votingSection) votingSection.classList.remove("hidden");
+        $("connectSection")?.classList.add("hidden");
+        $("notVerifiedSection")?.classList.add("hidden");
+        $("votingSection")?.classList.remove("hidden");
       }
 
       function setError(message) {
@@ -735,136 +695,73 @@
         });
       }
 
-      // ==========================
-      //  YES/NO + ROUND COUNTERS (UX ONLY)
-      // ==========================
-
-      function readJsonKey(key, fallbackObj) {
-        try {
-          const raw = localStorage.getItem(key);
-          if (!raw) return fallbackObj;
-          const parsed = JSON.parse(raw);
-          return parsed && typeof parsed === "object" ? parsed : fallbackObj;
-        } catch {
-          return fallbackObj;
-        }
-      }
-
-      function writeJsonKey(key, obj) {
-        try {
-          localStorage.setItem(key, JSON.stringify(obj));
-        } catch {
-          // ignore storage errors
-        }
-      }
-
-      function readYesNoCounts() {
-        const parsed = readJsonKey(YESNO_STORAGE_KEY, { yes: 0, no: 0 });
-        return {
-          yes: Number(parsed?.yes) || 0,
-          no: Number(parsed?.no) || 0
-        };
-      }
-
-      function writeYesNoCounts(counts) {
-        writeJsonKey(YESNO_STORAGE_KEY, counts);
-      }
-
-      function renderYesNoCounts() {
-        const counts = readYesNoCounts();
-        const yesEl = $("yesVotes");
-        const noEl = $("noVotes");
-        if (yesEl) yesEl.textContent = counts.yes.toLocaleString();
-        if (noEl) noEl.textContent = counts.no.toLocaleString();
-      }
-
-      function incrementYesNo(choice) {
-        const counts = readYesNoCounts();
-        if (choice === "yes") counts.yes += 1;
-        if (choice === "no") counts.no += 1;
-        writeYesNoCounts(counts);
-        renderYesNoCounts();
-      }
-
-      function readRoundVotes() {
-        const parsed = readJsonKey(ROUND_STORAGE_KEY, { round: 0 });
-        return Number(parsed?.round) || 0;
-      }
-
-      function writeRoundVotes(round) {
-        writeJsonKey(ROUND_STORAGE_KEY, { round });
-      }
-
-      function renderRoundVotes() {
-        const el = $("totalVotes");
-        if (!el) return;
-        el.textContent = readRoundVotes().toLocaleString();
-      }
-
-      function incrementRoundVotes() {
-        const current = readRoundVotes();
-        writeRoundVotes(current + 1);
-        renderRoundVotes();
-      }
-
-      // ==========================
-      //  ETH / PROVIDER HELPERS
-      // ==========================
-
+      // ========= ETH HELPERS =========
       async function ensureProviderAndContract() {
-        if (!window.ethereum) {
-          throw new Error("MetaMask not found");
-        }
-        if (!provider) {
-          provider = new ethers.BrowserProvider(window.ethereum);
-        }
-        if (!signer) {
-          signer = await provider.getSigner();
-        }
-        if (!contract) {
-          contract = new ethers.Contract(
-            CONTRACT_ADDRESS,
-            CONTRACT_ABI,
-            signer
-          );
-        }
+        if (!window.ethereum) throw new Error("MetaMask not found");
+        if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
+        if (!signer) signer = await provider.getSigner();
+        if (!contract)
+          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
         return { provider, signer, contract };
       }
 
       async function ensureOnLinea() {
         if (!window.ethereum) return false;
-        if (!provider) {
-          provider = new ethers.BrowserProvider(window.ethereum);
-        }
+        if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
         const net = await provider.getNetwork();
         return net.chainId === LINEA_CHAIN_ID;
       }
 
-      // ==========================
-      //  PROOF OF HUMANITY (HTTP)
-      // ==========================
-
+      // ========= POH =========
       async function checkPohOffchain(address) {
         try {
-          console.log("Checking PoH via HTTP for", address);
           const res = await fetch(`${POH_API_BASE}/${address}`);
-          if (!res.ok) {
-            throw new Error(`PoH HTTP ${res.status}`);
-          }
-          const text = (await res.text()).trim(); // "true" or "false"
-          const isHuman = text === "true";
-          console.log("PoH API result:", isHuman);
-          return isHuman;
+          if (!res.ok) throw new Error(`PoH HTTP ${res.status}`);
+          const text = (await res.text()).trim();
+          return text === "true";
         } catch (err) {
           console.error("PoH API error:", err);
           return null;
         }
       }
 
-      // ==========================
-      //  LEADERBOARD (LOGS)
-      // ==========================
+      // ========= GLOBAL TOTALS (API) =========
+      async function fetchGlobalTotals() {
+        const res = await fetch(API_VOTES, { method: "GET" });
+        if (!res.ok) throw new Error(`votes api ${res.status}`);
+        const data = await res.json();
+        return {
+          yes: Number(data?.yes || 0),
+          no: Number(data?.no || 0),
+          round: Number(data?.round || 0)
+        };
+      }
 
+      async function renderGlobalTotals() {
+        try {
+          const totals = await fetchGlobalTotals();
+          $("yesVotes").textContent = totals.yes.toLocaleString();
+          $("noVotes").textContent = totals.no.toLocaleString();
+          $("totalVotes").textContent = totals.round.toLocaleString();
+        } catch (e) {
+          console.warn("Failed to render global totals:", e);
+        }
+      }
+
+      async function recordVoteIntent({ txHash, wallet, choice }) {
+        const res = await fetch(API_VOTE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ txHash, wallet, choice })
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(() => "");
+          throw new Error(`vote api ${res.status} ${t}`);
+        }
+        return res.json();
+      }
+
+      // ========= LEADERBOARD (unchanged) =========
       async function fetchAllLogs(provider, address, fromBlock, toBlock) {
         let startBlock =
           typeof fromBlock === "bigint" ? fromBlock : BigInt(fromBlock);
@@ -886,24 +783,12 @@
             const msg = (err?.message || "").toLowerCase();
             if (msg.includes("more than 10000 results")) {
               const span = end - start;
-              if (span <= 0n) {
-                console.error(
-                  "Cannot split block range further but still too many results:",
-                  start.toString(),
-                  end.toString()
-                );
-                return;
-              }
+              if (span <= 0n) return;
               const mid = start + (span >> 1n);
               await fetchRange(start, mid);
               await fetchRange(mid + 1n, end);
             } else {
-              console.error(
-                "Error fetching logs for range",
-                start.toString(),
-                end.toString(),
-                err
-              );
+              console.error("Error fetching logs range", start, end, err);
             }
           }
         }
@@ -964,9 +849,7 @@
           const { provider } = await ensureProviderAndContract();
 
           let latestBlock = await provider.getBlockNumber();
-          if (typeof latestBlock === "number") {
-            latestBlock = BigInt(latestBlock);
-          }
+          if (typeof latestBlock === "number") latestBlock = BigInt(latestBlock);
 
           const logs = await fetchAllLogs(
             provider,
@@ -979,14 +862,13 @@
 
           for (const log of logs) {
             if (!log.topics || log.topics.length < 2) continue;
-
             try {
               const topic = log.topics[1];
               if (!topic || topic.length !== 66) continue;
               const addr = ethers.getAddress("0x" + topic.slice(26));
               const prev = counts.get(addr) || 0;
               counts.set(addr, prev + 1);
-            } catch (e) {}
+            } catch {}
           }
 
           const rows = Array.from(counts.entries())
@@ -1013,9 +895,7 @@
 
           rows.forEach((row, index) => {
             const tr = document.createElement("tr");
-            if (me && row.wallet.toLowerCase() === me) {
-              tr.classList.add("leaderboard-row-me");
-            }
+            if (me && row.wallet.toLowerCase() === me) tr.classList.add("leaderboard-row-me");
 
             const rankTd = document.createElement("td");
             rankTd.className = "rank-col";
@@ -1044,10 +924,7 @@
         }
       }
 
-      // ==========================
-      //  STATE REFRESH (ON-CHAIN)
-      // ==========================
-
+      // ========= STATE REFRESH =========
       async function refreshUserAndGlobalState() {
         if (!currentAccount) return;
 
@@ -1062,51 +939,36 @@
           try {
             const maxBn = await contract.maxVotesPerDay();
             maxVotesPerDay = Number(maxBn);
-          } catch (e) {
-            console.warn("maxVotesPerDay read failed, using default 10", e);
-          }
+          } catch {}
 
           try {
             const info = await contract.getUserInfo(currentAccount);
             votesToday = Number(info[1]);
             userTotalVotes = Number(info[2]);
             votesLeft = Number(info[4]);
-          } catch (e) {
-            console.warn("getUserInfo read failed, falling back", e);
+          } catch {
             try {
               const leftBn = await contract.votesLeftToday(currentAccount);
               votesLeft = Number(leftBn);
-            } catch (e2) {
-              console.warn("votesLeftToday read failed", e2);
-            }
+            } catch {}
             try {
               const totalBn = await contract.totalVotesOf(currentAccount);
               userTotalVotes = Number(totalBn);
-            } catch (e3) {
-              console.warn("totalVotesOf read failed", e3);
-            }
+            } catch {}
           }
 
-          renderRoundVotes();
+          await renderGlobalTotals();
 
-          const userTotalVotesEl = $("userTotalVotes");
-          if (userTotalVotesEl) {
-            userTotalVotesEl.textContent =
-              userTotalVotes != null
-                ? userTotalVotes.toLocaleString()
-                : "-";
-          }
+          $("userTotalVotes").textContent =
+            userTotalVotes != null ? userTotalVotes.toLocaleString() : "-";
 
-          const votesTodayEl = $("votesToday");
-          if (votesTodayEl) {
-            if (votesLeft != null && maxVotesPerDay != null) {
-              const used = Math.max(0, maxVotesPerDay - Number(votesLeft));
-              votesTodayEl.textContent = `${used}/${maxVotesPerDay}`;
-            } else if (votesToday != null && maxVotesPerDay != null) {
-              votesTodayEl.textContent = `${votesToday}/${maxVotesPerDay}`;
-            } else {
-              votesTodayEl.textContent = `0/${maxVotesPerDay}`;
-            }
+          if (votesLeft != null && maxVotesPerDay != null) {
+            const used = Math.max(0, maxVotesPerDay - Number(votesLeft));
+            $("votesToday").textContent = `${used}/${maxVotesPerDay}`;
+          } else if (votesToday != null && maxVotesPerDay != null) {
+            $("votesToday").textContent = `${votesToday}/${maxVotesPerDay}`;
+          } else {
+            $("votesToday").textContent = `0/${maxVotesPerDay}`;
           }
 
           const yesBtn = $("voteYesButton");
@@ -1115,34 +977,24 @@
 
           if (usedMsg) {
             if (votesLeft === 0) {
-              if (yesBtn) yesBtn.classList.add("hidden");
-              if (noBtn) noBtn.classList.add("hidden");
+              yesBtn?.classList.add("hidden");
+              noBtn?.classList.add("hidden");
               usedMsg.classList.remove("hidden");
-              usedMsg.textContent =
-                "You’ve used all votes for now. Come back later.";
+              usedMsg.textContent = "You’ve used all votes for now. Come back later.";
             } else {
-              if (yesBtn) yesBtn.classList.remove("hidden");
-              if (noBtn) noBtn.classList.remove("hidden");
+              yesBtn?.classList.remove("hidden");
+              noBtn?.classList.remove("hidden");
               usedMsg.classList.add("hidden");
             }
           }
 
           await loadLeaderboard();
         } catch (err) {
-          console.error("Error reading user/global state:", err);
-          const yesBtn = $("voteYesButton");
-          const noBtn = $("voteNoButton");
-          const usedMsg = $("usedAllVotesMessage");
-          if (yesBtn) yesBtn.classList.remove("hidden");
-          if (noBtn) noBtn.classList.remove("hidden");
-          if (usedMsg) usedMsg.classList.add("hidden");
+          console.error("refreshUserAndGlobalState error:", err);
         }
       }
 
-      // ==========================
-      //  CONNECT FLOW
-      // ==========================
-
+      // ========= CONNECT =========
       async function handleConnectClick() {
         setError("");
         setSuccess("");
@@ -1176,19 +1028,14 @@
           } else if (pohResult === false) {
             isPohVerified = false;
             showNotVerifiedSection();
-            const verifyLink = $("verifyLink");
-            if (verifyLink) {
-              verifyLink.href = POH_PORTAL_URL;
-            }
+            $("verifyLink").href = POH_PORTAL_URL;
             setError(
               "This wallet is not Proof-of-Humanity verified. Use the Verify link to complete PoH."
             );
           } else {
             isPohVerified = null;
             showConnectSection();
-            setError(
-              "Could not check Proof of Humanity. Please try again in a moment."
-            );
+            setError("Could not check Proof of Humanity. Please try again in a moment.");
           }
         } catch (err) {
           console.error("Connect/init error:", err);
@@ -1196,10 +1043,7 @@
         }
       }
 
-      // ==========================
-      //  VOTE (ON-CHAIN POH)
-      // ==========================
-
+      // ========= VOTE =========
       async function onVoteClick(choice) {
         setError("");
         setSuccess("");
@@ -1223,42 +1067,42 @@
           }
 
           if (isPohVerified === false) {
-            setError(
-              "This wallet is not PoH verified via Linea. Complete PoH first."
-            );
+            setError("This wallet is not PoH verified via Linea. Complete PoH first.");
             return;
           }
 
           setVoteButtonBusy(true);
 
-          const sigRes = await fetch(
-            `${POH_SIGNER_API_BASE}/${currentAccount}`
-          );
-          if (!sigRes.ok) {
-            throw new Error(`PoH signer HTTP ${sigRes.status}`);
-          }
+          const sigRes = await fetch(`${POH_SIGNER_API_BASE}/${currentAccount}`);
+          if (!sigRes.ok) throw new Error(`PoH signer HTTP ${sigRes.status}`);
           const rawSig = (await sigRes.text()).trim();
-          if (!rawSig || rawSig === "0x") {
-            throw new Error(
-              "Empty PoH signature from Linea signer. Wallet may not be on-chain PoH verified yet."
-            );
-          }
-          if (!rawSig.startsWith("0x")) {
-            throw new Error("Invalid PoH signature format from Linea signer.");
-          }
-          const pohSignature = rawSig;
 
-          const tx = await contract.vote(pohSignature);
-          await tx.wait();
+          if (!rawSig || rawSig === "0x") throw new Error("Empty PoH signature from Linea signer.");
+          if (!rawSig.startsWith("0x")) throw new Error("Invalid PoH signature format from Linea signer.");
 
-          if (choice === "yes" || choice === "no") {
-            incrementYesNo(choice);
+          const tx = await contract.vote(rawSig);
+          const receipt = await tx.wait();
+
+          const txHash = receipt?.hash || receipt?.transactionHash || tx.hash;
+
+          // Record globally in Redis (serverless)
+          const apiResult = await recordVoteIntent({
+            txHash,
+            wallet: currentAccount,
+            choice
+          });
+
+          // Immediately reflect server truth (includes other users)
+          if (apiResult && typeof apiResult.yes !== "undefined") {
+            $("yesVotes").textContent = Number(apiResult.yes || 0).toLocaleString();
+            $("noVotes").textContent = Number(apiResult.no || 0).toLocaleString();
+            $("totalVotes").textContent = Number(apiResult.round || 0).toLocaleString();
+          } else {
+            await renderGlobalTotals();
           }
-          incrementRoundVotes();
 
-          setSuccess(
-            "Vote successful! Your TATERZ claim + vote has been recorded."
-          );
+          setSuccess("Vote successful! Your TATERZ claim + vote has been recorded.");
+
           await refreshUserAndGlobalState();
         } catch (err) {
           console.error("Vote tx error:", err);
@@ -1271,42 +1115,18 @@
             String(err ?? "");
           const lower = rawMsg.toLowerCase();
 
-          if (
-            err?.code === "ACTION_REJECTED" ||
-            lower.includes("user rejected")
-          ) {
+          if (err?.code === "ACTION_REJECTED" || lower.includes("user rejected")) {
             setError("Transaction rejected in wallet.");
-          } else if (
-            lower.includes("notpohverified") ||
-            lower.includes("not poh verified")
-          ) {
+          } else if (lower.includes("notpohverified") || lower.includes("not poh verified")) {
             setError(
               "This wallet is not PoH-verified according to Linea's on-chain verifier. Complete PoH with this wallet."
             );
           } else if (lower.includes("daily") && lower.includes("limit")) {
             setError("You’ve used all votes for now. Come back later.");
-          } else if (
-            lower.includes("not enough taterz") ||
-            lower.includes("insufficient taterz")
-          ) {
-            setError(
-              "Voting contract does not have enough TATERZ to pay rewards. Please contact the team."
-            );
-          } else if (
-            lower.includes("ecdsa: invalid signature length") ||
-            lower.includes("invalid signature")
-          ) {
-            setError(
-              "Linea PoH signature was invalid. If you recently verified, give it a few minutes and try again. Otherwise re-do PoH with this wallet."
-            );
-          } else if (lower.includes("signer http")) {
-            setError(
-              "Could not fetch PoH signature from Linea signer API. Please try again shortly."
-            );
-          } else if (lower.includes("empty poh signature")) {
-            setError(
-              "Linea signer returned an empty PoH signature. This usually means the wallet is not registered yet. Re-do PoH with this wallet."
-            );
+          } else if (lower.includes("not enough taterz") || lower.includes("insufficient taterz")) {
+            setError("Voting contract does not have enough TATERZ to pay rewards. Please contact the team.");
+          } else if (lower.includes("invalid signature")) {
+            setError("Linea PoH signature was invalid. If you recently verified, give it a few minutes and try again.");
           } else {
             setError("Vote transaction failed. Check console for details.");
           }
@@ -1314,10 +1134,6 @@
           setVoteButtonBusy(false);
         }
       }
-
-      // ==========================
-      //  WALLET EVENTS & AUTO-CONNECT
-      // ==========================
 
       function setupWalletEventListeners() {
         if (!window.ethereum) return;
@@ -1345,9 +1161,7 @@
           if (currentAccount && isPohVerified) {
             try {
               await refreshUserAndGlobalState();
-            } catch (e) {
-              console.warn("Could not refresh after chain change", e);
-            }
+            } catch {}
           }
         });
       }
@@ -1359,9 +1173,7 @@
         }
 
         try {
-          const accounts = await window.ethereum.request({
-            method: "eth_accounts"
-          });
+          const accounts = await window.ethereum.request({ method: "eth_accounts" });
 
           if (!accounts || !accounts.length) {
             showConnectSection();
@@ -1381,10 +1193,7 @@
           } else if (pohResult === false) {
             isPohVerified = false;
             showNotVerifiedSection();
-            const verifyLink = $("verifyLink");
-            if (verifyLink) {
-              verifyLink.href = POH_PORTAL_URL;
-            }
+            $("verifyLink").href = POH_PORTAL_URL;
           } else {
             isPohVerified = null;
             showConnectSection();
@@ -1395,11 +1204,8 @@
         }
       }
 
-      // ==========================
-      //  BOOTSTRAP
-      // ==========================
-
-      window.addEventListener("load", () => {
+      // ========= BOOTSTRAP =========
+      window.addEventListener("load", async () => {
         const voteAction = $("voteAction");
         if (voteAction) {
           const actions = document.createElement("div");
@@ -1410,7 +1216,6 @@
           yesBtn.className = "yn-btn yn-btn-yes";
           yesBtn.type = "button";
           yesBtn.textContent = "Vote Yes";
-          yesBtn.setAttribute("aria-label", "Vote Yes");
           yesBtn.addEventListener("click", () => onVoteClick("yes"));
 
           const noBtn = document.createElement("button");
@@ -1418,7 +1223,6 @@
           noBtn.className = "yn-btn yn-btn-no";
           noBtn.type = "button";
           noBtn.textContent = "Vote No";
-          noBtn.setAttribute("aria-label", "Vote No");
           noBtn.addEventListener("click", () => onVoteClick("no"));
 
           actions.appendChild(yesBtn);
@@ -1428,18 +1232,19 @@
           const usedMsg = document.createElement("div");
           usedMsg.id = "usedAllVotesMessage";
           usedMsg.className = "no-votes-text hidden";
-          usedMsg.textContent =
-            "You’ve used all votes for now. Come back later.";
+          usedMsg.textContent = "You’ve used all votes for now. Come back later.";
           voteAction.appendChild(usedMsg);
         }
 
-        renderYesNoCounts();
-        renderRoundVotes();
+        // Render totals before connect (global)
+        await renderGlobalTotals();
 
-        const connectBtn = $("connectWalletButton");
-        if (connectBtn) {
-          connectBtn.addEventListener("click", handleConnectClick);
-        }
+        // Poll so everyone sees updates without refresh
+        setInterval(() => {
+          renderGlobalTotals();
+        }, 5000);
+
+        $("connectWalletButton")?.addEventListener("click", handleConnectClick);
 
         showConnectSection();
         setupWalletEventListeners();
