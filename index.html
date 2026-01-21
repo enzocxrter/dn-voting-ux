@@ -1043,97 +1043,112 @@
         }
       }
 
-      // ========= VOTE =========
-      async function onVoteClick(choice) {
-        setError("");
-        setSuccess("");
+     // ========= VOTE =========
+async function onVoteClick(choice) {
+  setError("");
+  setSuccess("");
 
-        try {
-          if (!window.ethereum) {
-            setError("MetaMask not found.");
-            return;
-          }
-          if (!currentAccount) {
-            setError("Connect your wallet first.");
-            return;
-          }
+  try {
+    if (!window.ethereum) {
+      setError("MetaMask not found.");
+      return;
+    }
+    if (!currentAccount) {
+      setError("Connect your wallet first.");
+      return;
+    }
 
-          const { contract } = await ensureProviderAndContract();
+    const { contract } = await ensureProviderAndContract();
 
-          const onLinea = await ensureOnLinea();
-          if (!onLinea) {
-            setError("Please switch your wallet network to Linea.");
-            return;
-          }
+    const onLinea = await ensureOnLinea();
+    if (!onLinea) {
+      setError("Please switch your wallet network to Linea.");
+      return;
+    }
 
-          if (isPohVerified === false) {
-            setError("This wallet is not PoH verified via Linea. Complete PoH first.");
-            return;
-          }
+    if (isPohVerified === false) {
+      setError("This wallet is not PoH verified via Linea. Complete PoH first.");
+      return;
+    }
 
-          setVoteButtonBusy(true);
+    setVoteButtonBusy(true);
 
-          const sigRes = await fetch(`${POH_SIGNER_API_BASE}/${currentAccount}`);
-          if (!sigRes.ok) throw new Error(`PoH signer HTTP ${sigRes.status}`);
-          const rawSig = (await sigRes.text()).trim();
+    const sigRes = await fetch(`${POH_SIGNER_API_BASE}/${currentAccount}`);
+    if (!sigRes.ok) throw new Error(`PoH signer HTTP ${sigRes.status}`);
+    const rawSig = (await sigRes.text()).trim();
 
-          if (!rawSig || rawSig === "0x") throw new Error("Empty PoH signature from Linea signer.");
-          if (!rawSig.startsWith("0x")) throw new Error("Invalid PoH signature format from Linea signer.");
+    if (!rawSig || rawSig === "0x")
+      throw new Error("Empty PoH signature from Linea signer.");
+    if (!rawSig.startsWith("0x"))
+      throw new Error("Invalid PoH signature format from Linea signer.");
 
-          const tx = await contract.vote(rawSig);
-          const receipt = await tx.wait();
+    const tx = await contract.vote(rawSig);
+    const receipt = await tx.wait();
 
-          const txHash = receipt?.hash || receipt?.transactionHash || tx.hash;
+    const txHash = receipt?.hash || receipt?.transactionHash || tx.hash;
 
-          // Record globally in Redis (serverless)
-          const apiResult = await recordVoteIntent({
-            txHash,
-            wallet: currentAccount,
-            choice
-          });
+    // Record globally in Redis (serverless)
+    const apiResult = await recordVoteIntent({
+      txHash,
+      wallet: currentAccount,
+      choice
+    });
 
-          // Immediately reflect server truth (includes other users)
-          if (apiResult && typeof apiResult.yes !== "undefined") {
-            $("yesVotes").textContent = Number(apiResult.yes || 0).toLocaleString();
-            $("noVotes").textContent = Number(apiResult.no || 0).toLocaleString();
-            $("totalVotes").textContent = Number(apiResult.round || 0).toLocaleString();
-          } else {
-            await renderGlobalTotals();
-          }
+    // Immediately reflect server truth (includes other users)
+    if (apiResult && typeof apiResult.yes !== "undefined") {
+      $("yesVotes").textContent = Number(apiResult.yes || 0).toLocaleString();
+      $("noVotes").textContent = Number(apiResult.no || 0).toLocaleString();
+      $("totalVotes").textContent = Number(apiResult.round || 0).toLocaleString();
+    } else {
+      await renderGlobalTotals();
+    }
 
-          setSuccess("Vote successful! Your TATERZ claim + vote has been recorded.");
+    setSuccess("Vote successful! Your TATERZ claim + vote has been recorded.");
 
-          await refreshUserAndGlobalState();
-        } catch (err) {
-          console.error("Vote tx error:", err);
+    await refreshUserAndGlobalState();
+  } catch (err) {
+    console.error("Vote tx error:", err);
 
-          const rawMsg =
-            err?.error?.message ||
-            err?.data?.message ||
-            err?.reason ||
-            err?.message ||
-            String(err ?? "");
-          const lower = rawMsg.toLowerCase();
+    const rawMsg =
+      err?.error?.message ||
+      err?.data?.message ||
+      err?.reason ||
+      err?.message ||
+      String(err ?? "");
 
-          if (err?.code === "ACTION_REJECTED" || lower.includes("user rejected")) {
-            setError("Transaction rejected in wallet.");
-          } else if (lower.includes("notpohverified") || lower.includes("not poh verified")) {
-            setError(
-              "This wallet is not PoH-verified according to Linea's on-chain verifier. Complete PoH with this wallet."
-            );
-          } else if (lower.includes("daily") && lower.includes("limit")) {
-            setError("You’ve used all votes for now. Come back later.");
-          } else if (lower.includes("not enough taterz") || lower.includes("insufficient taterz")) {
-            setError("Voting contract does not have enough TATERZ to pay rewards. Please contact the team.");
-          } else if (lower.includes("invalid signature")) {
-            setError("Linea PoH signature was invalid. If you recently verified, give it a few minutes and try again.");
-          } else {
-            setError("Vote transaction failed. Check console for details.");
-          }
-        } finally {
-          setVoteButtonBusy(false);
-        }
-      }
+    const lower = rawMsg.toLowerCase();
+
+    if (err?.code === "ACTION_REJECTED" || lower.includes("user rejected")) {
+      setError("Transaction rejected in wallet.");
+    } else if (lower.includes("notpohverified") || lower.includes("not poh verified")) {
+      setError(
+        "This wallet is not PoH-verified according to Linea's on-chain verifier. Complete PoH with this wallet."
+      );
+    } else if (lower.includes("daily") && lower.includes("limit")) {
+      setError("You’ve used all votes for now. Come back later.");
+    } else if (lower.includes("not enough taterz") || lower.includes("insufficient taterz")) {
+      setError(
+        "Voting contract does not have enough TATERZ to pay rewards. Please contact the team."
+      );
+    } else if (lower.includes("invalid signature")) {
+      setError(
+        "Linea PoH signature was invalid. If you recently verified, give it a few minutes and try again."
+      );
+    } else if (
+      // 🔥 NEW: show the real backend error if /api/vote failed
+      lower.includes("vote api") ||
+      lower.includes("/api/vote") ||
+      lower.includes("missing redis_url") ||
+      lower.includes("method not allowed")
+    ) {
+      setError(rawMsg);
+    } else {
+      setError("Vote transaction failed. Check console for details.");
+    }
+  } finally {
+    setVoteButtonBusy(false);
+  }
+}
 
       function setupWalletEventListeners() {
         if (!window.ethereum) return;
